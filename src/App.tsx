@@ -46,7 +46,7 @@ import { EncontrarProfessorPage } from '@/pages/aluno/EncontrarProfessor'
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Routes>
           <Route path="/" element={<SplashPage />} />
           <Route path="/identificacao" element={<IdentificacaoPage />} />
