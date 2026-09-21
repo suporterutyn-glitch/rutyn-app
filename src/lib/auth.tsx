@@ -52,17 +52,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
 
-  async function loadProfile(userId: string) {
-    try {
-      // NOTE: Avoid RLS recursion by not loading profile here.
-      // The profile is created by trigger when user signs up.
-      // Components that need profile can fetch it as needed.
-      setProfile(null)
-    } catch (err) {
-      console.error('Error in loadProfile:', err)
-      setProfile(null)
-    }
-  }
+  // NOTE: Avoid RLS recursion by not loading profile here.
+  // The profile is created by trigger when user signs up.
+  // Components that need profile can fetch it as needed.
 
   async function refresh() {
     const { data: { session } } = await supabase.auth.getSession()

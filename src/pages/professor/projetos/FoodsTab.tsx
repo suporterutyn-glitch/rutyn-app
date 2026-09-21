@@ -18,13 +18,11 @@ type Food = {
 }
 
 export function FoodsTab() {
-  const { i18n } = useTranslation()
+  const { i18n: _i18n } = useTranslation()
   const [items, setItems] = useState<Food[]>([])
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [showNew, setShowNew] = useState(false)
-
-  const isSpanish = i18n.language.startsWith('es')
 
   async function load() {
     setLoading(true)

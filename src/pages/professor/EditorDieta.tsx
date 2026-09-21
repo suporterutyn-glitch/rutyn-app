@@ -153,7 +153,7 @@ export function EditorDietaPage() {
                         type="number" defaultValue={f.quantity} onBlur={(e) => updateFoodQty(f.id, Number(e.target.value) || 0)}
                         className="w-16 bg-transparent border-b border-brand/30 text-white text-rt-12 outline-none text-center"
                       />
-                      <span className="text-grey-500 text-rt-11">{f.unit}</span>
+                      <span className="text-grey-500 text-rt-11">g</span>
                       <span className="flex-1 text-white text-rt-13 truncate">{f.food_name_snapshot}</span>
                       <span className="text-brand text-rt-11 font-semibold">{Math.round(mm.kcal)}kcal</span>
                       <button onClick={() => removeFood(f.id)} className="w-6 h-6 rounded-md bg-surface-card flex items-center justify-center">
@@ -195,11 +195,11 @@ function FoodPicker({ onClose, onPick }: { onClose: () => void; onPick: (c: Food
   const [qty, setQty] = useState('100')
   useEffect(() => {
     void (async () => {
-      const { data } = await supabase.from('foods').select('*').order('name_pt').limit(200)
+      const { data } = await supabase.from('foods').select('*').order('name').limit(200)
       setItems((data as FoodCat[]) ?? [])
     })()
   }, [])
-  const filtered = items.filter((x) => x.name_pt.toLowerCase().includes(q.toLowerCase()))
+  const filtered = items.filter((x) => x.name.toLowerCase().includes(q.toLowerCase()))
   return (
     <FullScreenSheet title="Adicionar alimento" onClose={onClose}>
       {!picked ? (
@@ -214,8 +214,8 @@ function FoodPicker({ onClose, onPick }: { onClose: () => void; onPick: (c: Food
                   <button onClick={() => setPicked(x)} className="w-full card-dark p-3 flex items-center gap-3 text-left">
                     <Apple size={18} className="text-brand" />
                     <div className="flex-1">
-                      <div className="text-white text-rt-13 font-semibold">{x.name_pt}</div>
-                      <div className="text-grey-500 text-rt-10">{x.portion}{x.unit} · {Number(x.kcal)} kcal</div>
+                      <div className="text-white text-rt-13 font-semibold">{x.name}</div>
+                      <div className="text-grey-500 text-rt-10">{x.portion}g · {Number(x.calories)} kcal</div>
                     </div>
                   </button>
                 </li>
@@ -225,18 +225,18 @@ function FoodPicker({ onClose, onPick }: { onClose: () => void; onPick: (c: Food
         </>
       ) : (
         <div className="flex flex-col gap-6">
-          <div className="text-white text-rt-15 font-bold">{picked.name_pt}</div>
-          <Field label={`Quantidade (${picked.unit})`}>
+          <div className="text-white text-rt-15 font-bold">{picked.name}</div>
+          <Field label={`Quantidade (${picked.portion || '100g'})`}>
             <input inputMode="decimal" className="input-dark" value={qty} onChange={(e) => setQty(e.target.value)} />
           </Field>
           <div className="grid grid-cols-4 gap-2 text-center card-dark p-3">
             {(() => {
               const r = (Number(qty) || 0) / Number(picked.portion || 100)
               return [
-                { l: 'kcal', v: Number(picked.kcal) * r, c: 'text-macro-kcal' },
-                { l: 'P', v: Number(picked.protein) * r, c: 'text-macro-protein' },
-                { l: 'C', v: Number(picked.carb) * r, c: 'text-macro-carb' },
-                { l: 'G', v: Number(picked.fat) * r, c: 'text-macro-fat' },
+                { l: 'kcal', v: Number(picked.calories) * r, c: 'text-macro-kcal' },
+                { l: 'P', v: Number(picked.protein_g) * r, c: 'text-macro-protein' },
+                { l: 'C', v: Number(picked.carbs_g) * r, c: 'text-macro-carb' },
+                { l: 'G', v: Number(picked.fats_g) * r, c: 'text-macro-fat' },
               ].map((m) => (
                 <div key={m.l}><div className={'text-rt-15 font-bold ' + m.c}>{Math.round(m.v)}</div><div className="text-grey-500 text-rt-10 uppercase">{m.l}</div></div>
               ))
@@ -283,11 +283,11 @@ function AssignDietSheet({ diet, meals, foodsMap, onClose }: {
           const cat = f.food_id ? foodsMap.get(f.food_id) : null
           const r = cat ? Number(f.quantity) / Number(cat.portion || 100) : 1
           return {
-            name: f.food_name_snapshot, qty: Number(f.quantity), unit: f.unit,
-            kcal: cat ? Number(cat.kcal) * r : 0,
-            p: cat ? Number(cat.protein) * r : 0,
-            c: cat ? Number(cat.carb) * r : 0,
-            f: cat ? Number(cat.fat) * r : 0,
+            name: f.food_name_snapshot, qty: Number(f.quantity), unit: 'g',
+            kcal: cat ? Number(cat.calories) * r : 0,
+            p: cat ? Number(cat.protein_g) * r : 0,
+            c: cat ? Number(cat.carbs_g) * r : 0,
+            f: cat ? Number(cat.fats_g) * r : 0,
           }
         }),
       })),

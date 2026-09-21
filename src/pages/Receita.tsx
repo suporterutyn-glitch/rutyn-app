@@ -60,10 +60,10 @@ export function ReceitaPage() {
     if (!cat) return acc
     const ratio = Number(i.quantity) / Number(cat.portion || 100)
     return {
-      kcal: acc.kcal + Number(cat.kcal) * ratio,
-      p: acc.p + Number(cat.protein) * ratio,
-      c: acc.c + Number(cat.carb) * ratio,
-      f: acc.f + Number(cat.fat) * ratio,
+      kcal: acc.kcal + Number(cat.calories) * ratio,
+      p: acc.p + Number(cat.protein_g) * ratio,
+      c: acc.c + Number(cat.carbs_g) * ratio,
+      f: acc.f + Number(cat.fats_g) * ratio,
     }
   }, { kcal: 0, p: 0, c: 0, f: 0 })
 
@@ -107,10 +107,10 @@ export function ReceitaPage() {
         <ul className="flex flex-col gap-2 mb-4">
           {ings.map((i) => {
             const cat = i.food_id ? foodsMap.get(i.food_id) : null
-            const kcal = cat ? Number(cat.kcal) * (Number(i.quantity) / Number(cat.portion || 100)) : 0
+            const kcal = cat ? Number(cat.calories) * (Number(i.quantity) / Number(cat.portion || 100)) : 0
             return (
               <li key={i.id} className="card-dark p-3 flex items-center gap-2">
-                <span className="text-brand text-rt-12 font-bold w-16">{Number(i.quantity)}{i.unit}</span>
+                <span className="text-brand text-rt-12 font-bold w-16">{Number(i.quantity)}g</span>
                 <span className="text-white text-rt-13 flex-1 truncate">{i.food_name_snapshot}</span>
                 <span className="text-white/60 text-rt-11">{Math.round(kcal)} kcal</span>
                 {canEdit && (
