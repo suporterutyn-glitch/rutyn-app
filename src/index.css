@@ -1,0 +1,102 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 10.2%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 11.8%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 17.6%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 89 46% 48%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 17.6%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 14.5%;
+    --muted-foreground: 0 0% 62%;
+    --accent: 89 46% 48%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 4 90% 58%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 89 46% 48%;
+    --radius: 0.75rem;
+
+    --brand-light: 83 50% 51%;
+    --brand-dark: 84 47% 24%;
+    --brand-mid: 93 51% 37%;
+    --assess: 88 50% 53%;
+    --surface-input: 0 0% 14.5%;
+    --surface-raised: 0 0% 17.6%;
+    --border-strong: 0 0% 23.9%;
+    --divider: 0 0% 26.7%;
+    --nav: 0 0% 85.1%;
+    --surface-light: 0 0% 96.1%;
+    --warning: 36 77% 57%;
+    --info: 207 90% 54%;
+    --danger-wine: 0 50% 36%;
+    --danger-deep: 0 74% 41%;
+    --offline: 38 100% 50%;
+    --nav-height-pro: 80px;
+    --nav-height-student: 105px;
+  }
+
+  html, body, #root { min-height: 100dvh; background: #000; }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Montserrat', system-ui, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
+  }
+
+  #root { display: flex; justify-content: center; }
+  .app-shell {
+    width: 100%;
+    max-width: 430px;
+    min-height: 100dvh;
+    position: relative;
+    background: #1A1A1A;
+  }
+
+  .app-bg { background: #1A1A1A url('/assets/images/background.png') center/cover no-repeat; }
+  .app-bg-pro { position: relative; background: #111 url('/assets/images/background.png') center/cover no-repeat; }
+  .app-bg-pro::before { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,.82); pointer-events: none; }
+
+  input, textarea, select { font-family: inherit; }
+  button { font-family: inherit; }
+}
+
+@layer components {
+  .btn-primary-pill {
+    @apply relative w-full h-[55px] rounded-[50px] bg-brand-v shadow-btn text-white font-bold text-rt-20 flex items-center justify-center transition active:scale-[0.98];
+  }
+  .btn-save {
+    @apply relative w-full h-[54px] rounded-[27px] bg-save shadow-glow text-white font-bold text-rt-16 flex items-center justify-center transition active:scale-[0.98];
+  }
+  .btn-google {
+    @apply relative w-full h-[55px] rounded-[50px] bg-google shadow-btn text-white font-semibold text-rt-16 flex items-center justify-center gap-3 border border-white/50;
+  }
+  .btn-apple {
+    @apply relative w-full h-[55px] rounded-[50px] bg-apple shadow-btn text-white font-semibold text-rt-16 flex items-center justify-center gap-3 border border-white/50;
+  }
+  .btn-outline-white {
+    @apply relative w-full h-[55px] rounded-[65px] border-[1.5px] border-white bg-transparent text-white font-semibold text-rt-16 flex items-center justify-center gap-3;
+  }
+  .input-dark {
+    @apply w-full h-[52px] px-4 rounded-[12px] bg-surface-input border border-surface-line text-white text-rt-14 placeholder:text-grey-600 focus:border-brand outline-none transition;
+  }
+  .input-light-underline {
+    @apply w-full bg-transparent border-0 border-b border-ink-underline text-ink-dark text-rt-13 placeholder:text-ink-placeholder focus:border-b-2 focus:border-brand outline-none py-2;
+  }
+  .card-dark { @apply bg-surface-card border border-surface-line-strong rounded-card; }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
