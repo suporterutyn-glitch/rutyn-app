@@ -24,17 +24,13 @@ export function LanguageToggle() {
 
   useEffect(() => {
     const norm = i18n.language.startsWith('pt') ? 'pt' : i18n.language.startsWith('es') ? 'es' : i18n.language.startsWith('en') ? 'en' : 'pt'
-    if (norm !== current) {
-      setCurrent(norm)
-    }
-  }, [i18n.language, current])
+    setCurrent(norm)
+  }, [i18n.language])
 
   const handleClick = async () => {
-    const idx = LANGS.indexOf(current)
-    if (idx === -1) {
-      await setLang('es')
-      return
-    }
+    const stored = localStorage.getItem('rutyn.lang')
+    const currentLang = (stored === 'pt' || stored === 'es' || stored === 'en') ? stored : 'pt'
+    const idx = LANGS.indexOf(currentLang)
     const nextIdx = (idx + 1) % LANGS.length
     const next = LANGS[nextIdx]
     await setLang(next)
