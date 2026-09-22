@@ -41,7 +41,7 @@ export function ConfiguracoesPage() {
     await signOut()
   }
 
-  const currentLang = i18n.language.startsWith('es') ? 'es' : 'pt'
+  const currentLang = i18n.language.startsWith('es') ? 'es' : i18n.language.startsWith('en') ? 'en' : 'pt'
 
   return (
     <div className="pt-[calc(env(safe-area-inset-top)+16px)] px-4 pb-24">
@@ -52,7 +52,7 @@ export function ConfiguracoesPage() {
         <h1 className="text-white text-rt-18 font-semibold">{t('settings:title')}</h1>
       </div>
 
-      {/* Toggle de idioma */}
+      {/* Language selector */}
       <div className="card-dark p-4 mb-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -61,12 +61,12 @@ export function ConfiguracoesPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          {(['pt', 'es'] as const).map((l) => (
+          {(['pt', 'es', 'en'] as const).map((l) => (
             <button key={l} onClick={() => setLang(l)} className={
               'flex-1 h-10 rounded-btn-pill font-semibold text-rt-13 flex items-center justify-center gap-2 ' +
               (currentLang === l ? 'bg-brand text-white' : 'bg-surface-raised text-grey-400')
             }>
-              <span className="text-lg leading-none">{l === 'pt' ? '🇧🇷' : '🇪🇸'}</span>
+              <span className="text-lg leading-none">{l === 'pt' ? '🇧🇷' : l === 'es' ? '🇪🇸' : '🇺🇸'}</span>
               {l === 'pt' ? 'Português' : 'Español'}
             </button>
           ))}

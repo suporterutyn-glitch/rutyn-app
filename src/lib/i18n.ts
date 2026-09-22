@@ -3,11 +3,13 @@ import { initReactI18next } from 'react-i18next'
 
 const STORAGE_KEY = 'rutyn.lang'
 
-function initialLang(): 'pt' | 'es' {
+function initialLang(): 'pt' | 'es' | 'en' {
   const saved = localStorage.getItem(STORAGE_KEY)
-  if (saved === 'pt' || saved === 'es') return saved
+  if (saved === 'pt' || saved === 'es' || saved === 'en') return saved
   const sys = (navigator.language || 'pt').toLowerCase()
-  return sys.startsWith('es') ? 'es' : 'pt'
+  if (sys.startsWith('es')) return 'es'
+  if (sys.startsWith('en')) return 'en'
+  return 'pt'
 }
 
 const pt = {
@@ -410,8 +412,208 @@ const es: typeof pt = {
   },
 }
 
+const en: typeof pt = {
+  common: {
+    continue: 'Continue', back: 'Back', save: 'Save', cancel: 'Cancel',
+    email: 'Email', password: 'Password', name: 'Name', whatsapp: 'WhatsApp',
+    tryAgain: 'Try again', loading: 'Loading...', offline: 'No connection',
+    saved: 'Saved', delete: 'Delete', edit: 'Edit', add: 'Add',
+    search: 'Search', close: 'Close', confirm: 'Confirm', send: 'Send',
+    yes: 'Yes', no: 'No', all: 'All',
+  },
+  identification: {
+    tagline: 'Your personal trainer in your pocket',
+    imTeacher: 'I\'m a Trainer', imStudent: 'I\'m a Student',
+    login: 'I have an account',
+  },
+  login: {
+    title: 'Welcome back', forgot: 'FORGOT PASSWORD?', enter: 'Sign In',
+    signUp: 'SIGN UP', google: 'Continue with Google', apple: 'Continue with Apple',
+    invalidEmail: 'Invalid email', typeEmail: 'Enter your email', typePassword: 'Enter your password',
+  },
+  signupTeacher: {
+    title: 'Trainer Registration', gender: 'Gender', country: 'Country',
+    acceptTerms: 'I read and accept the Terms of Use and Privacy Policy',
+    create: 'Create account',
+  },
+  signupStudent: {
+    title: 'Student Registration', hasTeacher: 'I already have a trainer',
+    teacherEmail: 'Trainer\'s email', findLater: 'Find later',
+  },
+  waiting: {
+    title: 'Waiting for Approval',
+    subtitle: 'You have {{days}} days to be approved or find a trainer.',
+    check: 'Wait', change: 'Choose another trainer', logout: 'Sign out',
+  },
+  professor: {
+    hello: 'Hello, {{name}}', welcomeBack: 'Welcome back',
+    activeStudents: 'Active Students', pendingInvites: 'Pending Invites',
+    monthReceived: 'Received this month', changeWorkouts: 'Change workouts',
+    assessments: 'Assessments', messages: 'Messages', schedule: 'Schedule',
+    noAppointments: 'No upcoming appointments.',
+    incompleteProfile: 'Incomplete Profile',
+    completeProfileSub: 'Complete your profile to appear in the marketplace',
+    plan: 'Plan', planUpgrade: 'Upgrade Now',
+    tabs: {
+      projects: 'Projects', students: 'Students', home: 'Home',
+      messages: 'Messages', financial: 'Financial',
+    },
+  },
+  aluno: {
+    hello: 'Hello, {{name}}', welcome: 'Welcome to Rutyn',
+    hydration: 'Hydration', frequency: 'Frequency',
+    newWorkouts: 'New\nWorkouts', physicalAss: 'Physical\nAssessment',
+    tapToSee: 'Tap to see',
+    messages: 'Messages', unreadMessages: 'Unanswered messages',
+    talkTeacher: 'Chat with your trainer',
+    paymentOk: 'Payment up to date ✓', paymentAwaiting: 'Awaiting confirmation',
+    paymentSuspended: 'Payment suspended ⚠',
+    paymentDueOn: 'Your subscription is due on {{date}}',
+    paymentNext: 'Next payment on {{date}}',
+    iPaid: 'Already Paid',
+    tabs: {
+      workouts: 'Workouts', nutrition: 'Nutrition', home: 'Home',
+      chat: 'Chat', assessment: 'Assessment',
+    },
+  },
+  workouts: {
+    myWorkouts: 'My Workouts', noWorkouts: 'No workouts available',
+    noWorkoutsSub: 'Your trainer hasn\'t assigned a routine yet.',
+    current: 'CURRENT', done: 'COMPLETED',
+    workouts: 'workouts', progress: 'Progress', exercises: 'Exercises',
+    slideToStart: 'Slide to start workout',
+    slideToFinish: 'Slide to finish',
+    abandonConfirm: 'Abandon this workout?',
+    workoutTime: 'Workout time', rest: 'Rest',
+    series: 'sets', load: 'Load', reps: 'Reps',
+    finished: 'Workout finished', congrats: 'Congratulations!',
+    congratsSub: 'You completed another workout.',
+    share: 'Share', backToWorkouts: 'Back to workouts',
+    duration: 'Duration',
+  },
+  nutrition: {
+    title: 'Nutrition', myDiets: 'My Diets', shopping: 'Shopping List',
+    todayDiet: 'Today\'s diet', noDiet: 'No diet',
+    noDietSub: 'Your trainer hasn\'t assigned a diet yet.',
+    week: '1 week', month: '1 month', sendWhats: 'Send via WhatsApp',
+    noItems: 'No items in your diet.', noMeals: 'No meals registered.',
+  },
+  projects: {
+    title: 'My Projects',
+    routines: 'Routines', exercises: 'Exercises', diets: 'Diets',
+    foods: 'Foods', recipes: 'Recipes',
+    searchRoutines: 'Search routines...', searchExercises: 'Search exercises...',
+    searchDiets: 'Search diets...', searchFoods: 'Search foods...', searchRecipes: 'Search recipes...',
+    newRoutine: 'Create new Routine', newExercise: 'New Exercise',
+    newDiet: 'New Diet', newFood: 'New Food', newRecipe: 'New Recipe',
+    noRoutines: 'No routines yet',
+    noRoutinesSub: 'Create your first routine to assign to your students.',
+  },
+  students: {
+    title: 'Students', searchStudent: 'Search student...',
+    limit: '{{active}}/{{limit}} STUDENTS',
+    noStudents: 'No students',
+    noStudentsSub: 'Register your first student or accept invites from the marketplace.',
+    registerStudent: 'Register Student',
+    profile: 'Profile', routines: 'Routines', diets: 'Diets', assessments: 'Assessments',
+    openAssessment: 'Open assessment',
+  },
+  invites: {
+    title: 'Pending Invites', none: 'No invites',
+    noneSub: 'You have no pending invites.',
+    counterProposal: 'Counter proposal sent',
+    reject: 'Reject', accept: 'Accept',
+    limitReached: 'Student limit reached. Upgrade your plan.',
+    accepted: 'Proposal accepted!', acceptedBody: '{{name}} accepted your proposal.',
+    rejected: 'Proposal rejected', rejectedBody: '{{name}} rejected your proposal.',
+  },
+  financial: {
+    title: 'Financial', bankData: 'Bank data',
+    monthReceived: 'Received this month',
+    filters: { all: 'All', pending: 'Pending', awaiting: 'Awaiting', paid: 'Paid', suspended: 'Suspended' },
+    status: { PENDING: 'PENDING', AWAITING: 'AWAITING', PAID: 'PAID', REJECTED: 'REJECTED', SUSPENDED: 'SUSPENDED' },
+    dueOn: 'Due:', chargeStudent: 'Charge Student', confirm: 'Confirm',
+    markPaid: 'Mark as paid', empty: 'No charges',
+    emptySub: 'Charge your first student to get started.',
+    student: 'Student', format: 'Format', monthly: 'Monthly', hourly: 'Per hour',
+    amount: 'Amount', dueDate: 'Due date', sendCharge: 'Send charge',
+    holder: 'Holder', bank: 'Bank', agency: 'Agency', account: 'Account',
+    pixKey: 'PIX Key', paymentData: 'Payment data',
+    noneCharge: 'No pending charges 🎉',
+    waitingTeacher: 'Waiting for trainer to confirm payment.',
+  },
+  plans: {
+    choose: 'Choose your plan', pricesLocal: 'Prices in your currency ({{currency}}). Monthly billing via provider.',
+    monthly: '/month', free: 'Free', current: 'Current plan', subscribe: 'Subscribe',
+    backFree: 'Back to Free', mostPopular: 'MOST POPULAR', currentBadge: 'CURRENT',
+    upTo: 'Up to {{n}} students', cancelAnytime: 'Monthly subscription. Cancel anytime.',
+  },
+  profile: {
+    title: 'Complete your profile', state: 'State / Province', city: 'City',
+    occupation: 'Occupation', specialties: 'Specialties', idealClients: 'Ideal client',
+    workFormat: 'Work format', hourlyPrice: 'Hourly rate', monthlyPrice: 'Monthly rate',
+    bio: 'Bio', bioPh: 'Tell us about your experience…',
+    linkMarketplace: 'Link to marketplace',
+    marketplaceSub: 'Students can find you in the search',
+    completeWarning: 'Complete state, city, occupation, at least 1 specialty and 1 ideal client to complete your profile.',
+  },
+  marketplace: {
+    title: 'Find a Trainer', searchName: 'Search by name…',
+    noneTeachers: 'No trainers available yet', noneSub: 'Come back soon.',
+    sendProposal: 'Send proposal', proposalSent: 'Invite sent',
+    proposalAccepted: 'Invite accepted', proposalCountered: 'Counter proposal sent',
+    about: 'About', prices: 'Rates', perHour: 'Per hour:', monthly: 'Monthly:',
+    weeklyFreq: 'Weekly frequency', chooseDays: 'Days (choose {{n}})',
+    model: 'Model', objectives: 'Objectives (comma-separated)',
+    sendingProposal: 'Sending…',
+  },
+  chat: {
+    title: 'Messages', typeMessage: 'Type your message…',
+    noConversations: 'No conversations',
+    noConvTeacher: 'Conversations will appear here once you have active students.',
+    noConvStudent: 'Wait to be linked to a trainer.',
+    tapToChat: 'Tap to chat',
+  },
+  notifications: {
+    title: 'Notifications', none: 'No notifications',
+    noneSub: 'You have no new notifications.',
+  },
+  assessment: {
+    title: 'Physical Assessment', mine: 'My Assessment',
+    noAssessment: 'No assessment yet',
+    noAssessmentSub: 'Your trainer hasn\'t done your first physical assessment yet.',
+    lastUpdate: 'Last updated: {{date}}',
+    basic: 'Basic data', composition: 'Body composition', perimetry: 'Perimetry',
+    weight: 'Weight', height: 'Height', age: 'Age', restingHr: 'Resting HR',
+    imc: 'BMI', maxHr: 'Max HR estimated: {{v}} bpm',
+    fat: 'Fat', leanMass: 'Lean mass', waist: 'Waist', hips: 'Hips',
+    whr: 'Waist/Hips', risk: 'Risk {{level}}',
+    visibleToStudent: 'Visible to student', saveAssessment: 'Save assessment',
+  },
+  anamnesis: {
+    title: 'Assessments', none: 'No assessments',
+    noneTeacherSub: 'Send an assessment for the student to answer.',
+    noneStudentSub: 'Your trainer hasn\'t sent any assessments yet.',
+    sendNew: 'Send new assessment', chooseTemplate: 'Choose assessment',
+    questions: '{{n}} questions', pending: 'Pending', answered: 'Answered',
+    answeredOn: 'Answered on {{date}}', waitingStudent: 'Waiting for student to answer',
+    seeAnswers: 'See answers',
+    writeAnswer: 'Write your answer…', submit: 'Submit',
+  },
+  settings: {
+    title: 'Settings', language: 'Language', profile: 'My Profile',
+    plan: 'My Plan', bank: 'Bank Data', security: 'Security',
+    terms: 'Terms and Privacy', support: 'WhatsApp Support',
+    signOut: 'Sign Out', deleteAccount: 'Delete Account',
+    deleteConfirm: 'This will mark your account for deletion. Are you sure?',
+  },
+  hydration: {
+    congrats: 'Congratulations! Hydration goal reached!',
+  },
+}
+
 void i18n.use(initReactI18next).init({
-  resources: { pt: pt as any, es: es as any },
+  resources: { pt: pt as any, es: es as any, en: en as any },
   lng: initialLang(),
   fallbackLng: 'pt',
   defaultNS: 'common',
@@ -419,7 +621,7 @@ void i18n.use(initReactI18next).init({
   interpolation: { escapeValue: false },
 })
 
-export function setLang(lang: 'pt' | 'es') {
+export function setLang(lang: 'pt' | 'es' | 'en') {
   localStorage.setItem(STORAGE_KEY, lang)
   void i18n.changeLanguage(lang)
 }
