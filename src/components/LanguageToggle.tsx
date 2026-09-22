@@ -7,15 +7,34 @@ const FLAGS = { pt: '🇧🇷', es: '🇪🇸', en: '🇺🇸' }
 
 export function LanguageToggle() {
   const { i18n } = useTranslation()
-  const [current, setCurrent] = useState<'pt' | 'es' | 'en'>('pt')
+  const [current, setCurrent] = useState<'pt' | 'es' | 'en'>(() => {
+    const stored = localStorage.getItem('rutyn.lang')
+    return (stored === 'pt' || stored === 'es' || stored === 'en') ? stored : 'pt'
+  })
+
+  useEffect(() => {
+    const listener = () => {
+      const stored = localStorage.getItem('rutyn.lang')
+      const norm = (stored === 'pt' || stored === 'es' || stored === 'en') ? stored : 'pt'
+      setCurrent(norm)
+    }
+    window.addEventListener('storage', listener)
+    return () => window.removeEventListener('storage', listener)
+  }, [])
 
   useEffect(() => {
     const norm = i18n.language.startsWith('pt') ? 'pt' : i18n.language.startsWith('es') ? 'es' : i18n.language.startsWith('en') ? 'en' : 'pt'
-    setCurrent(norm)
-  }, [i18n.language])
+    if (norm !== current) {
+      setCurrent(norm)
+    }
+  }, [i18n.language, current])
 
   const handleClick = () => {
     const idx = LANGS.indexOf(current)
+    if (idx === -1) {
+      setLang('es')
+      return
+    }
     const nextIdx = (idx + 1) % LANGS.length
     const next = LANGS[nextIdx]
     setLang(next)
