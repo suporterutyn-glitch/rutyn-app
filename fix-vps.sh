@@ -34,8 +34,20 @@ location / {
 SNIPPET
 
 CONF=/etc/nginx/sites-available/rutyn.com.br
-APP_CERT=/etc/letsencrypt/live/app.rutyn.com.br/fullchain.pem
 APEX_CERT=/etc/letsencrypt/live/rutyn.com.br/fullchain.pem
+
+# Hostnames de la app. El vanity necesita un registro A cargado a mano en hPanel;
+# el de hstgr.cloud resuelve por wildcard y hace de canonico hasta que exista.
+APP_VANITY=app.rutyn.com.br
+APP_FALLBACK=app.srv1815529.hstgr.cloud
+
+cert_for() { [ -f "/etc/letsencrypt/live/$1/fullchain.pem" ]; }
+
+CANON=""
+if cert_for "$APP_VANITY"; then CANON="$APP_VANITY"
+elif cert_for "$APP_FALLBACK"; then CANON="$APP_FALLBACK"
+fi
+echo "  hostname canonico de la app: ${CANON:-(ninguno con certificado todavia)}"
 
 cat > "$CONF" <<'NGINXUP'
 upstream rutynapp {
@@ -43,55 +55,60 @@ upstream rutynapp {
 }
 NGINXUP
 
-# --- app.rutyn.com.br : la aplicacion ---
-if [ -f "$APP_CERT" ]; then
-  echo "  app.rutyn.com.br -> HTTPS (443), 80 redirige"
-  cat >> "$CONF" <<'APPSSL'
+# --- la aplicacion, un bloque por hostname (443 solo si tiene certificado) ---
+for H in "$APP_VANITY" "$APP_FALLBACK"; do
+  if cert_for "$H"; then
+    echo "  $H -> HTTPS"
+    cat >> "$CONF" <<EOF
 
 server {
     listen 80;
     listen [::]:80;
-    server_name app.rutyn.com.br;
+    server_name $H;
     location /.well-known/acme-challenge/ { root /var/www/rutyn; }
-    location / { return 301 https://$host$request_uri; }
+    location / { return 301 https://\$host\$request_uri; }
 }
 
 server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
-    server_name app.rutyn.com.br;
+    server_name $H;
 
-    ssl_certificate /etc/letsencrypt/live/app.rutyn.com.br/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/app.rutyn.com.br/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/$H/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/$H/privkey.pem;
 
     include /etc/nginx/snippets/rutyn-app.conf;
 }
-APPSSL
-else
-  echo "  app.rutyn.com.br -> HTTP (todavia sin certificado)"
-  cat >> "$CONF" <<'APPPLAIN'
+EOF
+  else
+    echo "  $H -> HTTP (sin certificado)"
+    cat >> "$CONF" <<EOF
 
 server {
     listen 80;
     listen [::]:80;
-    server_name app.rutyn.com.br;
+    server_name $H;
     location /.well-known/acme-challenge/ { root /var/www/rutyn; }
     include /etc/nginx/snippets/rutyn-app.conf;
 }
-APPPLAIN
-fi
+EOF
+  fi
+done
 
 # --- rutyn.com.br : transitorio, se retira cuando el DNS del apex se mude ---
+APP_URL="https://${CANON}"
+[ -z "$CANON" ] && APP_URL="http://${APP_FALLBACK}"
+
 if [ -f "$APEX_CERT" ] && [ -d /var/www/rutyn/landing ]; then
-  echo "  rutyn.com.br -> landing + /app/ redirige al subdominio (transitorio)"
-  cat >> "$CONF" <<'APEXSSL'
+  echo "  rutyn.com.br -> landing + /app/ redirige a $APP_URL (transitorio)"
+  cat >> "$CONF" <<EOF
 
 server {
     listen 80;
     listen [::]:80;
     server_name rutyn.com.br www.rutyn.com.br;
     location /.well-known/acme-challenge/ { root /var/www/rutyn; }
-    location / { return 301 https://$host$request_uri; }
+    location / { return 301 https://\$host\$request_uri; }
 }
 
 server {
@@ -103,15 +120,15 @@ server {
     ssl_certificate /etc/letsencrypt/live/rutyn.com.br/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/rutyn.com.br/privkey.pem;
 
-    location = /app { return 301 https://app.rutyn.com.br/; }
-    location /app/  { return 301 https://app.rutyn.com.br/; }
+    location = /app { return 301 ${APP_URL}/; }
+    location /app/  { return 301 ${APP_URL}/; }
 
     location / {
         alias /var/www/rutyn/landing/;
-        try_files $uri $uri/ /index.html;
+        try_files \$uri \$uri/ /index.html;
     }
 }
-APEXSSL
+EOF
 else
   echo "  rutyn.com.br -> no se sirve (landing retirada o sin certificado)"
 fi
@@ -153,9 +170,11 @@ echo "-- App via 8080 (acceso directo) --"
 curl -s -I "http://127.0.0.1:8080/assets/$JS" | grep -i -E "HTTP/|content-type"
 curl -s "http://127.0.0.1:8080/" | grep -o '<title>[^<]*</title>'
 curl -s "http://127.0.0.1:8080/" | grep -o 'src="[^"]*"' | head -3
-echo "-- app.rutyn.com.br en 80 --"
-curl -s -I -H 'Host: app.rutyn.com.br' "http://127.0.0.1:80/" | grep -i -E "HTTP/|location"
-echo "-- rutyn.com.br/app/ debe redirigir al subdominio --"
+for H in "$APP_VANITY" "$APP_FALLBACK"; do
+  echo "-- $H en 80 --"
+  curl -s -I -H "Host: $H" "http://127.0.0.1:80/" | grep -i -E "HTTP/|location"
+done
+echo "-- rutyn.com.br/app/ debe redirigir a la app --"
 curl -s -I -H 'Host: rutyn.com.br' "http://127.0.0.1:80/app/" | grep -i -E "HTTP/|location"
 echo "-- Landing en rutyn.com.br/ --"
 curl -s -H 'Host: rutyn.com.br' "http://127.0.0.1:80/" | grep -oE '<title>[^<]*</title>|^HTTP.*'
@@ -166,4 +185,4 @@ echo "-- Firewall --"
 ufw status 2>/dev/null | head -8 || echo "  ufw no instalado"
 iptables -S INPUT 2>/dev/null | grep -E "DROP|REJECT" | head -5 || true
 echo ""
-echo "LISTO -> https://app.rutyn.com.br/"
+echo "LISTO -> ${APP_URL}/"
