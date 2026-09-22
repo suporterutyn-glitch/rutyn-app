@@ -29,15 +29,15 @@ export function LanguageToggle() {
     }
   }, [i18n.language, current])
 
-  const handleClick = () => {
+  const handleClick = async () => {
     const idx = LANGS.indexOf(current)
     if (idx === -1) {
-      setLang('es')
+      await setLang('es')
       return
     }
     const nextIdx = (idx + 1) % LANGS.length
     const next = LANGS[nextIdx]
-    setLang(next)
+    await setLang(next)
   }
 
   return (

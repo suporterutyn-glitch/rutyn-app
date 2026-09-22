@@ -621,9 +621,13 @@ void i18n.use(initReactI18next).init({
   interpolation: { escapeValue: false },
 })
 
-export function setLang(lang: 'pt' | 'es' | 'en') {
+export async function setLang(lang: 'pt' | 'es' | 'en') {
   localStorage.setItem(STORAGE_KEY, lang)
-  void i18n.changeLanguage(lang)
+  try {
+    await i18n.changeLanguage(lang)
+  } catch (err) {
+    console.error('Failed to change language to', lang, err)
+  }
 }
 
 export default i18n
