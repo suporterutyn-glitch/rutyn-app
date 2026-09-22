@@ -52,49 +52,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // NOTE: Avoid RLS recursion by not loading profile here.
-  // The profile is created by trigger when user signs up.
-  // Components that need profile can fetch it as needed.
+  async function loadProfile(userId: string | undefined) {
+    if (!userId) {
+      setProfile(null)
+      return
+    }
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle()
+    setProfile((data as Profile | null) ?? null)
+  }
 
   async function refresh() {
     const { data: { session } } = await supabase.auth.getSession()
     setSession(session)
-    // Don't load profile here to avoid RLS recursion
-    setProfile(null)
+    await loadProfile(session?.user.id)
     setLoading(false)
   }
 
   useEffect(() => {
-    // Try to restore session from localStorage first
-    if (typeof window !== 'undefined') {
-      const tokenKey = Object.keys(localStorage).find(k => k.includes('auth'))
-      if (tokenKey) {
-        try {
-          const tokenData = JSON.parse(localStorage.getItem(tokenKey) || '{}')
-          if (tokenData.user) {
-            // Create a minimal session object from localStorage
-            setSession({
-              access_token: tokenData.access_token,
-              token_type: 'bearer',
-              expires_in: tokenData.expires_in,
-              expires_at: tokenData.expires_at,
-              refresh_token: tokenData.refresh_token,
-              user: tokenData.user,
-            } as any)
-            setLoading(false)
-            return
-          }
-        } catch {
-          // Fall through to refresh()
-        }
-      }
-    }
-
     void refresh()
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s)
-      // Don't load profile on auth state change to avoid RLS recursion
-      setProfile(null)
+      // supabase-js holds an internal lock during this callback; calling back
+      // into the client from inside it deadlocks. Defer to the next tick.
+      setTimeout(() => void loadProfile(s?.user.id), 0)
     })
     return () => sub.subscription.unsubscribe()
   }, [])
@@ -115,24 +99,4 @@ export function useAuth() {
   const v = useContext(Ctx)
   if (!v) throw new Error('useAuth outside AuthProvider')
   return v
-}
-
-export async function getProfileUnsafe(userId: string) {
-  try {
-    // Fetch profile using anon key to avoid RLS issues
-    const response = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}&select=*`,
-      {
-        headers: {
-          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-        }
-      }
-    )
-    if (!response.ok) return null
-    const data = await response.json()
-    return (data[0] as Profile | null) ?? null
-  } catch {
-    return null
-  }
 }
