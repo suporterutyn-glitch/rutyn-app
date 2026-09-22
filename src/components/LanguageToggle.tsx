@@ -3,9 +3,9 @@ import { setLang } from '@/lib/i18n'
 
 export function LanguageToggle() {
   const { i18n } = useTranslation()
-  const current = i18n.language.startsWith('es') ? 'es' : 'pt'
-  const next = current === 'pt' ? 'es' : 'pt'
-  const flag = current === 'pt' ? '🇧🇷' : '🇪🇸'
+  const current = i18n.language.startsWith('es') ? 'es' : i18n.language.startsWith('en') ? 'en' : 'pt'
+  const next = current === 'pt' ? 'es' : current === 'es' ? 'en' : 'pt'
+  const flag = current === 'pt' ? '🇧🇷' : current === 'es' ? '🇪🇸' : '🇺🇸'
   return (
     <button
       type="button"
