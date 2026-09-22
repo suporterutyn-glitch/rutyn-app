@@ -9,27 +9,17 @@ export function SplashPage() {
   useEffect(() => {
     if (loading) return
 
-    // Wait 800ms to ensure session is loaded from localStorage
-    const t = setTimeout(() => {
-      if (!session) {
-        nav('/identificacao', { replace: true })
-      } else if (profile) {
-        // Profile loaded, use it
-        if (profile.role === 'teacher') nav('/professor', { replace: true })
-        else if (profile.link_status === 'pending') nav('/aguardando', { replace: true })
-        else if (profile.link_status === 'none' || profile.link_status === 'ended')
-          nav('/aluno/encontrar-professor', { replace: true })
-        else nav('/aluno', { replace: true })
-      } else {
-        // No profile loaded, use JWT metadata
-        const userMeta = session.user?.user_metadata as any
-        const jwtRole = userMeta?.role as 'teacher' | 'student' | undefined
-        if (jwtRole === 'teacher') nav('/professor', { replace: true })
-        else if (jwtRole === 'student') nav('/aluno', { replace: true })
-        else nav('/identificacao', { replace: true })
-      }
-    }, 800)
-    return () => clearTimeout(t)
+    if (!session || !profile) {
+      nav('/identificacao', { replace: true })
+    } else if (profile.role === 'teacher') {
+      nav('/professor', { replace: true })
+    } else if (profile.link_status === 'pending') {
+      nav('/aguardando', { replace: true })
+    } else if (profile.link_status === 'none' || profile.link_status === 'ended') {
+      nav('/aluno/encontrar-professor', { replace: true })
+    } else {
+      nav('/aluno', { replace: true })
+    }
   }, [loading, session, profile, nav])
 
   return (

@@ -10,21 +10,10 @@ export function StatusGate({ role, children }: Props) {
   if (loading) return null
   if (!session) return <Navigate to="/identificacao" replace state={{ from: loc }} />
 
-  // If we have session, use JWT metadata to check role
-  const userMeta = session.user?.user_metadata as any
-  const jwtRole = userMeta?.role as 'teacher' | 'student' | undefined
-
-  // If no profile is loaded but we have a session and valid role, allow access
-  // Profile will be loaded on-demand in the component
-  if (!profile) {
-    if (!jwtRole) return <Navigate to="/identificacao" replace state={{ from: loc }} />
-    // Allow access if JWT role matches expected role
-    if (role && jwtRole !== role) {
-      return <Navigate to={jwtRole === 'teacher' ? '/professor' : '/aluno'} replace />
-    }
-    // Render but profile-dependent checks won't work
-    return <>{children}</>
-  }
+  // Never gate on user_metadata: the user can write their own with
+  // auth.updateUser. Without a profile the account_status and link_status
+  // checks below cannot run, so there is no safe way to render here.
+  if (!profile) return <Navigate to="/identificacao" replace state={{ from: loc }} />
 
   if (profile.account_status === 'deactivated') return <Navigate to="/bloqueado?motivo=desativada" replace />
   if (profile.account_status === 'deleting') return <Navigate to="/bloqueado?motivo=exclusao" replace />
