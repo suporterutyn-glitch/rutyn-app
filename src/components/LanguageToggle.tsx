@@ -33,7 +33,6 @@ export function LanguageToggle() {
     const idx = LANGS.indexOf(currentLang)
     const nextIdx = (idx + 1) % LANGS.length
     const next = LANGS[nextIdx]
-    console.log({ stored, currentLang, idx, nextIdx, next, LANGS })
     await setLang(next)
   }
 
