@@ -260,7 +260,7 @@ function NewStudentSheet({ profile, onClose, onCreated }: { profile: any; onClos
           <input type="email" className="input-dark" placeholder={t('students:emailHint')} value={email} onChange={(e) => setEmail(e.target.value)} />
         </Field>
 
-        <WhatsAppInput countryCode={countryCode} onCountry={setCountryCode} value={phone} onChange={setPhone} lang={lang} />
+        <WhatsAppInput countryCode={countryCode} onCountry={setCountryCode} value={phone} onChange={setPhone} lang={lang} variant="dark" />
 
         <DarkSelectSheet
           label={t('students:paymentFormat')}

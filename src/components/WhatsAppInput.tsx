@@ -9,20 +9,25 @@ type Props = {
   onChange: (v: string) => void
   label?: string
   lang: 'pt' | 'es'
+  /** 'light' = subrayado sobre tarjeta clara (cadastros). 'dark' = caja oscura (app interna). */
+  variant?: 'light' | 'dark'
 }
 
-export function WhatsAppInput({ countryCode, onCountry, value, onChange, label = 'WhatsApp', lang }: Props) {
+export function WhatsAppInput({ countryCode, onCountry, value, onChange, label = 'WhatsApp', lang, variant = 'light' }: Props) {
+  const oscuro = variant === 'dark'
   const [open, setOpen] = useState(false)
   const country = COUNTRIES.find((c) => c.code === countryCode) ?? COUNTRIES[0]
 
   return (
     <div>
-      <label className="block text-rt-11 text-ink-placeholder font-semibold">{label}</label>
-      <div className="flex items-center gap-2 border-b border-ink-underline focus-within:border-brand py-2">
+      <label className={'block text-rt-11 font-semibold ' + (oscuro ? 'text-grey-400 mb-1' : 'text-ink-placeholder')}>{label}</label>
+      <div className={oscuro
+          ? 'flex items-center gap-2 h-[52px] px-4 rounded-[12px] bg-surface-input border border-surface-line focus-within:border-brand'
+          : 'flex items-center gap-2 border-b border-ink-underline focus-within:border-brand py-2'}>
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="flex items-center gap-1 text-ink-dark text-rt-13 font-medium"
+          className={'flex items-center gap-1 text-rt-13 font-medium ' + (oscuro ? 'text-white' : 'text-ink-dark')}
         >
           <span className="text-xl leading-none">{country.flag}</span>
           <span>{country.dial}</span>
@@ -33,7 +38,7 @@ export function WhatsAppInput({ countryCode, onCountry, value, onChange, label =
           inputMode="numeric"
           value={value}
           onChange={(e) => onChange(e.target.value.replace(/\D/g, '').slice(0, country.digits))}
-          className="flex-1 bg-transparent outline-none text-ink-dark text-rt-13 placeholder:text-[#CCCCCC]"
+          className={'flex-1 bg-transparent outline-none text-rt-13 ' + (oscuro ? 'text-white placeholder:text-grey-600' : 'text-ink-dark placeholder:text-[#CCCCCC]')}
           placeholder={country.mask}
         />
       </div>
