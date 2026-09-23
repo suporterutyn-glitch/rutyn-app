@@ -65,7 +65,7 @@
 
   .app-bg { background: #1A1A1A url('/assets/images/background.png') center/cover no-repeat; }
   .app-bg-pro { position: relative; background: #111 url('/assets/images/background.png') center/cover no-repeat; }
-  .app-bg-pro::before { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,.82); pointer-events: none; }
+  .app-bg-pro::before { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,.58); pointer-events: none; }
 
   input, textarea, select { font-family: inherit; }
   button { font-family: inherit; }
