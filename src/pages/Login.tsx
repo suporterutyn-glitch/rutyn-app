@@ -58,7 +58,9 @@ export function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
     setLoading(false)
     if (error) {
-      setSnackbar(error.message)
+      // Supabase responde siempre en ingles; el modulo pide el mensaje traducido.
+      const credencialesMal = /invalid login credentials/i.test(error.message)
+      setSnackbar(credencialesMal ? t('login:invalidCredentials') : error.message)
       return
     }
     try {
