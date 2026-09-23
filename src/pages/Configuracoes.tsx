@@ -67,7 +67,7 @@ export function ConfiguracoesPage() {
               (currentLang === l ? 'bg-brand text-white' : 'bg-surface-raised text-grey-400')
             }>
               <span className="text-lg leading-none">{l === 'pt' ? '🇧🇷' : l === 'es' ? '🇪🇸' : '🇺🇸'}</span>
-              {l === 'pt' ? 'Português' : 'Español'}
+              {l === 'pt' ? 'Português' : l === 'es' ? 'Español' : 'English'}
             </button>
           ))}
         </div>
