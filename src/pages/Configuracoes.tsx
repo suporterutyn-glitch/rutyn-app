@@ -104,7 +104,7 @@ export function ConfiguracoesPage() {
           </>
         )}
         <MenuItem icon={Lock} label={t('settings:security')} onClick={() => nav('/redefinir-senha')} />
-        <MenuItem icon={FileText} label={t('settings:terms')} onClick={() => window.open('https://rutyn.app/termos', '_blank')} />
+        <MenuItem icon={FileText} label={t('settings:terms')} onClick={() => nav('/termos')} />
         <li>
           <a
             href="https://wa.me/5551999999999"

@@ -33,6 +33,10 @@ const pt = {
     invalidEmail: 'E-mail inválido', typeEmail: 'Digite seu e-mail', typePassword: 'Digite sua senha',
   },
   gender: { male: 'Masculino', female: 'Feminino', other: 'Outro' },
+  terms: {
+    title: 'Termos de Serviço e Política de Privacidade',
+    onlySpanish: 'A versão oficial deste documento está em espanhol.',
+  },
   signupTeacher: {
     title: 'Cadastro de Professor', gender: 'Gênero', country: 'País',
     greeting: 'Oi Professor, Seja bem-vindo',
@@ -44,6 +48,8 @@ const pt = {
     register: 'Registrar-se',
     doLogin: 'Fazer login',
     acceptTerms: 'Li e aceito os Termos de Uso e a Política de Privacidade',
+    acceptPrefix: 'Li e aceito os ',
+    termsLink: 'Termos de Uso e Política de Privacidade',
     create: 'Criar conta',
   },
   signupStudent: {
@@ -244,6 +250,10 @@ const es: typeof pt = {
     invalidEmail: 'Correo inválido', typeEmail: 'Escribe tu correo', typePassword: 'Escribe tu contraseña',
   },
   gender: { male: 'Masculino', female: 'Femenino', other: 'Otro' },
+  terms: {
+    title: 'Términos de Servicio y Política de Privacidad',
+    onlySpanish: '',
+  },
   signupTeacher: {
     title: 'Registro de Profesor', gender: 'Género', country: 'País',
     greeting: 'Hola Profesor, Bienvenido',
@@ -255,6 +265,8 @@ const es: typeof pt = {
     register: 'Registrarse',
     doLogin: 'Iniciar sesión',
     acceptTerms: 'Leí y acepto los Términos de Uso y la Política de Privacidad',
+    acceptPrefix: 'Leí y acepto los ',
+    termsLink: 'Términos de Uso y Política de Privacidad',
     create: 'Crear cuenta',
   },
   signupStudent: {
@@ -455,6 +467,10 @@ const en: typeof pt = {
     invalidEmail: 'Invalid email', typeEmail: 'Enter your email', typePassword: 'Enter your password',
   },
   gender: { male: 'Male', female: 'Female', other: 'Other' },
+  terms: {
+    title: 'Terms of Service and Privacy Policy',
+    onlySpanish: 'The official version of this document is in Spanish.',
+  },
   signupTeacher: {
     title: 'Trainer Registration', gender: 'Gender', country: 'Country',
     greeting: 'Hi Trainer, Welcome',
@@ -466,6 +482,8 @@ const en: typeof pt = {
     register: 'Sign up',
     doLogin: 'Log in',
     acceptTerms: 'I read and accept the Terms of Use and Privacy Policy',
+    acceptPrefix: 'I read and accept the ',
+    termsLink: 'Terms of Use and Privacy Policy',
     create: 'Create account',
   },
   signupStudent: {

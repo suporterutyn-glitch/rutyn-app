@@ -136,10 +136,25 @@ export function CadastroAlunoPage() {
               </div>
             )}
 
-            <label className="flex items-start gap-2 text-rt-11 text-ink-muted">
-              <input type="checkbox" checked={accept} onChange={(e) => setAccept(e.target.checked)} className="accent-brand mt-0.5" />
-              <span>{t('signupTeacher:acceptTerms')}</span>
-            </label>
+            <div className="flex items-start gap-2 text-rt-11 text-ink-muted">
+              <input
+                type="checkbox"
+                checked={accept}
+                onChange={(e) => setAccept(e.target.checked)}
+                className="accent-brand mt-0.5 w-6 h-6 shrink-0"
+                aria-label={t('signupTeacher:acceptPrefix') + t('signupTeacher:termsLink')}
+              />
+              <span className="pt-1">
+                {t('signupTeacher:acceptPrefix')}
+                <button
+                  type="button"
+                  onClick={() => nav('/termos')}
+                  className="text-brand font-semibold underline text-left"
+                >
+                  {t('signupTeacher:termsLink')}
+                </button>
+              </span>
+            </div>
 
             {error && <div className="text-rt-11 text-danger">{error}</div>}
 

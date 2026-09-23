@@ -26,6 +26,7 @@ import { EditorDietaPage } from '@/pages/professor/EditorDieta'
 import { NovoCompromissoPage } from '@/pages/professor/NovoCompromisso'
 import { CriarNotificacaoPage } from '@/pages/professor/CriarNotificacao'
 import { ReceitaPage } from '@/pages/Receita'
+import { TermosPage } from '@/pages/Termos'
 import { ConversasPage, ConversaPage } from '@/pages/Chat'
 import { NotificacoesPage as NotificacoesCentralPage } from '@/pages/Notificacoes'
 import { ConfiguracoesPage } from '@/pages/Configuracoes'
@@ -58,6 +59,7 @@ export default function App() {
           <Route path="/aguardando" element={<AguardandoAprovacaoPage />} />
           <Route path="/bloqueado" element={<BloqueadoPage />} />
           <Route path="/receita/:id" element={<ReceitaPage />} />
+          <Route path="/termos" element={<TermosPage />} />
 
           <Route path="/professor" element={<StatusGate role="teacher"><ProfessorShell /></StatusGate>}>
             <Route index element={<ProfessorHome />} />
