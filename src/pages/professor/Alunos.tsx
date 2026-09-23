@@ -6,6 +6,10 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { EmptyState, FullScreenSheet, Field } from './projetos/RoutinesTab'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
+import { WhatsAppInput } from '@/components/WhatsAppInput'
+import { DarkSelectSheet } from '@/components/DarkSheets'
+import { countryByCode } from '@/lib/countries'
+import { currencyOf, formatMoney } from '@/lib/plans'
 
 type Student = {
   id: string
@@ -173,7 +177,7 @@ export function AlunosPage() {
       {limiteAvisado && (
         <FeedbackDialog
           kind="error"
-          message={t('students:limitReached')}
+          message={t('invites:limitReached')}
           onClose={() => {
             setLimiteAvisado(false)
             nav('/professor/assinatura')
@@ -187,13 +191,25 @@ export function AlunosPage() {
 }
 
 function NewStudentSheet({ profile, onClose, onCreated }: { profile: any; onClose: () => void; onCreated: () => void }) {
+  const { t, i18n } = useTranslation()
+  const lang = (i18n.language.startsWith('es') ? 'es' : 'pt') as 'pt' | 'es'
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [countryCode, setCountryCode] = useState(profile?.country ?? 'BR')
+  const [phone, setPhone] = useState('')
+  const [format, setFormat] = useState<'monthly' | 'hourly'>('monthly')
+  const [amount, setAmount] = useState('')
+  const [hours, setHours] = useState('')
+  const [dueDate, setDueDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const valor = Number(amount.replace(',', '.')) || 0
+  const horas = Number(hours.replace(',', '.')) || 0
+  const total = format === 'hourly' ? valor * horas : valor
+
   async function save() {
-    if (!name.trim() || !email.trim()) { setError('Preencha todos os campos'); return }
+    if (!name.trim() || !email.trim()) { setError(t('students:nameHint')); return }
     setSaving(true)
     setError(null)
 
@@ -201,15 +217,31 @@ function NewStudentSheet({ profile, onClose, onCreated }: { profile: any; onClos
       const { data, error } = await supabase.functions.invoke('create-student', {
         body: { email: email.trim(), full_name: name.trim(), teacher_id: profile?.id },
       })
+      if (error) { setSaving(false); setError(error.message || 'Erro ao criar aluno'); return }
+      if (data?.error) { setSaving(false); setError(data.error); return }
+
+      const studentId = data?.student_id
+      if (studentId) {
+        if (phone.trim()) {
+          await supabase
+            .from('profiles')
+            .update({ phone: `${countryByCode(countryCode)?.dial}${phone.trim()}`, country: countryCode })
+            .eq('id', studentId)
+        }
+        // Primera cobranza: sin esto el alumno queda sin cobro asociado.
+        if (total > 0) {
+          await supabase.from('charges').insert({
+            teacher_id: profile?.id,
+            student_id: studentId,
+            format,
+            amount: total,
+            hours: format === 'hourly' ? horas : null,
+            due_date: dueDate,
+            status: 'pending',
+          })
+        }
+      }
       setSaving(false)
-      if (error) {
-        setError(error.message || 'Erro ao criar aluno')
-        return
-      }
-      if (data?.error) {
-        setError(data.error)
-        return
-      }
       onCreated()
     } catch (err) {
       setError(String(err))
@@ -218,15 +250,57 @@ function NewStudentSheet({ profile, onClose, onCreated }: { profile: any; onClos
   }
 
   return (
-    <FullScreenSheet title="Cadastrar Aluno" onClose={onClose}>
-      <div className="flex flex-col gap-6">
-        <Field label="Nome"><input className="input-dark" value={name} onChange={(e) => setName(e.target.value)} /></Field>
-        <Field label="E-mail"><input type="email" className="input-dark" value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
-        {error && <div className="text-rt-11 text-warning">{error}</div>}
+    <FullScreenSheet title={t('students:registerStudent')} onClose={onClose}>
+      <div className="flex flex-col gap-5">
+        <Field label={t('signupTeacher:fullName')}>
+          <input className="input-dark" placeholder={t('students:nameHint')} value={name} onChange={(e) => setName(e.target.value)} />
+        </Field>
+
+        <Field label={t('email')}>
+          <input type="email" className="input-dark" placeholder={t('students:emailHint')} value={email} onChange={(e) => setEmail(e.target.value)} />
+        </Field>
+
+        <WhatsAppInput countryCode={countryCode} onCountry={setCountryCode} value={phone} onChange={setPhone} lang={lang} />
+
+        <DarkSelectSheet
+          label={t('students:paymentFormat')}
+          title={t('students:paymentFormat')}
+          value={format}
+          onChange={(v) => setFormat(v as 'monthly' | 'hourly')}
+          options={[
+            { id: 'monthly', label: t('students:formatMonthly') },
+            { id: 'hourly', label: t('students:formatHourly') },
+          ]}
+        />
+
+        <Field label={format === 'hourly' ? t('students:amountHourly') : t('students:amountMonthly')}>
+          <input inputMode="decimal" className="input-dark" placeholder="0,00" value={amount} onChange={(e) => setAmount(e.target.value)} />
+        </Field>
+
+        {format === 'hourly' && (
+          <>
+            <Field label={t('students:hoursPerMonth')}>
+              <input inputMode="decimal" className="input-dark" placeholder="0" value={hours} onChange={(e) => setHours(e.target.value)} />
+            </Field>
+            <div className="flex justify-between text-rt-14">
+              <span className="text-grey-400">{t('students:total')}</span>
+              <span className="text-brand font-bold">{formatMoney(total, currencyOf(countryCode))}</span>
+            </div>
+          </>
+        )}
+
+        <Field label={t('students:paymentDate')}>
+          <input type="date" className="input-dark" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+        </Field>
       </div>
+
       <div className="mt-8">
-        <button className="btn-save" disabled={saving} onClick={save}>{saving ? 'Salvando...' : 'Cadastrar Aluno'}</button>
+        <button className="btn-save" disabled={saving} onClick={save}>
+          {saving ? t('loading') : t('students:registerStudent')}
+        </button>
       </div>
+
+      {error && <FeedbackDialog kind="error" message={error} onClose={() => setError(null)} />}
     </FullScreenSheet>
   )
 }
