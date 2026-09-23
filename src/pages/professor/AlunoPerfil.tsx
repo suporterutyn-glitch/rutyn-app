@@ -54,20 +54,20 @@ export function AlunoPerfilPage() {
 
   async function suspend() {
     if (!id || !confirm('Suspender este aluno? Ele perde acesso aos treinos.')) return
-    await supabase.from('profiles').update({ link_status: 'suspended' }).eq('id', id)
+    await supabase.rpc('gestionar_vinculo_aluno', { aluno_id: id, accion: 'suspender' })
     await supabase.from('notifications').insert({ user_id: id, type: 'warning', title: 'Sua conta foi suspensa', body: 'Fale com seu professor para regularizar.' })
     await load(); setMenuOpen(false)
   }
   async function reactivate() {
     if (!id) return
-    await supabase.from('profiles').update({ link_status: 'active' }).eq('id', id)
+    await supabase.rpc('gestionar_vinculo_aluno', { aluno_id: id, accion: 'reactivar' })
     await load(); setMenuOpen(false)
   }
   async function remove() {
     if (!id) return
     const reason = prompt('Motivo (opcional):') ?? ''
     if (!confirm('Remover este aluno da sua lista?')) return
-    await supabase.from('profiles').update({ teacher_id: null, link_status: 'ended' }).eq('id', id)
+    await supabase.rpc('gestionar_vinculo_aluno', { aluno_id: id, accion: 'desvincular' })
     await supabase.from('notifications').insert({
       user_id: id, type: 'warning',
       title: 'Removido da lista',

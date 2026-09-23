@@ -72,6 +72,7 @@ export function AlunosPage() {
   const [showNew, setShowNew] = useState(false)
   const [limiteAvisado, setLimiteAvisado] = useState(false)
   const [gestionando, setGestionando] = useState<Student | null>(null)
+  const [errorAccion, setErrorAccion] = useState<string | null>(null)
   const nav = useNavigate()
 
   const planLimit = PLAN_LIMITS[profile?.plan ?? 'free'] ?? 2
@@ -100,21 +101,26 @@ export function AlunosPage() {
 
   useEffect(() => { void load() }, [profile?.id])
 
-  async function cambiarVinculo(alumno: Student, estado: 'active' | 'suspended') {
-    await supabase.from('profiles').update({ link_status: estado }).eq('id', alumno.id)
-    setGestionando(null)
-    await load()
-  }
-
-  async function quitarAlumno(alumno: Student) {
-    // No se borra la cuenta: se corta el vinculo y el alumno queda libre.
-    await supabase.from('profiles').update({ teacher_id: null, link_status: 'ended' }).eq('id', alumno.id)
-    await supabase.from('notifications').insert({
-      user_id: alumno.id,
-      type: 'warning',
-      title: 'Removido da lista',
-      body: `${profile?.full_name ?? 'Seu professor'} te removeu.`,
+  // El profesor no escribe el perfil del alumno: solo invoca las acciones del
+  // vinculo. Un error aqui se muestra, no se traga: antes fallaba en silencio.
+  async function accionVinculo(alumno: Student, accion: 'suspender' | 'reactivar' | 'desvincular') {
+    const { error } = await supabase.rpc('gestionar_vinculo_aluno', {
+      aluno_id: alumno.id,
+      accion,
     })
+    if (error) {
+      setGestionando(null)
+      setErrorAccion(error.message)
+      return
+    }
+    if (accion === 'desvincular') {
+      await supabase.from('notifications').insert({
+        user_id: alumno.id,
+        type: 'warning',
+        title: 'Removido da lista',
+        body: `${profile?.full_name ?? 'Seu professor'} te removeu.`,
+      })
+    }
     setGestionando(null)
     await load()
   }
@@ -247,11 +253,15 @@ export function AlunosPage() {
         <GerenciarAlunoDialog
           nome={gestionando.full_name ?? ''}
           suspenso={gestionando.link_status === 'suspended'}
-          onSuspender={() => void cambiarVinculo(gestionando, 'suspended')}
-          onReativar={() => void cambiarVinculo(gestionando, 'active')}
-          onExcluir={() => void quitarAlumno(gestionando)}
+          onSuspender={() => void accionVinculo(gestionando, 'suspender')}
+          onReativar={() => void accionVinculo(gestionando, 'reactivar')}
+          onExcluir={() => void accionVinculo(gestionando, 'desvincular')}
           onClose={() => setGestionando(null)}
         />
+      )}
+
+      {errorAccion && (
+        <FeedbackDialog kind="error" message={errorAccion} onClose={() => setErrorAccion(null)} />
       )}
 
       {limiteAvisado && (
