@@ -57,11 +57,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(null)
       return
     }
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .maybeSingle()
+    // Sin perfil los guardas expulsan a /identificacao, asi que un fallo mudo
+    // aparece como "login que no entra". Dejar rastro.
+    if (error) console.error('No se pudo cargar el perfil:', error.message)
     setProfile((data as Profile | null) ?? null)
   }
 
@@ -76,9 +79,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void refresh()
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s)
+      // El perfil llega un tick mas tarde que la sesion. Sin esto, los guardas
+      // ven sesion + profile null y expulsan al usuario recien logueado.
+      setLoading(true)
       // supabase-js holds an internal lock during this callback; calling back
       // into the client from inside it deadlocks. Defer to the next tick.
-      setTimeout(() => void loadProfile(s?.user.id), 0)
+      setTimeout(() => {
+        void loadProfile(s?.user.id).finally(() => setLoading(false))
+      }, 0)
     })
     return () => sub.subscription.unsubscribe()
   }, [])

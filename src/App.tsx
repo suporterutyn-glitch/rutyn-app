@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from '@/lib/auth'
 import { SplashPage } from '@/pages/Splash'
 import { IdentificacaoPage } from '@/pages/Identificacao'
@@ -102,6 +102,8 @@ export default function App() {
             <Route path="configuracoes" element={<ConfiguracoesPage />} />
             <Route path="perfil" element={<MeuPerfilPage />} />
           </Route>
+
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
