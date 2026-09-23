@@ -70,7 +70,9 @@ export function AguardandoAprovacaoPage() {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-brand text-rt-13 font-semibold">{t('waiting:requestedTeacher')}</div>
+              <div className="text-brand text-rt-12 font-semibold whitespace-nowrap truncate">
+                {t('waiting:requestedTeacher')}
+              </div>
               <div className="text-white text-rt-18 font-bold truncate">{professor.full_name}</div>
               <div className="text-white/50 text-rt-13 truncate">{professor.email}</div>
             </div>
