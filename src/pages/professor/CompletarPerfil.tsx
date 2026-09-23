@@ -110,7 +110,6 @@ export function CompletarPerfilPage() {
           value={occupation}
           onChange={setOccupation}
           searchable
-          placeholder={t('completeProfile:selectOne')}
           options={atuacoes.map((c) => ({ id: c.id, label: etiqueta(c, lang) }))}
         />
 
