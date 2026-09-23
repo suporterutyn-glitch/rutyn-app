@@ -55,7 +55,7 @@ export function AguardandoAprovacaoPage() {
           </div>
         </div>
 
-        <h1 className="text-white text-rt-26 font-bold text-center mb-4">{t('waiting:title')}</h1>
+        <h1 className="text-white text-rt-28 font-bold text-center mb-4">{t('waiting:title')}</h1>
         <p className="text-center text-white/70 text-rt-14 leading-relaxed mb-7">
           {t('waiting:created')}
         </p>

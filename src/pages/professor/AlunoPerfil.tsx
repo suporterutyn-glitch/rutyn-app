@@ -100,7 +100,7 @@ export function AlunoPerfilPage() {
               </button>
             )}
             <button onClick={() => { setMenuOpen(false); nav(`/professor/anamnese/${id}`) }} className="w-full flex items-center gap-2 px-4 py-3 text-white text-rt-13 hover:bg-white/5">
-              <FileText size={16} className="text-assess" /> Anamneses
+              <FileText size={16} className="text-brand-assess" /> Anamneses
             </button>
             <button onClick={remove} className="w-full flex items-center gap-2 px-4 py-3 text-danger text-rt-13 hover:bg-white/5">
               <UserMinus size={16} /> Remover da lista

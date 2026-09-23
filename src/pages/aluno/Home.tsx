@@ -187,7 +187,7 @@ export function AlunoHome() {
         >
           <div className="flex items-start justify-between">
             <div className="text-white text-rt-13 font-semibold leading-tight whitespace-pre-line">{t('aluno:physicalAss')}</div>
-            <ClipboardCheck size={18} className="text-assess" />
+            <ClipboardCheck size={18} className="text-brand-assess" />
           </div>
           <div className="text-white/60 text-rt-11">{t('aluno:tapToSee')}</div>
         </button>

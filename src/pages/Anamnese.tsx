@@ -67,7 +67,7 @@ export function AnamneseProfessorPage() {
           {answers.map((a) => (
             <li key={a.id} className="card-dark p-4">
               <div className="flex items-center gap-2 mb-1">
-                <FileText size={16} className="text-assess" />
+                <FileText size={16} className="text-brand-assess" />
                 <span className="text-white text-rt-14 font-bold">{a.anamnesis_templates?.name}</span>
               </div>
               <div className="text-white/60 text-rt-11">
@@ -102,7 +102,7 @@ export function AnamneseProfessorPage() {
             {templates.map((t) => (
               <li key={t.id}>
                 <button onClick={() => send(t.id)} className="w-full card-dark p-4 flex items-center gap-3">
-                  <FileText size={20} className="text-assess" />
+                  <FileText size={20} className="text-brand-assess" />
                   <div className="flex-1 text-left">
                     <div className="text-white text-rt-14 font-bold">{t.name}</div>
                     <div className="text-white/60 text-rt-11">{t.questions.length} perguntas</div>

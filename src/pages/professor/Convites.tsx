@@ -113,7 +113,7 @@ export function ConvitesPage() {
               </div>
               {inv.objectives && inv.objectives.length > 0 && (
                 <div className="flex flex-wrap gap-1 mb-3">
-                  {inv.objectives.map((o) => <span key={o} className="text-rt-9 px-2 py-0.5 rounded-tag bg-chip-tag-dark text-white/80">{o}</span>)}
+                  {inv.objectives.map((o) => <span key={o} className="text-rt-9 px-2 py-0.5 rounded-tag bg-surface-raised text-white/80">{o}</span>)}
                 </div>
               )}
 

@@ -12,7 +12,7 @@ const ICON: Record<string, any> = {
   routine: Dumbbell, warning: AlertTriangle, info: Bell, system: Bell,
 }
 const COLOR: Record<string, string> = {
-  invite: 'text-info-light', payment: 'text-brand', evaluation: 'text-assess',
+  invite: 'text-info-light', payment: 'text-brand', evaluation: 'text-brand-assess',
   routine: 'text-brand', warning: 'text-warning', info: 'text-white', system: 'text-white',
 }
 

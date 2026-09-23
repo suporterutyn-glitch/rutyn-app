@@ -29,7 +29,7 @@ export function AvaliacaoAlunoPage() {
     <div className="pt-[calc(env(safe-area-inset-top)+16px)] px-4 pb-24 bg-white min-h-dvh -mx-4 pb-8" style={{ marginLeft: 0, marginRight: 0 }}>
       <div className="px-4">
         <div className="flex items-center gap-2 mb-4">
-          <ClipboardCheck size={22} className="text-assess" />
+          <ClipboardCheck size={22} className="text-brand-assess" />
           <h1 className="text-black text-rt-20 font-bold">Minha Avaliação</h1>
         </div>
 
@@ -122,14 +122,14 @@ function AssessmentView({ a }: { a: A }) {
 function Section({ title, children, color: _color }: { title: string; children: React.ReactNode; color?: string }) {
   return (
     <div className="rounded-card bg-surface-light p-4">
-      <div className="text-assess text-rt-13 font-bold uppercase tracking-wider mb-3">{title}</div>
+      <div className="text-brand-assess text-rt-13 font-bold uppercase tracking-wider mb-3">{title}</div>
       {children}
     </div>
   )
 }
 
 function Metric({ label, value, color }: { label: string; value: string; color?: string }) {
-  const cls = color === 'deep-orange' ? 'text-alert-deep-orange' : color === 'assess' ? 'text-assess' : 'text-black'
+  const cls = color === 'deep-orange' ? 'text-alert-deep-orange' : color === 'assess' ? 'text-brand-assess' : 'text-black'
   return (
     <div>
       <div className="text-grey-600 text-rt-11 uppercase font-semibold tracking-wide">{label}</div>

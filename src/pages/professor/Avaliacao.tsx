@@ -110,7 +110,7 @@ export function AvaliacaoProfessorPage() {
           <ArrowLeft size={20} />
         </button>
         <div className="flex items-center gap-2">
-          <ClipboardCheck size={20} className="text-assess" />
+          <ClipboardCheck size={20} className="text-brand-assess" />
           <h1 className="text-white text-rt-20 font-bold">Avaliação Física</h1>
         </div>
       </div>
@@ -203,7 +203,7 @@ export function AvaliacaoProfessorPage() {
             return (
               <button key={s.key} type="button" onClick={() => toggleSection(s.key)} className={
                 'px-3 h-8 rounded-card border text-rt-12 font-semibold ' +
-                (on ? 'bg-assess border-assess text-white' : 'bg-transparent border-grey-700 text-grey-400')
+                (on ? 'bg-brand-assess border-brand-assess text-white' : 'bg-transparent border-grey-700 text-grey-400')
               }>{s.label}</button>
             )
           })}
@@ -218,7 +218,7 @@ export function AvaliacaoProfessorPage() {
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="card-dark p-4 mb-4">
-      <div className="text-assess text-rt-13 font-bold uppercase tracking-wider mb-3">{title}</div>
+      <div className="text-brand-assess text-rt-13 font-bold uppercase tracking-wider mb-3">{title}</div>
       {children}
     </div>
   )
