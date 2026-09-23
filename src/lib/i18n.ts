@@ -31,6 +31,7 @@ const pt = {
     title: 'Bem-vindo de volta', forgot: 'ESQUECEU A SENHA?', enter: 'Entrar',
     signUp: 'CADASTRAR-SE', google: 'Continuar com Google', apple: 'Continuar com Apple',
     invalidEmail: 'E-mail inválido', typeEmail: 'Digite seu e-mail', typePassword: 'Digite sua senha',
+    savePassword: 'Salvar Senha',
   },
   gender: { male: 'Masculino', female: 'Feminino', other: 'Outro' },
   terms: {
@@ -248,6 +249,7 @@ const es: typeof pt = {
     title: 'Bienvenido de nuevo', forgot: '¿OLVIDÓ LA CONTRASEÑA?', enter: 'Entrar',
     signUp: 'REGISTRARSE', google: 'Continuar con Google', apple: 'Continuar con Apple',
     invalidEmail: 'Correo inválido', typeEmail: 'Escribe tu correo', typePassword: 'Escribe tu contraseña',
+    savePassword: 'Guardar Contraseña',
   },
   gender: { male: 'Masculino', female: 'Femenino', other: 'Otro' },
   terms: {
@@ -465,6 +467,7 @@ const en: typeof pt = {
     title: 'Welcome back', forgot: 'FORGOT PASSWORD?', enter: 'Sign In',
     signUp: 'SIGN UP', google: 'Continue with Google', apple: 'Continue with Apple',
     invalidEmail: 'Invalid email', typeEmail: 'Enter your email', typePassword: 'Enter your password',
+    savePassword: 'Save Password',
   },
   gender: { male: 'Male', female: 'Female', other: 'Other' },
   terms: {
