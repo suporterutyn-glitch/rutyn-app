@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { setLang } from '@/lib/i18n'
+import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { currentPermission, isPushSupported, subscribeToPush, unsubscribeFromPush } from '@/lib/push'
 
 export function ConfiguracoesPage() {
@@ -91,7 +92,6 @@ export function ConfiguracoesPage() {
               <span className="w-6 h-6 rounded-full bg-white" />
             </button>
           </div>
-          {pushErr && <div className="text-danger text-rt-11 mt-2">{pushErr}</div>}
         </div>
       )}
 
@@ -132,6 +132,9 @@ export function ConfiguracoesPage() {
           <Trash2 size={16} /> {t('settings:deleteAccount')}
         </button>
       </div>
+      {pushErr && (
+        <FeedbackDialog kind="error" message={pushErr} onClose={() => setPushErr(null)} />
+      )}
     </div>
   )
 }

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Eye, EyeOff } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { OfflineBanner } from '@/components/OfflineBanner'
+import { FeedbackDialog } from '@/components/FeedbackDialog'
 
 const CLAVE_EMAIL = 'rutyn.savedEmail'
 
@@ -168,13 +169,7 @@ export function LoginPage() {
       </div>
 
       {snackbar && (
-        <div
-          role="alert"
-          className="fixed left-0 right-0 bottom-0 z-50 bg-danger text-white text-rt-13 px-5 py-4 pb-[calc(env(safe-area-inset-bottom)+16px)]"
-          onClick={() => setSnackbar(null)}
-        >
-          {snackbar}
-        </div>
+        <FeedbackDialog kind="error" message={snackbar} onClose={() => setSnackbar(null)} />
       )}
     </div>
   )

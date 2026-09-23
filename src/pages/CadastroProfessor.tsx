@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { WhatsAppInput } from '@/components/WhatsAppInput'
 import { RutynLogo } from '@/components/RutynLogo'
 import { SelectSheet } from '@/components/SelectSheet'
+import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { countryByCode } from '@/lib/countries'
 
 export function CadastroProfessorPage() {
@@ -149,8 +150,6 @@ export function CadastroProfessorPage() {
               </span>
             </div>
 
-            {error && <div className="text-rt-11 text-danger">{error}</div>}
-
             <div className="mt-2 flex flex-col gap-3">
               <div className="h-[23px] rounded-[10px] bg-gradient-to-r from-[#91C145] to-[#7CB342] flex items-center justify-center px-3">
                 <span className="text-black text-rt-12 font-semibold whitespace-nowrap">
@@ -173,6 +172,9 @@ export function CadastroProfessorPage() {
           </form>
         </div>
       </div>
+      {error && (
+        <FeedbackDialog kind="error" message={error} onClose={() => setError(null)} />
+      )}
     </div>
   )
 }

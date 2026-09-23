@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { WhatsAppInput } from '@/components/WhatsAppInput'
 import { RutynLogo } from '@/components/RutynLogo'
 import { SelectSheet } from '@/components/SelectSheet'
+import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { countryByCode } from '@/lib/countries'
 
 export function CadastroAlunoPage() {
@@ -156,8 +157,6 @@ export function CadastroAlunoPage() {
               </span>
             </div>
 
-            {error && <div className="text-rt-11 text-danger">{error}</div>}
-
             <div className="mt-2 flex flex-col gap-3">
               <button type="submit" disabled={loading} className="btn-primary-pill">
                 {loading ? t('loading') : t('signupTeacher:register')}
@@ -174,6 +173,9 @@ export function CadastroAlunoPage() {
           </form>
         </div>
       </div>
+      {error && (
+        <FeedbackDialog kind="error" message={error} onClose={() => setError(null)} />
+      )}
     </div>
   )
 }

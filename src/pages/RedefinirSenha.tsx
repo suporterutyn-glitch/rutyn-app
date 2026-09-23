@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -89,7 +90,6 @@ export function RedefinirSenhaPage() {
                 />
               </div>
 
-              {error && <div className="text-danger text-rt-11">{error}</div>}
 
               <button type="submit" disabled={saving} className="btn-save mt-4">
                 {saving ? t('loading') : 'Salvar nova senha'}
@@ -98,6 +98,9 @@ export function RedefinirSenhaPage() {
           )}
         </div>
       </div>
+      {error && (
+        <FeedbackDialog kind="error" message={error} onClose={() => setError(null)} />
+      )}
     </div>
   )
 }
