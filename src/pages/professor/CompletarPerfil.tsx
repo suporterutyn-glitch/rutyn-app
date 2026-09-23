@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth'
 import { Field } from './projetos/RoutinesTab'
 import { PRICE_RANGES, currencyOf, formatMoney } from '@/lib/plans'
 import { DarkSelectSheet, DarkMultiSheet } from '@/components/DarkSheets'
+import { COUNTRIES } from '@/lib/countries'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { atuacoes, especialidades, formatosTrabalho, clientesIdeais, etiqueta } from '@/lib/catalogos'
 import { useTranslation } from 'react-i18next'
@@ -17,7 +18,7 @@ export function CompletarPerfilPage() {
   const lang = i18n.language
   const [feedback, setFeedback] = useState<{ kind: 'error' | 'success'; message: string } | null>(null)
   const { profile, refresh } = useAuth()
-  const country = profile?.country ?? 'BR'
+  const [country, setCountry] = useState(profile?.country ?? 'BR')
   const range = PRICE_RANGES[country] ?? PRICE_RANGES.BR
   const currency = currencyOf(country)
 
@@ -55,7 +56,7 @@ export function CompletarPerfilPage() {
     }
     setSaving(true)
     await supabase.from('profiles').update({
-      state, city, occupation,
+      country, state, city, occupation,
       specialties, ideal_clients: ideal, work_formats: formats,
       price_hourly_min: hourlyMin, price_hourly_max: hourlyMax,
       price_monthly_min: monthlyMin, price_monthly_max: monthlyMax,
@@ -78,10 +79,32 @@ export function CompletarPerfilPage() {
       </div>
 
       <div className="flex flex-col gap-6">
-        <div className="grid grid-cols-2 gap-3">
-          <Field label={t('completeProfile:state')}><input className="input-dark" value={state} onChange={(e) => setState(e.target.value)} /></Field>
-          <Field label={t('completeProfile:city')}><input className="input-dark" value={city} onChange={(e) => setCity(e.target.value)} /></Field>
-        </div>
+        <p className="text-white/70 text-rt-14 leading-relaxed -mt-2">
+          {t('completeProfile:subtitle')}
+        </p>
+
+        <h2 className="text-brand text-rt-16 font-semibold">{t('completeProfile:sectionLocation')}</h2>
+
+        <DarkSelectSheet
+          label={t('completeProfile:country')}
+          title={t('completeProfile:country')}
+          value={country}
+          onChange={setCountry}
+          searchable
+          options={COUNTRIES.map((c) => ({
+            id: c.code,
+            label: `${c.flag}  ${lang.startsWith('es') ? c.name_es : c.name_pt}`,
+          }))}
+        />
+
+        <Field label={t('completeProfile:state')}>
+          <input className="input-dark" value={state} onChange={(e) => setState(e.target.value)} />
+        </Field>
+        <Field label={t('completeProfile:city')}>
+          <input className="input-dark" value={city} onChange={(e) => setCity(e.target.value)} />
+        </Field>
+
+        <h2 className="text-brand text-rt-16 font-semibold mt-2">{t('completeProfile:sectionProfessional')}</h2>
 
         <DarkSelectSheet
           label={t('completeProfile:occupation')}
@@ -103,21 +126,21 @@ export function CompletarPerfilPage() {
         />
 
         <DarkMultiSheet
-          label={t('completeProfile:idealClients')}
-          title={t('completeProfile:idealClientsTitle')}
-          values={ideal}
-          onChange={setIdeal}
-          confirmLabel={t('confirm')}
-          options={clientesIdeais.map((c) => ({ id: c.id, label: etiqueta(c, lang) }))}
-        />
-
-        <DarkMultiSheet
           label={t('completeProfile:workFormat')}
           title={t('completeProfile:workFormatTitle')}
           values={formats}
           onChange={setFormats}
           confirmLabel={t('confirm')}
           options={formatosTrabalho.map((c) => ({ id: c.id, label: etiqueta(c, lang) }))}
+        />
+
+        <DarkMultiSheet
+          label={t('completeProfile:idealClients')}
+          title={t('completeProfile:idealClientsTitle')}
+          values={ideal}
+          onChange={setIdeal}
+          confirmLabel={t('confirm')}
+          options={clientesIdeais.map((c) => ({ id: c.id, label: etiqueta(c, lang) }))}
         />
 
         <RangeField label={t('completeProfile:hourlyPrice')} min={range.hourly.min} max={range.hourly.max} step={range.hourly.step} currency={currency} valueMin={hourlyMin ?? range.hourly.min} valueMax={hourlyMax ?? range.hourly.max} onChange={(a, b) => { setHourlyMin(a); setHourlyMax(b) }} />

@@ -43,6 +43,9 @@ const pt = {
   gender: { male: 'Masculino', female: 'Feminino', other: 'Outro' },
   completeProfile: {
     title: 'Complete seu perfil',
+    subtitle: 'Antes de começar, conta um pouco mais sobre você para que os alunos possam te encontrar com facilidade.',
+    sectionLocation: 'Localização', sectionProfessional: 'Profissional',
+    country: 'País',
     state: 'Estado / Província', city: 'Cidade',
     occupation: 'Atuação', selectOne: 'Selecione…',
     specialties: 'Especialidades', specialtyTitle: 'Especialidade',
@@ -292,6 +295,9 @@ const es: typeof pt = {
   gender: { male: 'Masculino', female: 'Femenino', other: 'Otro' },
   completeProfile: {
     title: 'Completa tu perfil',
+    subtitle: 'Antes de empezar, contanos un poco más sobre vos para que los alumnos puedan encontrarte con facilidad.',
+    sectionLocation: 'Ubicación', sectionProfessional: 'Profesional',
+    country: 'País',
     state: 'Estado / Provincia', city: 'Ciudad',
     occupation: 'Actuación', selectOne: 'Selecciona…',
     specialties: 'Especialidades', specialtyTitle: 'Especialidad',
@@ -541,6 +547,9 @@ const en: typeof pt = {
   gender: { male: 'Male', female: 'Female', other: 'Other' },
   completeProfile: {
     title: 'Complete your profile',
+    subtitle: 'Before you start, tell us a bit more about you so students can find you easily.',
+    sectionLocation: 'Location', sectionProfessional: 'Professional',
+    country: 'Country',
     state: 'State / Province', city: 'City',
     occupation: 'Role', selectOne: 'Select…',
     specialties: 'Specialties', specialtyTitle: 'Specialty',
