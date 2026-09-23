@@ -6,6 +6,7 @@ import { Eye, EyeOff } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { OfflineBanner } from '@/components/OfflineBanner'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
+import { RecuperarSenhaDialog } from '@/components/RecuperarSenhaDialog'
 
 const CLAVE_EMAIL = 'rutyn.savedEmail'
 
@@ -19,7 +20,8 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [errEmail, setErrEmail] = useState<string | null>(null)
   const [errPassword, setErrPassword] = useState<string | null>(null)
-  const [snackbar, setSnackbar] = useState<string | null>(null)
+  const [feedback, setFeedback] = useState<{ kind: 'error' | 'success'; message: string } | null>(null)
+  const [recuperarAbierto, setRecuperarAbierto] = useState(false)
 
   useEffect(() => {
     try {
@@ -53,7 +55,7 @@ export function LoginPage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    setSnackbar(null)
+    setFeedback(null)
     if (!validar()) return
     setLoading(true)
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
@@ -61,7 +63,7 @@ export function LoginPage() {
     if (error) {
       // Supabase responde siempre en ingles; el modulo pide el mensaje traducido.
       const credencialesMal = /invalid login credentials/i.test(error.message)
-      setSnackbar(credencialesMal ? t('login:invalidCredentials') : error.message)
+      setFeedback({ kind: 'error', message: credencialesMal ? t('login:invalidCredentials') : error.message })
       return
     }
     try {
@@ -136,9 +138,13 @@ export function LoginPage() {
             </div>
 
             <div className="flex justify-end -mt-3">
-              <Link to="/esqueci-senha" className="text-rt-11 font-bold text-brand-ink">
+              <button
+                type="button"
+                onClick={() => setRecuperarAbierto(true)}
+                className="text-rt-11 font-bold text-brand-ink"
+              >
                 {t('login:forgot')}
-              </Link>
+              </button>
             </div>
 
             <label className="flex items-center gap-2 text-rt-13 text-ink-dark -mt-2">
@@ -168,8 +174,23 @@ export function LoginPage() {
         </div>
       </div>
 
-      {snackbar && (
-        <FeedbackDialog kind="error" message={snackbar} onClose={() => setSnackbar(null)} />
+      {recuperarAbierto && (
+        <RecuperarSenhaDialog
+          emailInicial={email}
+          onCancel={() => setRecuperarAbierto(false)}
+          onEnviado={(mensaje) => {
+            setRecuperarAbierto(false)
+            setFeedback({ kind: 'success', message: mensaje })
+          }}
+        />
+      )}
+
+      {feedback && (
+        <FeedbackDialog
+          kind={feedback.kind}
+          message={feedback.message}
+          onClose={() => setFeedback(null)}
+        />
       )}
     </div>
   )

@@ -34,6 +34,12 @@ const pt = {
     savePassword: 'Salvar Senha',
     invalidCredentials: 'E-mail ou senha incorretos',
   },
+  recover: {
+    title: 'Recuperar Senha',
+    subtitle: 'Digite seu email para receber o link de recuperação de senha.',
+    send: 'Enviar',
+    sent: 'Se o e-mail existir, enviamos um link para redefinir sua senha.',
+  },
   gender: { male: 'Masculino', female: 'Feminino', other: 'Outro' },
   terms: {
     title: 'Termos de Serviço e Política de Privacidade',
@@ -253,6 +259,12 @@ const es: typeof pt = {
     savePassword: 'Guardar Contraseña',
     invalidCredentials: 'Correo o contraseña incorrectos',
   },
+  recover: {
+    title: 'Recuperar Contraseña',
+    subtitle: 'Escribe tu correo para recibir el enlace de recuperación de contraseña.',
+    send: 'Enviar',
+    sent: 'Si el correo existe, enviamos un enlace para restablecer tu contraseña.',
+  },
   gender: { male: 'Masculino', female: 'Femenino', other: 'Otro' },
   terms: {
     title: 'Términos de Servicio y Política de Privacidad',
@@ -471,6 +483,12 @@ const en: typeof pt = {
     invalidEmail: 'Invalid email', typeEmail: 'Enter your email', typePassword: 'Enter your password',
     savePassword: 'Save Password',
     invalidCredentials: 'Incorrect email or password',
+  },
+  recover: {
+    title: 'Recover Password',
+    subtitle: 'Enter your email to receive the password recovery link.',
+    send: 'Send',
+    sent: 'If the email exists, we sent a link to reset your password.',
   },
   gender: { male: 'Male', female: 'Female', other: 'Other' },
   terms: {
