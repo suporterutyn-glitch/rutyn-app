@@ -61,22 +61,22 @@ export function AguardandoAprovacaoPage() {
         </p>
 
         {professor && (
-          <div className="card-dark p-4 flex items-center gap-4 mb-4">
-            <div className="w-14 h-14 rounded-full bg-surface-raised border border-brand/50 flex items-center justify-center overflow-hidden shrink-0">
+          <div className="card-dark p-4 flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 rounded-full bg-surface-raised border border-brand/50 flex items-center justify-center overflow-hidden shrink-0">
               {professor.avatar_url ? (
                 <img src={professor.avatar_url} alt="" className="w-full h-full object-cover" />
               ) : (
-                <User size={26} className="text-brand" />
+                <User size={22} className="text-brand" />
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-brand text-rt-12 font-semibold whitespace-nowrap truncate">
+              <div className="text-brand text-rt-11 font-semibold whitespace-nowrap">
                 {t('waiting:requestedTeacher')}
               </div>
               <div className="text-white text-rt-18 font-bold truncate">{professor.full_name}</div>
               <div className="text-white/50 text-rt-13 truncate">{professor.email}</div>
             </div>
-            <span className="shrink-0 text-rt-12 font-semibold px-3 py-1.5 rounded-btn-pill bg-warning/25 text-warning">
+            <span className="shrink-0 text-rt-11 font-semibold px-2.5 py-1 rounded-btn-pill bg-warning/25 text-warning">
               {t('waiting:pending')}
             </span>
           </div>
