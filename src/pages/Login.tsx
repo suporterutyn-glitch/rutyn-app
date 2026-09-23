@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { RutynLogo } from '@/components/RutynLogo'
 import { useNavigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Eye, EyeOff } from 'lucide-react'
@@ -33,9 +34,7 @@ export function LoginPage() {
       <OfflineBanner />
       <div className="relative z-10 flex flex-col min-h-dvh">
         <div className="flex-1 flex flex-col items-center justify-center gap-2 px-6">
-          <div className="w-[90px] h-[90px] rounded-full bg-gradient-to-tr from-[#3A3A3A] to-[#050505] flex items-center justify-center">
-            <span className="text-brand-light text-rt-32 font-black">R</span>
-          </div>
+          <RutynLogo size={90} />
           <div className="text-white font-black text-rt-29 tracking-tight">rutyn</div>
         </div>
 

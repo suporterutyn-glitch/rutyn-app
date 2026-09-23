@@ -23,6 +23,7 @@ const pt = {
   },
   identification: {
     tagline: 'Seu personal no bolso',
+    welcome: 'Bem-vindo a Rutyn',
     imTeacher: 'Sou Professor', imStudent: 'Sou Aluno',
     login: 'Já tenho conta',
   },
@@ -223,6 +224,7 @@ const es: typeof pt = {
   },
   identification: {
     tagline: 'Tu personal en el bolsillo',
+    welcome: 'Bienvenido a Rutyn',
     imTeacher: 'Soy Profesor', imStudent: 'Soy Alumno',
     login: 'Ya tengo cuenta',
   },
@@ -423,6 +425,7 @@ const en: typeof pt = {
   },
   identification: {
     tagline: 'Your personal trainer in your pocket',
+    welcome: 'Welcome to Rutyn',
     imTeacher: 'I\'m a Trainer', imStudent: 'I\'m a Student',
     login: 'I have an account',
   },
