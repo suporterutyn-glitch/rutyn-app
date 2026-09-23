@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ChevronDown, Search } from 'lucide-react'
+import { CampoInterno } from './CampoInterno'
 
 type Opcion = { id: string; label: string }
 
@@ -20,6 +21,7 @@ export function DarkSelectSheet({
   onChange,
   searchable = false,
   placeholder,
+  labelInside = false,
 }: {
   label: string
   title: string
@@ -28,6 +30,8 @@ export function DarkSelectSheet({
   onChange: (id: string) => void
   searchable?: boolean
   placeholder?: string
+  /** Etiqueta dentro de la caja en vez de encima (modulo 04). */
+  labelInside?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
@@ -38,17 +42,34 @@ export function DarkSelectSheet({
 
   return (
     <div>
-      <label className="block text-rt-11 text-grey-400 font-semibold mb-1">{label}</label>
-      <button
-        type="button"
-        onClick={() => { setQ(''); setOpen(true) }}
-        className="w-full flex items-center justify-between input-dark text-left"
-      >
-        <span className={selected ? 'text-white' : 'text-grey-500'}>
-          {selected ? selected.label : placeholder ?? '—'}
-        </span>
-        <ChevronDown size={20} className="text-brand shrink-0" />
-      </button>
+      {!labelInside && (
+        <label className="block text-rt-11 text-grey-400 font-semibold mb-1">{label}</label>
+      )}
+      {labelInside ? (
+        <CampoInterno label={label} filled={!!selected}>
+          <button
+            type="button"
+            onClick={() => { setQ(''); setOpen(true) }}
+            className="w-full flex items-center justify-between text-left"
+          >
+            <span className={selected ? 'text-white text-rt-15' : 'text-grey-500 text-rt-15'}>
+              {selected ? selected.label : placeholder ?? label}
+            </span>
+            <ChevronDown size={20} className="text-brand shrink-0" />
+          </button>
+        </CampoInterno>
+      ) : (
+        <button
+          type="button"
+          onClick={() => { setQ(''); setOpen(true) }}
+          className="w-full flex items-center justify-between input-dark text-left"
+        >
+          <span className={selected ? 'text-white' : 'text-grey-500'}>
+            {selected ? selected.label : placeholder ?? '—'}
+          </span>
+          <ChevronDown size={20} className="text-brand shrink-0" />
+        </button>
+      )}
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-end bg-black/60" onClick={() => setOpen(false)}>
@@ -119,6 +140,7 @@ export function DarkMultiSheet({
   options,
   onChange,
   confirmLabel,
+  labelInside = false,
 }: {
   label: string
   title: string
@@ -126,6 +148,7 @@ export function DarkMultiSheet({
   options: Opcion[]
   onChange: (ids: string[]) => void
   confirmLabel: string
+  labelInside?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState<string[]>(values)
@@ -142,13 +165,26 @@ export function DarkMultiSheet({
 
   return (
     <div>
-      <label className="block text-rt-11 text-grey-400 font-semibold mb-1">{label}</label>
-      <button type="button" onClick={abrir} className="w-full flex items-center justify-between input-dark text-left">
-        <span className={elegidos.length ? 'text-white' : 'text-grey-500'}>
-          {elegidos.length ? elegidos.join(', ') : '—'}
-        </span>
-        <ChevronDown size={20} className="text-brand shrink-0" />
-      </button>
+      {!labelInside && (
+        <label className="block text-rt-11 text-grey-400 font-semibold mb-1">{label}</label>
+      )}
+      {labelInside ? (
+        <CampoInterno label={label} filled={elegidos.length > 0}>
+          <button type="button" onClick={abrir} className="w-full flex items-center justify-between text-left">
+            <span className={'text-rt-15 ' + (elegidos.length ? 'text-white' : 'text-grey-500')}>
+              {elegidos.length ? elegidos.join(', ') : label}
+            </span>
+            <ChevronDown size={20} className="text-brand shrink-0" />
+          </button>
+        </CampoInterno>
+      ) : (
+        <button type="button" onClick={abrir} className="w-full flex items-center justify-between input-dark text-left">
+          <span className={elegidos.length ? 'text-white' : 'text-grey-500'}>
+            {elegidos.length ? elegidos.join(', ') : '—'}
+          </span>
+          <ChevronDown size={20} className="text-brand shrink-0" />
+        </button>
+      )}
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-end bg-black/60" onClick={() => setOpen(false)}>

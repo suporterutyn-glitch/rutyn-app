@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
-import { Field } from './projetos/RoutinesTab'
 import { PRICE_RANGES, currencyOf, formatMoney } from '@/lib/plans'
 import { DarkSelectSheet, DarkMultiSheet } from '@/components/DarkSheets'
 import { COUNTRIES } from '@/lib/countries'
+import { InputInterno, CampoInterno } from '@/components/CampoInterno'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { atuacoes, especialidades, formatosTrabalho, clientesIdeais, etiqueta } from '@/lib/catalogos'
 import { useTranslation } from 'react-i18next'
@@ -86,6 +86,7 @@ export function CompletarPerfilPage() {
         <h2 className="text-brand text-rt-16 font-semibold">{t('completeProfile:sectionLocation')}</h2>
 
         <DarkSelectSheet
+          labelInside
           label={t('completeProfile:country')}
           title={t('completeProfile:country')}
           value={country}
@@ -97,16 +98,13 @@ export function CompletarPerfilPage() {
           }))}
         />
 
-        <Field label={t('completeProfile:state')}>
-          <input className="input-dark" value={state} onChange={(e) => setState(e.target.value)} />
-        </Field>
-        <Field label={t('completeProfile:city')}>
-          <input className="input-dark" value={city} onChange={(e) => setCity(e.target.value)} />
-        </Field>
+        <InputInterno label={t('completeProfile:state')} value={state} onChange={setState} />
+        <InputInterno label={t('completeProfile:city')} value={city} onChange={setCity} />
 
         <h2 className="text-brand text-rt-16 font-semibold mt-2">{t('completeProfile:sectionProfessional')}</h2>
 
         <DarkSelectSheet
+          labelInside
           label={t('completeProfile:occupation')}
           title={t('completeProfile:occupation')}
           value={occupation}
@@ -117,6 +115,7 @@ export function CompletarPerfilPage() {
         />
 
         <DarkMultiSheet
+          labelInside
           label={t('completeProfile:specialties')}
           title={t('completeProfile:specialtyTitle')}
           values={specialties}
@@ -126,6 +125,7 @@ export function CompletarPerfilPage() {
         />
 
         <DarkMultiSheet
+          labelInside
           label={t('completeProfile:workFormat')}
           title={t('completeProfile:workFormatTitle')}
           values={formats}
@@ -135,6 +135,7 @@ export function CompletarPerfilPage() {
         />
 
         <DarkMultiSheet
+          labelInside
           label={t('completeProfile:idealClients')}
           title={t('completeProfile:idealClientsTitle')}
           values={ideal}
@@ -146,9 +147,14 @@ export function CompletarPerfilPage() {
         <RangeField label={t('completeProfile:hourlyPrice')} min={range.hourly.min} max={range.hourly.max} step={range.hourly.step} currency={currency} valueMin={hourlyMin ?? range.hourly.min} valueMax={hourlyMax ?? range.hourly.max} onChange={(a, b) => { setHourlyMin(a); setHourlyMax(b) }} />
         <RangeField label={t('completeProfile:monthlyPrice')} min={range.monthly.min} max={range.monthly.max} step={range.monthly.step} currency={currency} valueMin={monthlyMin ?? range.monthly.min} valueMax={monthlyMax ?? range.monthly.max} onChange={(a, b) => { setMonthlyMin(a); setMonthlyMax(b) }} />
 
-        <Field label={t('completeProfile:bio')}>
-          <textarea className="input-dark h-28 py-3 resize-none" value={bio} onChange={(e) => setBio(e.target.value)} placeholder={t('completeProfile:bioHint')} />
-        </Field>
+        <CampoInterno label={t('completeProfile:bio')} filled={!!bio}>
+          <textarea
+            className="w-full h-24 bg-transparent outline-none resize-none text-white text-rt-15 placeholder:text-grey-500"
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            placeholder={bio ? '' : t('completeProfile:bioHint')}
+          />
+        </CampoInterno>
 
         <label className="flex items-center justify-between card-dark p-3">
           <div>
