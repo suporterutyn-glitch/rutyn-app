@@ -100,3 +100,9 @@
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 }
+
+/* Splash: logo pulsando con ondas verdes expandiendose (modulo 01, print 002). */
+@keyframes rutyn-splash-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+@keyframes rutyn-splash-wave { from { transform: scale(1); opacity: .35; } to { transform: scale(1.95); opacity: 0; } }
+.rutyn-splash-pulse { animation: rutyn-splash-pulse 1.8s ease-in-out infinite; }
+.rutyn-splash-wave { animation: rutyn-splash-wave 2.4s ease-out infinite; }
