@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { WhatsAppInput } from '@/components/WhatsAppInput'
 import { RutynLogo } from '@/components/RutynLogo'
+import { SelectSheet } from '@/components/SelectSheet'
 import { countryByCode } from '@/lib/countries'
 
 export function CadastroProfessorPage() {
@@ -116,26 +117,17 @@ export function CadastroProfessorPage() {
               </button>
             </div>
 
-            <div>
-              <label className="block text-rt-11 text-ink-placeholder font-semibold mb-2">{t('signupTeacher:gender')}</label>
-              <div className="flex gap-2">
-                {(['M', 'F', 'X'] as const).map((g) => (
-                  <button
-                    type="button"
-                    key={g}
-                    onClick={() => setGender(g)}
-                    className={
-                      'flex-1 h-11 rounded-[20px] border text-rt-13 font-semibold ' +
-                      (gender === g
-                        ? 'bg-brand border-brand text-white'
-                        : 'bg-transparent border-grey-700 text-ink-muted')
-                    }
-                  >
-                    {g === 'M' ? (lang === 'pt' ? 'Masculino' : 'Masculino') : g === 'F' ? (lang === 'pt' ? 'Feminino' : 'Femenino') : (lang === 'pt' ? 'Outro' : 'Otro')}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <SelectSheet
+              label={t('signupTeacher:gender')}
+              title={t('signupTeacher:gender')}
+              value={gender}
+              onChange={setGender}
+              options={[
+                { value: 'M', label: t('gender:male') },
+                { value: 'F', label: t('gender:female') },
+                { value: 'X', label: t('gender:other') },
+              ]}
+            />
 
             <label className="flex items-start gap-2 text-rt-11 text-ink-muted">
               <input type="checkbox" checked={accept} onChange={(e) => setAccept(e.target.checked)} className="accent-brand mt-0.5" />

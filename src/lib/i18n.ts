@@ -32,6 +32,7 @@ const pt = {
     signUp: 'CADASTRAR-SE', google: 'Continuar com Google', apple: 'Continuar com Apple',
     invalidEmail: 'E-mail inválido', typeEmail: 'Digite seu e-mail', typePassword: 'Digite sua senha',
   },
+  gender: { male: 'Masculino', female: 'Feminino', other: 'Outro' },
   signupTeacher: {
     title: 'Cadastro de Professor', gender: 'Gênero', country: 'País',
     greeting: 'Oi Professor, Seja bem-vindo',
@@ -242,6 +243,7 @@ const es: typeof pt = {
     signUp: 'REGISTRARSE', google: 'Continuar con Google', apple: 'Continuar con Apple',
     invalidEmail: 'Correo inválido', typeEmail: 'Escribe tu correo', typePassword: 'Escribe tu contraseña',
   },
+  gender: { male: 'Masculino', female: 'Femenino', other: 'Otro' },
   signupTeacher: {
     title: 'Registro de Profesor', gender: 'Género', country: 'País',
     greeting: 'Hola Profesor, Bienvenido',
@@ -452,6 +454,7 @@ const en: typeof pt = {
     signUp: 'SIGN UP', google: 'Continue with Google', apple: 'Continue with Apple',
     invalidEmail: 'Invalid email', typeEmail: 'Enter your email', typePassword: 'Enter your password',
   },
+  gender: { male: 'Male', female: 'Female', other: 'Other' },
   signupTeacher: {
     title: 'Trainer Registration', gender: 'Gender', country: 'Country',
     greeting: 'Hi Trainer, Welcome',

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { WhatsAppInput } from '@/components/WhatsAppInput'
 import { RutynLogo } from '@/components/RutynLogo'
+import { SelectSheet } from '@/components/SelectSheet'
 import { countryByCode } from '@/lib/countries'
 
 export function CadastroAlunoPage() {
@@ -117,10 +118,16 @@ export function CadastroAlunoPage() {
               </button>
             </div>
 
-            <label className="flex items-center gap-2 text-rt-13 text-ink-dark">
-              <input type="checkbox" checked={hasTeacher} onChange={(e) => setHasTeacher(e.target.checked)} className="accent-brand" />
-              <span>{t('signupStudent:hasTeacher')}</span>
-            </label>
+            <SelectSheet
+              label={t('signupStudent:hasTeacher')}
+              title={t('signupStudent:hasTeacher')}
+              value={hasTeacher ? 'sim' : 'nao'}
+              onChange={(v) => setHasTeacher(v === 'sim')}
+              options={[
+                { value: 'nao', label: t('no') },
+                { value: 'sim', label: t('yes') },
+              ]}
+            />
 
             {hasTeacher && (
               <div>
