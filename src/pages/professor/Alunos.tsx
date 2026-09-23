@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Search, UserPlus, X, User as UserIcon, Phone } from 'lucide-react'
+import { Search, UserPlus, X, User as UserIcon, Phone, MoreVertical } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { EmptyState, FullScreenSheet, Field } from './projetos/RoutinesTab'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
+import { GerenciarAlunoDialog } from '@/components/professor/GerenciarAluno'
 import { WhatsAppInput } from '@/components/WhatsAppInput'
 import { DarkSelectSheet } from '@/components/DarkSheets'
 import { countryByCode } from '@/lib/countries'
@@ -70,6 +71,7 @@ export function AlunosPage() {
   const [loading, setLoading] = useState(true)
   const [showNew, setShowNew] = useState(false)
   const [limiteAvisado, setLimiteAvisado] = useState(false)
+  const [gestionando, setGestionando] = useState<Student | null>(null)
   const nav = useNavigate()
 
   const planLimit = PLAN_LIMITS[profile?.plan ?? 'free'] ?? 2
@@ -97,6 +99,25 @@ export function AlunosPage() {
   }
 
   useEffect(() => { void load() }, [profile?.id])
+
+  async function cambiarVinculo(alumno: Student, estado: 'active' | 'suspended') {
+    await supabase.from('profiles').update({ link_status: estado }).eq('id', alumno.id)
+    setGestionando(null)
+    await load()
+  }
+
+  async function quitarAlumno(alumno: Student) {
+    // No se borra la cuenta: se corta el vinculo y el alumno queda libre.
+    await supabase.from('profiles').update({ teacher_id: null, link_status: 'ended' }).eq('id', alumno.id)
+    await supabase.from('notifications').insert({
+      user_id: alumno.id,
+      type: 'warning',
+      title: 'Removido da lista',
+      body: `${profile?.full_name ?? 'Seu professor'} te removeu.`,
+    })
+    setGestionando(null)
+    await load()
+  }
 
   const active = items.filter((s) => s.link_status === 'active').length
   const q = query.trim().toLowerCase()
@@ -171,7 +192,16 @@ export function AlunosPage() {
                   />
                 )
               })()}
-              <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setGestionando(s)}
+                aria-label={t('students:manage.title')}
+                className="absolute bottom-3 right-3 w-9 h-9 rounded-[10px] bg-surface-raised flex items-center justify-center text-grey-400"
+              >
+                <MoreVertical size={18} />
+              </button>
+
+              <div className="flex items-center gap-3 pr-12">
                 <Link to={`/professor/alunos/${s.id}`} className="shrink-0">
                   <div
                     className="w-16 h-16 rounded-full border-2 border-brand flex items-center justify-center overflow-hidden"
@@ -211,6 +241,17 @@ export function AlunosPage() {
             </li>
           ))}
         </ul>
+      )}
+
+      {gestionando && (
+        <GerenciarAlunoDialog
+          nome={gestionando.full_name ?? ''}
+          suspenso={gestionando.link_status === 'suspended'}
+          onSuspender={() => void cambiarVinculo(gestionando, 'suspended')}
+          onReativar={() => void cambiarVinculo(gestionando, 'active')}
+          onExcluir={() => void quitarAlumno(gestionando)}
+          onClose={() => setGestionando(null)}
+        />
       )}
 
       {limiteAvisado && (
