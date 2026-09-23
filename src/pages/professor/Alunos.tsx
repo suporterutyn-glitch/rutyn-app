@@ -20,6 +20,37 @@ type Student = {
   phone: string | null
 }
 
+type Cobranza = { student_id: string; due_date: string; status: string }
+
+type EstadoCobranza = 'none' | 'upToDate' | 'pending' | 'overdue' | 'awaiting' | 'suspended'
+
+/** Deriva el estado de pago del alumno a partir de sus cobranzas abiertas. */
+function estadoCobranza(cobranzas: Cobranza[]): EstadoCobranza {
+  if (!cobranzas.length) return 'none'
+  if (cobranzas.some((c) => c.status === 'suspended')) return 'suspended'
+  if (cobranzas.some((c) => c.status === 'awaiting')) return 'awaiting'
+  const abiertas = cobranzas.filter((c) => c.status === 'pending')
+  if (!abiertas.length) return 'upToDate'
+  const hoy = new Date()
+  hoy.setHours(0, 0, 0, 0)
+  const dias = abiertas.map((c) =>
+    Math.floor((new Date(c.due_date + 'T00:00:00').getTime() - hoy.getTime()) / 86400000),
+  )
+  const masCercano = Math.min(...dias)
+  if (masCercano < 0) return 'overdue'
+  if (masCercano <= 5) return 'pending'
+  return 'upToDate'
+}
+
+const COLOR_COBRANZA: Record<EstadoCobranza, string> = {
+  none: 'bg-grey-500',
+  upToDate: 'bg-brand',
+  pending: 'bg-warning',
+  overdue: 'bg-warning',
+  awaiting: 'bg-[#2196F3]',
+  suspended: 'bg-grey-500',
+}
+
 // Color estable por alumno, para que la inicial no cambie entre recargas.
 const COLORES_INICIAL = ['#2196F3', '#26A69A', '#7E57C2', '#EF5350', '#FFA726', '#66BB6A']
 function colorDe(id: string) {
@@ -34,6 +65,7 @@ export function AlunosPage() {
   const { profile } = useAuth()
   const { t } = useTranslation()
   const [items, setItems] = useState<Student[]>([])
+  const [cobranzas, setCobranzas] = useState<Record<string, Cobranza[]>>({})
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [showNew, setShowNew] = useState(false)
@@ -51,6 +83,16 @@ export function AlunosPage() {
       .eq('teacher_id', profile.id)
       .order('full_name')
     setItems((data as Student[]) ?? [])
+
+    const { data: chs } = await supabase
+      .from('charges')
+      .select('student_id,due_date,status')
+      .eq('teacher_id', profile.id)
+    const porAlumno: Record<string, Cobranza[]> = {}
+    for (const c of (chs as Cobranza[]) ?? []) {
+      ;(porAlumno[c.student_id] ??= []).push(c)
+    }
+    setCobranzas(porAlumno)
     setLoading(false)
   }
 
@@ -119,19 +161,16 @@ export function AlunosPage() {
         <ul className="flex flex-col gap-3">
           {filtered.map((s) => (
             <li key={s.id} className="card-dark p-4 relative">
-              <span
-                aria-hidden
-                className={
-                  'absolute top-3 right-3 w-3.5 h-3.5 rounded-full ' +
-                  (s.link_status === 'active'
-                    ? 'bg-brand'
-                    : s.link_status === 'pending'
-                      ? 'bg-[#2196F3]'
-                      : s.link_status === 'suspended'
-                        ? 'bg-warning'
-                        : 'bg-grey-500')
-                }
-              />
+              {(() => {
+                const estado = estadoCobranza(cobranzas[s.id] ?? [])
+                return (
+                  <span
+                    title={t(`students:billing.${estado}`)}
+                    aria-label={t(`students:billing.${estado}`)}
+                    className={'absolute top-3 right-3 w-3.5 h-3.5 rounded-full ' + COLOR_COBRANZA[estado]}
+                  />
+                )
+              })()}
               <div className="flex items-center gap-3">
                 <Link to={`/professor/alunos/${s.id}`} className="shrink-0">
                   <div
