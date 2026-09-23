@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Search, UserPlus, X, User as UserIcon } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Search, UserPlus, X, User as UserIcon, Phone } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { EmptyState, FullScreenSheet, Field } from './projetos/RoutinesTab'
+import { FeedbackDialog } from '@/components/FeedbackDialog'
 
 type Student = {
   id: string
@@ -12,6 +13,15 @@ type Student = {
   email: string | null
   link_status: string
   avatar_url: string | null
+  phone: string | null
+}
+
+// Color estable por alumno, para que la inicial no cambie entre recargas.
+const COLORES_INICIAL = ['#2196F3', '#26A69A', '#7E57C2', '#EF5350', '#FFA726', '#66BB6A']
+function colorDe(id: string) {
+  let suma = 0
+  for (let i = 0; i < id.length; i++) suma += id.charCodeAt(i)
+  return COLORES_INICIAL[suma % COLORES_INICIAL.length]
 }
 
 const PLAN_LIMITS: Record<string, number> = { free: 2, pro: 25, master: 50, elite: 100 }
@@ -23,6 +33,8 @@ export function AlunosPage() {
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [showNew, setShowNew] = useState(false)
+  const [limiteAvisado, setLimiteAvisado] = useState(false)
+  const nav = useNavigate()
 
   const planLimit = PLAN_LIMITS[profile?.plan ?? 'free'] ?? 2
 
@@ -31,7 +43,7 @@ export function AlunosPage() {
     setLoading(true)
     const { data } = await supabase
       .from('profiles')
-      .select('id,full_name,email,link_status,avatar_url')
+      .select('id,full_name,email,link_status,avatar_url,phone')
       .eq('teacher_id', profile.id)
       .order('full_name')
     setItems((data as Student[]) ?? [])
@@ -41,7 +53,13 @@ export function AlunosPage() {
   useEffect(() => { void load() }, [profile?.id])
 
   const active = items.filter((s) => s.link_status === 'active').length
-  const filtered = items.filter((s) => (s.full_name ?? '').toLowerCase().includes(query.toLowerCase()))
+  const q = query.trim().toLowerCase()
+  const filtered = q
+    ? items.filter(
+        (s) =>
+          (s.full_name ?? '').toLowerCase().includes(q) || (s.email ?? '').toLowerCase().includes(q),
+      )
+    : items
   const pct = Math.min(100, Math.round((active / planLimit) * 100))
   const barColor = pct > 80 ? 'bg-danger-soft' : pct > 55 ? 'bg-warning' : pct > 35 ? 'bg-[#CDDC39]' : 'bg-brand-light'
   const canAdd = active < planLimit
@@ -64,8 +82,7 @@ export function AlunosPage() {
 
       <div className="flex gap-2 mb-4">
         <button
-          onClick={() => canAdd && setShowNew(true)}
-          disabled={!canAdd}
+          onClick={() => (canAdd ? setShowNew(true) : setLimiteAvisado(true))}
           className={
             'w-[42px] h-[42px] rounded-full flex items-center justify-center ' +
             (canAdd ? 'bg-brand' : 'bg-grey-600')
@@ -97,29 +114,71 @@ export function AlunosPage() {
       ) : (
         <ul className="flex flex-col gap-3">
           {filtered.map((s) => (
-            <li key={s.id}>
-              <Link to={`/professor/alunos/${s.id}`} className="card-dark p-4 flex items-center gap-3">
-                <div className="relative">
-                  <div className="w-12 h-12 rounded-full bg-surface-raised flex items-center justify-center overflow-hidden">
+            <li key={s.id} className="card-dark p-4 relative">
+              <span
+                aria-hidden
+                className={
+                  'absolute top-3 right-3 w-3.5 h-3.5 rounded-full ' +
+                  (s.link_status === 'active'
+                    ? 'bg-brand'
+                    : s.link_status === 'pending'
+                      ? 'bg-[#2196F3]'
+                      : s.link_status === 'suspended'
+                        ? 'bg-warning'
+                        : 'bg-grey-500')
+                }
+              />
+              <div className="flex items-center gap-3">
+                <Link to={`/professor/alunos/${s.id}`} className="shrink-0">
+                  <div
+                    className="w-16 h-16 rounded-full border-2 border-brand flex items-center justify-center overflow-hidden"
+                    style={s.avatar_url ? undefined : { backgroundColor: colorDe(s.id) }}
+                  >
                     {s.avatar_url ? (
                       <img src={s.avatar_url} alt="" className="w-full h-full object-cover" />
+                    ) : s.full_name ? (
+                      <span className="text-white text-rt-24 font-bold">
+                        {s.full_name.trim().charAt(0).toUpperCase()}
+                      </span>
                     ) : (
-                      <UserIcon size={22} className="text-grey-500" />
+                      <UserIcon size={26} className="text-white" />
                     )}
                   </div>
-                  <span className={
-                    'absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-surface-card ' +
-                    (s.link_status === 'active' ? 'bg-brand' : s.link_status === 'suspended' ? 'bg-danger' : 'bg-grey-500')
-                  } />
-                </div>
+                </Link>
+
                 <div className="flex-1 min-w-0">
-                  <div className="text-white text-rt-17 font-bold truncate">{s.full_name ?? 'Sem nome'}</div>
-                  <div className="text-grey-500 text-rt-11 truncate">{s.email}</div>
+                  <Link to={`/professor/alunos/${s.id}`} className="block min-w-0">
+                    <div className="text-white text-rt-18 font-bold truncate">{s.full_name ?? 'Sem nome'}</div>
+                    <div className="text-grey-500 text-rt-13 truncate mb-2">{s.email}</div>
+                  </Link>
+
+                  {s.phone && (
+                    <a
+                      href={`https://wa.me/${s.phone.replace(/\D/g, '')}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 h-9 px-4 rounded-btn-pill border border-brand text-brand text-rt-13 font-semibold"
+                    >
+                      <Phone size={16} />
+                      {t('students:whatsapp')}
+                    </a>
+                  )}
                 </div>
-              </Link>
+              </div>
             </li>
           ))}
         </ul>
+      )}
+
+      {limiteAvisado && (
+        <FeedbackDialog
+          kind="error"
+          message={t('students:limitReached')}
+          onClose={() => {
+            setLimiteAvisado(false)
+            nav('/professor/assinatura')
+          }}
+        />
       )}
 
       {showNew && <NewStudentSheet profile={profile} onClose={() => setShowNew(false)} onCreated={() => { setShowNew(false); void load() }} />}

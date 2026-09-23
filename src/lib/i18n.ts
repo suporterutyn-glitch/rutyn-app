@@ -140,6 +140,8 @@ const pt = {
   },
   students: {
     title: 'Alunos', searchStudent: 'Buscar aluno...',
+    whatsapp: 'Falar Pelo WhatsApp',
+    attention: 'Atenção',
     limit: '{{active}}/{{limit}} ALUNOS',
     noStudents: 'Nenhum aluno',
     noStudentsSub: 'Cadastre seu primeiro aluno ou aceite convites do marketplace.',
@@ -369,6 +371,8 @@ const es: typeof pt = {
   },
   students: {
     title: 'Alumnos', searchStudent: 'Buscar alumno...',
+    whatsapp: 'Hablar por WhatsApp',
+    attention: 'Atención',
     limit: '{{active}}/{{limit}} ALUMNOS',
     noStudents: 'Ningún alumno',
     noStudentsSub: 'Registra tu primer alumno o acepta invitaciones del marketplace.',
@@ -598,6 +602,8 @@ const en: typeof pt = {
   },
   students: {
     title: 'Students', searchStudent: 'Search student...',
+    whatsapp: 'Chat on WhatsApp',
+    attention: 'Attention',
     limit: '{{active}}/{{limit}} STUDENTS',
     noStudents: 'No students',
     noStudentsSub: 'Register your first student or accept invites from the marketplace.',
