@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -42,6 +42,19 @@ export function CompletarPerfilPage() {
     setMonthlyMin((profile as any)?.price_monthly_min ?? range.monthly.min)
     setMonthlyMax((profile as any)?.price_monthly_max ?? range.monthly.max)
   }, [profile?.id])
+
+  // Cada pais tiene su moneda y su rango: al cambiarlo, los valores del pais
+  // anterior quedarian fuera de escala (ej. 20 BRL dentro de un rango uruguayo
+  // que arranca en 300). Se reencuadran, salvo en el primer render.
+  const primerRender = useRef(true)
+  useEffect(() => {
+    if (primerRender.current) { primerRender.current = false; return }
+    const r = PRICE_RANGES[country] ?? PRICE_RANGES.BR
+    setHourlyMin(r.hourly.min)
+    setHourlyMax(r.hourly.max)
+    setMonthlyMin(r.monthly.min)
+    setMonthlyMax(r.monthly.max)
+  }, [country])
 
   const complete = !!(state && city && occupation && specialties.length && ideal.length)
 
@@ -190,20 +203,35 @@ function RangeField({
   label: string; min: number; max: number; step: number; currency: string
   valueMin: number; valueMax: number; onChange: (a: number, b: number) => void
 }) {
+  const pct = (v: number) => ((v - min) / (max - min)) * 100
   return (
     <div>
-      <div className="flex justify-between mb-2">
+      <div className="flex justify-between items-baseline mb-3">
         <label className="text-white text-rt-13 font-semibold">{label}</label>
-        <span className="text-brand text-rt-12 font-semibold">{formatMoney(valueMin, currency)} — {formatMoney(valueMax, currency)}</span>
+        <span className="text-brand text-rt-12 font-semibold">
+          {formatMoney(valueMin, currency)} — {formatMoney(valueMax, currency)}
+        </span>
       </div>
-      <div className="flex items-center gap-2">
-        <input type="range" min={min} max={max} step={step} value={valueMin}
-          onChange={(e) => onChange(Math.min(Number(e.target.value), valueMax), valueMax)}
-          className="flex-1 accent-brand" />
-        <input type="range" min={min} max={max} step={step} value={valueMax}
-          onChange={(e) => onChange(valueMin, Math.max(Number(e.target.value), valueMin))}
-          className="flex-1 accent-brand" />
+      <div className="relative h-6 flex items-center">
+        <div className="absolute inset-x-0 h-1.5 rounded-full bg-surface-line" />
+        <div
+          className="absolute h-1.5 rounded-full bg-brand"
+          style={{ left: `${pct(valueMin)}%`, right: `${100 - pct(valueMax)}%` }}
+        />
+        <input
+          type="range" min={min} max={max} step={step} value={valueMin}
+          aria-label={`${label} — mínimo`}
+          onChange={(e) => onChange(Math.min(Number(e.target.value), valueMax - step), valueMax)}
+          className="rango-doble"
+        />
+        <input
+          type="range" min={min} max={max} step={step} value={valueMax}
+          aria-label={`${label} — máximo`}
+          onChange={(e) => onChange(valueMin, Math.max(Number(e.target.value), valueMin + step))}
+          className="rango-doble"
+        />
       </div>
     </div>
   )
 }
+
