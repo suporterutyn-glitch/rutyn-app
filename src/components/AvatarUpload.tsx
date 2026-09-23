@@ -53,7 +53,7 @@ export function AvatarUpload({ size = 96, className = '' }: Props) {
         ) : (
           <UserIcon size={size * 0.42} className="text-grey-500 mx-auto" />
         )}
-        <div className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-brand border-2 border-bg-app flex items-center justify-center">
+        <div className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-brand border-2 border-surface-app flex items-center justify-center">
           {uploading ? <Loader2 size={14} className="text-white animate-spin" /> : <Camera size={14} className="text-white" />}
         </div>
       </button>

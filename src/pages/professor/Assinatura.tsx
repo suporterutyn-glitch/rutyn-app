@@ -76,7 +76,7 @@ function PlanCard({
       'rounded-card p-4 border ' +
       (active ? 'bg-plan-premium border-brand shadow-glow-lg' :
        plan === 'free' ? 'bg-plan-free border-danger-wine' :
-       'bg-surface-card border-divider')
+       'bg-surface-card border-surface-divider')
     }>
       <div className="flex items-center justify-between mb-2">
         <div className="text-white text-rt-18 font-bold">{PLAN_LABEL[plan]}</div>

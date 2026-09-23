@@ -153,7 +153,7 @@ export function ConversaPage() {
   return (
     <div className="app-shell chat-bg">
       <div className="relative z-10 min-h-dvh flex flex-col">
-        <div className="sticky top-0 bg-bg-app/95 backdrop-blur px-4 pt-[calc(env(safe-area-inset-top)+12px)] pb-3 flex items-center gap-3 border-b border-surface-line">
+        <div className="sticky top-0 bg-surface-app/95 backdrop-blur px-4 pt-[calc(env(safe-area-inset-top)+12px)] pb-3 flex items-center gap-3 border-b border-surface-line">
           <button onClick={() => nav(-1)} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white">
             <ArrowLeft size={20} />
           </button>
@@ -178,7 +178,7 @@ export function ConversaPage() {
           <div ref={endRef} />
         </div>
 
-        <div className="sticky bottom-0 bg-bg-app px-3 py-2 flex items-center gap-2" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 8px)' }}>
+        <div className="sticky bottom-0 bg-surface-app px-3 py-2 flex items-center gap-2" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 8px)' }}>
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}

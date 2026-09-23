@@ -93,7 +93,7 @@ export function CriarNotificacaoPage() {
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-app px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+16px)] bg-bg-app/95 backdrop-blur">
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-app px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+16px)] bg-surface-app/95 backdrop-blur">
         <button onClick={send} disabled={saving || !title.trim() || selected.size === 0} className="btn-save disabled:opacity-50">
           {saving ? 'Enviando…' : saved ? `${selected.size} enviadas ✓` : (<><Send size={16} className="inline mr-1" /> Enviar</>)}
         </button>

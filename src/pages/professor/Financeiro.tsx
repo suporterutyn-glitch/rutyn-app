@@ -79,7 +79,7 @@ export function FinanceiroPage() {
         </button>
       </div>
 
-      <div className="rounded-card bg-nav p-4 mb-4">
+      <div className="rounded-card bg-surface-nav p-4 mb-4">
         <div className="text-grey-600 text-rt-11 font-semibold uppercase tracking-wider">Recebido no mês</div>
         <div className="text-grey-900 text-rt-32 font-bold">{formatMoney(totalPeriod, currency)}</div>
       </div>

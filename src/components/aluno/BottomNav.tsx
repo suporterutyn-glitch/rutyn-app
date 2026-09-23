@@ -14,7 +14,7 @@ export function AlunoBottomNav() {
   ]
   return (
     <nav
-      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-app bg-nav rounded-b-nav"
+      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-app bg-surface-nav rounded-b-nav"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <div className="h-[5px] bg-brand-h" />

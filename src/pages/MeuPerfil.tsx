@@ -53,8 +53,8 @@ export function MeuPerfilPage() {
         <UnderField label={t('name')} value={name} onChange={setName} />
         <UnderField label={t('whatsapp')} value={phone} onChange={setPhone} />
         <div>
-          <label className="block text-nav text-rt-12 mb-1">{t('email')}</label>
-          <div className="w-full flex items-center gap-2 border-b border-divider py-2">
+          <label className="block text-surface-nav text-rt-12 mb-1">{t('email')}</label>
+          <div className="w-full flex items-center gap-2 border-b border-surface-divider py-2">
             <span className="flex-1 text-grey-500 text-rt-13">{profile?.email}</span>
             <Lock size={14} className="text-grey-600" />
           </div>
@@ -73,7 +73,7 @@ export function MeuPerfilPage() {
 function UnderField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <div>
-      <label className="block text-nav text-rt-12 mb-1">{label}</label>
+      <label className="block text-surface-nav text-rt-12 mb-1">{label}</label>
       <input value={value} onChange={(e) => onChange(e.target.value)} className="w-full bg-transparent border-b border-brand text-grey-300 text-rt-13 py-2 outline-none" />
     </div>
   )

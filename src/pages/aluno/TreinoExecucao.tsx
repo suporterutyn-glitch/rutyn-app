@@ -117,10 +117,10 @@ export function TreinoExecucaoPage() {
   }
 
   return (
-    <div className="app-shell bg-bg-app">
+    <div className="app-shell bg-surface-app">
       <div className="min-h-dvh flex flex-col text-white">
         {/* Header sticky */}
-        <div className="sticky top-0 z-20 bg-bg-app shadow-header px-4 pt-[calc(env(safe-area-inset-top)+12px)] pb-3 flex items-center gap-3">
+        <div className="sticky top-0 z-20 bg-surface-app shadow-header px-4 pt-[calc(env(safe-area-inset-top)+12px)] pb-3 flex items-center gap-3">
           <button
             onClick={() => {
               if (confirm('Abandonar treino?')) nav(-1)
@@ -207,7 +207,7 @@ export function TreinoExecucaoPage() {
         </div>
 
         {/* Timer descanso + slider */}
-        <div className="sticky bottom-0 bg-bg-app px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+16px)] shadow-header">
+        <div className="sticky bottom-0 bg-surface-app px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+16px)] shadow-header">
           <div className="flex items-center justify-between mb-3">
             <div>
               <div className="text-[10px] uppercase tracking-[2px] font-semibold text-white/60">Descanso</div>

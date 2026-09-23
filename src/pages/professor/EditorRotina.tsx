@@ -156,7 +156,7 @@ export function EditorRotinaPage() {
         </ul>
       )}
 
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-app px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+16px)] flex gap-2 bg-bg-app/95 backdrop-blur">
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-app px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+16px)] flex gap-2 bg-surface-app/95 backdrop-blur">
         <button onClick={() => setPickerOpen(true)} className="flex-1 h-12 rounded-btn-pill bg-brand text-white text-rt-14 font-semibold flex items-center justify-center gap-2">
           <Plus size={18} /> Exercício
         </button>
