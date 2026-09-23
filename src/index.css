@@ -46,7 +46,10 @@
     --nav-height-student: 105px;
   }
 
-  html, body, #root { min-height: 100dvh; background: #000; }
+  /* iOS usa documentElement como contenedor de scroll: sin overflow-x en `html`
+     el gesto lateral sigue funcionando aunque `body` lo tenga oculto. */
+  html, body, #root { min-height: 100dvh; background: #000; overflow-x: hidden; }
+  html { -webkit-text-size-adjust: 100%; }
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Montserrat', system-ui, sans-serif;
