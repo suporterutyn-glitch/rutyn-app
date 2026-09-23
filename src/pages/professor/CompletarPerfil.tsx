@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next'
 
 export function CompletarPerfilPage() {
   const nav = useNavigate()
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const lang = i18n.language
   const [feedback, setFeedback] = useState<{ kind: 'error' | 'success'; message: string } | null>(null)
   const { profile, refresh } = useAuth()
@@ -49,7 +49,7 @@ export function CompletarPerfilPage() {
     if (!complete) {
       setFeedback({
         kind: 'error',
-        message: 'Preencha estado, cidade, atuação, ao menos 1 especialidade e 1 cliente ideal para completar o perfil.',
+        message: t('completeProfile:missing'),
       })
       return
     }
@@ -65,7 +65,7 @@ export function CompletarPerfilPage() {
     }).eq('id', profile.id)
     await refresh()
     setSaving(false)
-    setFeedback({ kind: 'success', message: 'Perfil salvo com sucesso!' })
+    setFeedback({ kind: 'success', message: t('completeProfile:saved') })
   }
 
   return (
@@ -74,63 +74,63 @@ export function CompletarPerfilPage() {
         <button onClick={() => nav(-1)} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-white text-rt-20 font-bold">Complete seu perfil</h1>
+        <h1 className="text-white text-rt-20 font-bold">{t('completeProfile:title')}</h1>
       </div>
 
       <div className="flex flex-col gap-6">
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Estado / Província"><input className="input-dark" value={state} onChange={(e) => setState(e.target.value)} /></Field>
-          <Field label="Cidade"><input className="input-dark" value={city} onChange={(e) => setCity(e.target.value)} /></Field>
+          <Field label={t('completeProfile:state')}><input className="input-dark" value={state} onChange={(e) => setState(e.target.value)} /></Field>
+          <Field label={t('completeProfile:city')}><input className="input-dark" value={city} onChange={(e) => setCity(e.target.value)} /></Field>
         </div>
 
         <DarkSelectSheet
-          label="Atuação"
-          title="Atuação"
+          label={t('completeProfile:occupation')}
+          title={t('completeProfile:occupation')}
           value={occupation}
           onChange={setOccupation}
           searchable
-          placeholder="Selecione…"
+          placeholder={t('completeProfile:selectOne')}
           options={atuacoes.map((c) => ({ id: c.id, label: etiqueta(c, lang) }))}
         />
 
         <DarkMultiSheet
-          label="Especialidades"
-          title="Especialidade"
+          label={t('completeProfile:specialties')}
+          title={t('completeProfile:specialtyTitle')}
           values={specialties}
           onChange={setSpecialties}
-          confirmLabel="Confirmar"
+          confirmLabel={t('confirm')}
           options={especialidades.map((c) => ({ id: c.id, label: etiqueta(c, lang) }))}
         />
 
         <DarkMultiSheet
-          label="Cliente ideal"
-          title="Cliente Ideal"
+          label={t('completeProfile:idealClients')}
+          title={t('completeProfile:idealClientsTitle')}
           values={ideal}
           onChange={setIdeal}
-          confirmLabel="Confirmar"
+          confirmLabel={t('confirm')}
           options={clientesIdeais.map((c) => ({ id: c.id, label: etiqueta(c, lang) }))}
         />
 
         <DarkMultiSheet
-          label="Formato de trabalho"
-          title="Modelo de Trabalho"
+          label={t('completeProfile:workFormat')}
+          title={t('completeProfile:workFormatTitle')}
           values={formats}
           onChange={setFormats}
-          confirmLabel="Confirmar"
+          confirmLabel={t('confirm')}
           options={formatosTrabalho.map((c) => ({ id: c.id, label: etiqueta(c, lang) }))}
         />
 
-        <RangeField label="Preço por hora" min={range.hourly.min} max={range.hourly.max} step={range.hourly.step} currency={currency} valueMin={hourlyMin ?? range.hourly.min} valueMax={hourlyMax ?? range.hourly.max} onChange={(a, b) => { setHourlyMin(a); setHourlyMax(b) }} />
-        <RangeField label="Preço mensal" min={range.monthly.min} max={range.monthly.max} step={range.monthly.step} currency={currency} valueMin={monthlyMin ?? range.monthly.min} valueMax={monthlyMax ?? range.monthly.max} onChange={(a, b) => { setMonthlyMin(a); setMonthlyMax(b) }} />
+        <RangeField label={t('completeProfile:hourlyPrice')} min={range.hourly.min} max={range.hourly.max} step={range.hourly.step} currency={currency} valueMin={hourlyMin ?? range.hourly.min} valueMax={hourlyMax ?? range.hourly.max} onChange={(a, b) => { setHourlyMin(a); setHourlyMax(b) }} />
+        <RangeField label={t('completeProfile:monthlyPrice')} min={range.monthly.min} max={range.monthly.max} step={range.monthly.step} currency={currency} valueMin={monthlyMin ?? range.monthly.min} valueMax={monthlyMax ?? range.monthly.max} onChange={(a, b) => { setMonthlyMin(a); setMonthlyMax(b) }} />
 
-        <Field label="Biografia">
-          <textarea className="input-dark h-28 py-3 resize-none" value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Fale sobre sua experiência…" />
+        <Field label={t('completeProfile:bio')}>
+          <textarea className="input-dark h-28 py-3 resize-none" value={bio} onChange={(e) => setBio(e.target.value)} placeholder={t('completeProfile:bioHint')} />
         </Field>
 
         <label className="flex items-center justify-between card-dark p-3">
           <div>
-            <div className="text-white text-rt-13 font-semibold">Vincular ao marketplace</div>
-            <div className="text-white/60 text-rt-11">Alunos podem te encontrar na busca</div>
+            <div className="text-white text-rt-13 font-semibold">{t('completeProfile:marketplace')}</div>
+            <div className="text-white/60 text-rt-11">{t('completeProfile:marketplaceSub')}</div>
           </div>
           <input type="checkbox" checked={marketVisible} onChange={(e) => setMarketVisible(e.target.checked)} className="w-6 h-6 accent-brand" />
         </label>
@@ -138,7 +138,7 @@ export function CompletarPerfilPage() {
       </div>
 
       <div className="mt-8">
-        <button className="btn-save" disabled={saving} onClick={save}>{saving ? 'Salvando…' : 'Salvar'}</button>
+        <button className="btn-save" disabled={saving} onClick={save}>{saving ? t('loading') : t('save')}</button>
       </div>
 
       {feedback && (
