@@ -47,6 +47,7 @@ const pt = {
   },
   signupStudent: {
     title: 'Cadastro de Aluno', hasTeacher: 'Já tenho um professor',
+    greeting: 'Oi Aluno, Seja bem-vindo',
     teacherEmail: 'E-mail do professor', findLater: 'Encontrar depois',
   },
   waiting: {
@@ -256,6 +257,7 @@ const es: typeof pt = {
   },
   signupStudent: {
     title: 'Registro de Alumno', hasTeacher: 'Ya tengo un profesor',
+    greeting: 'Hola Alumno, Bienvenido',
     teacherEmail: 'Correo del profesor', findLater: 'Encontrar después',
   },
   waiting: {
@@ -465,6 +467,7 @@ const en: typeof pt = {
   },
   signupStudent: {
     title: 'Student Registration', hasTeacher: 'I already have a trainer',
+    greeting: 'Hi Student, Welcome',
     teacherEmail: 'Trainer\'s email', findLater: 'Find later',
   },
   waiting: {
