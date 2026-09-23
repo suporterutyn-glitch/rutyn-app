@@ -34,6 +34,7 @@ export type Profile = {
   pix_key?: string | null
   avatar_url?: string | null
   phone?: string | null
+  created_at?: string | null
 }
 
 type AuthCtx = {

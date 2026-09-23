@@ -69,6 +69,10 @@ const pt = {
     title: 'Aguardando Aprovação',
     subtitle: 'Você tem {{days}} dias para ser aprovado ou encontrar um professor.',
     check: 'Aguardar', change: 'Escolher outro professor', logout: 'Sair da conta',
+    created: 'Sua conta foi criada com sucesso! Aguarde a aprovação do seu professor para acessar o app.',
+    requestedTeacher: 'Professor Solicitado',
+    pending: 'Pendente',
+    waitFor: 'Aguardar aprovação {{name}}',
   },
   professor: {
     hello: 'Olá, {{name}}', welcomeBack: 'Bem-vindo de volta',
@@ -294,6 +298,10 @@ const es: typeof pt = {
     title: 'Esperando Aprobación',
     subtitle: 'Tienes {{days}} días para ser aprobado o encontrar un profesor.',
     check: 'Esperar', change: 'Elegir otro profesor', logout: 'Salir de la cuenta',
+    created: '¡Tu cuenta fue creada con éxito! Espera la aprobación de tu profesor para acceder a la app.',
+    requestedTeacher: 'Profesor Solicitado',
+    pending: 'Pendiente',
+    waitFor: 'Esperar aprobación de {{name}}',
   },
   professor: {
     hello: 'Hola, {{name}}', welcomeBack: 'Bienvenido de nuevo',
@@ -519,6 +527,10 @@ const en: typeof pt = {
     title: 'Waiting for Approval',
     subtitle: 'You have {{days}} days to be approved or find a trainer.',
     check: 'Wait', change: 'Choose another trainer', logout: 'Sign out',
+    created: 'Your account was created successfully! Wait for your trainer to approve you to access the app.',
+    requestedTeacher: 'Requested Trainer',
+    pending: 'Pending',
+    waitFor: 'Wait for {{name}} to approve',
   },
   professor: {
     hello: 'Hello, {{name}}', welcomeBack: 'Welcome back',
