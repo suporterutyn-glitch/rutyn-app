@@ -106,3 +106,14 @@
 @keyframes rutyn-splash-wave { from { transform: scale(1); opacity: .35; } to { transform: scale(1.95); opacity: 0; } }
 .rutyn-splash-pulse { animation: rutyn-splash-pulse 1.8s ease-in-out infinite; }
 .rutyn-splash-wave { animation: rutyn-splash-wave 2.4s ease-out infinite; }
+
+/* iOS da a input[type=date] un ancho intrinseco propio que ignora el contenedor
+   y provoca scroll horizontal. Se neutraliza el aspecto nativo y se permite encoger. */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 0;
+  max-width: 100%;
+}

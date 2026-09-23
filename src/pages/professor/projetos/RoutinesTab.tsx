@@ -196,7 +196,7 @@ function NewRoutineSheet({ onClose, onCreated }: { onClose: () => void; onCreate
 
 export function FullScreenSheet({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
-    <div className="fixed inset-0 z-40 bg-surface-card overflow-y-auto animate-slide-up-in">
+    <div className="fixed inset-0 z-40 bg-surface-card overflow-y-auto overflow-x-hidden animate-slide-up-in">
       <div className="max-w-app mx-auto min-h-dvh px-6 pt-[calc(env(safe-area-inset-top)+80px)] pb-8 relative">
         <button
           onClick={onClose}
