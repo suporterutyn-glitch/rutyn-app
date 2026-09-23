@@ -80,6 +80,8 @@ const pt = {
     title: 'Cadastro de Aluno', hasTeacher: 'Já tenho um professor',
     greeting: 'Oi Aluno, Seja bem-vindo',
     teacherEmail: 'E-mail do professor', findLater: 'Encontrar depois',
+    teacherNotFound: 'E-mail do professor não encontrado',
+    teacherFound: 'Professor encontrado',
   },
   waiting: {
     title: 'Aguardando Aprovação',
@@ -338,6 +340,8 @@ const es: typeof pt = {
     title: 'Registro de Alumno', hasTeacher: 'Ya tengo un profesor',
     greeting: 'Hola Alumno, Bienvenido',
     teacherEmail: 'Correo del profesor', findLater: 'Encontrar después',
+    teacherNotFound: 'Correo del profesor no encontrado',
+    teacherFound: 'Profesor encontrado',
   },
   waiting: {
     title: 'Esperando Aprobación',
@@ -596,6 +600,8 @@ const en: typeof pt = {
     title: 'Student Registration', hasTeacher: 'I already have a trainer',
     greeting: 'Hi Student, Welcome',
     teacherEmail: 'Trainer\'s email', findLater: 'Find later',
+    teacherNotFound: 'Trainer e-mail not found',
+    teacherFound: 'Trainer found',
   },
   waiting: {
     title: 'Waiting for Approval',

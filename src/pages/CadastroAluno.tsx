@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Eye, EyeOff } from 'lucide-react'
+import { ArrowLeft, Eye, EyeOff, Check, X as XIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { WhatsAppInput } from '@/components/WhatsAppInput'
@@ -24,14 +24,32 @@ export function CadastroAlunoPage() {
   const [phone, setPhone] = useState('')
   const [hasTeacher, setHasTeacher] = useState(false)
   const [teacherEmail, setTeacherEmail] = useState('')
+  // idle: aun sin consultar | checking: consultando | ok: es profesor | notfound: no existe
+  const [teacherState, setTeacherState] = useState<'idle' | 'checking' | 'ok' | 'notfound'>('idle')
   const [accept, setAccept] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Se consulta con retardo para no disparar una peticion por tecla.
+  useEffect(() => {
+    const correo = teacherEmail.trim()
+    if (!hasTeacher || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+      setTeacherState('idle')
+      return
+    }
+    setTeacherState('checking')
+    const id = setTimeout(async () => {
+      const { data, error } = await supabase.rpc('existe_profesor', { correo })
+      setTeacherState(error ? 'idle' : data === true ? 'ok' : 'notfound')
+    }, 500)
+    return () => clearTimeout(id)
+  }, [teacherEmail, hasTeacher])
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     if (!accept) { setError('Aceite os termos'); return }
     if (password !== confirmPassword) { setError(t('signupTeacher:passwordMismatch')); return }
+    if (hasTeacher && teacherState !== 'ok') { setError(t('signupStudent:teacherNotFound')); return }
     setError(null)
     setLoading(true)
     const { data, error } = await supabase.auth.signUp({
@@ -131,9 +149,31 @@ export function CadastroAlunoPage() {
             />
 
             {hasTeacher && (
-              <div>
+              <div className="relative">
                 <label className="block text-rt-11 text-ink-placeholder font-semibold">{t('signupStudent:teacherEmail')}</label>
-                <input type="email" required value={teacherEmail} onChange={(e) => setTeacherEmail(e.target.value)} className="input-light-underline" />
+                <input
+                  type="email"
+                  required
+                  value={teacherEmail}
+                  onChange={(e) => setTeacherEmail(e.target.value)}
+                  className={
+                    'input-light-underline pr-8 ' +
+                    (teacherState === 'notfound' ? 'border-b-2 border-danger' : '')
+                  }
+                />
+                <span className="absolute right-0 top-[26px]">
+                  {teacherState === 'checking' && (
+                    <span className="inline-block w-4 h-4 rounded-full border-2 border-grey-300 border-t-brand animate-spin" />
+                  )}
+                  {teacherState === 'ok' && <Check size={20} className="text-brand" />}
+                  {teacherState === 'notfound' && <XIcon size={20} className="text-danger" />}
+                </span>
+                {teacherState === 'notfound' && (
+                  <div className="text-[10px] text-danger mt-1">{t('signupStudent:teacherNotFound')}</div>
+                )}
+                {teacherState === 'ok' && (
+                  <div className="text-[10px] text-brand mt-1">{t('signupStudent:teacherFound')}</div>
+                )}
               </div>
             )}
 
