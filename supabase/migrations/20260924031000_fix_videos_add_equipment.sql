@@ -1,7 +1,9 @@
--- Agregar videos de MuscleWiki a los 30 ejercicios del catálogo global
--- Los videos fueron descargados y validados del catálogo público de MuscleWiki
--- Cada video es un MP4 directo desde media.musclewiki.com con validación de contenido
+-- Corrección: agregar columna equipment primero, luego actualizar videos
 
+alter table public.exercises
+add column if not exists equipment text;
+
+-- Ahora actualizar videos y equipment
 update public.exercises e
 set video_url = t.video_url,
     media_type = t.media_type,
@@ -42,4 +44,5 @@ where e.name = t.exercise_name and e.trainer_id is null;
 
 notify pgrst, 'reload schema';
 
+-- Verificar resultados
 select count(*) as videos_added from public.exercises where trainer_id is null and video_url like 'https://media.musclewiki.com%';
