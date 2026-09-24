@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ChevronDown, Search } from 'lucide-react'
 import { CampoInterno } from './CampoInterno'
 
@@ -33,6 +34,7 @@ export function DarkSelectSheet({
   /** Etiqueta dentro de la caja en vez de encima (modulo 04). */
   labelInside?: boolean
 }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
   const selected = options.find((o) => o.id === value)
@@ -89,7 +91,7 @@ export function DarkSelectSheet({
                     autoFocus
                     value={q}
                     onChange={(e) => setQ(e.target.value)}
-                    placeholder="Buscar..."
+                    placeholder={t('general:ui.search')}
                     className="flex-1 bg-transparent text-white text-rt-14 outline-none placeholder:text-grey-500"
                   />
                 </div>
@@ -98,7 +100,7 @@ export function DarkSelectSheet({
 
             <ul className="flex-1 overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+12px)]">
               {visibles.length === 0 && (
-                <li className="text-center text-rt-13 text-grey-500 py-6">Nenhum dado encontrado</li>
+                <li className="text-center text-rt-13 text-grey-500 py-6">{t('general:ui.nothingFound')}</li>
               )}
               {visibles.map((o) => {
                 const sel = o.id === value

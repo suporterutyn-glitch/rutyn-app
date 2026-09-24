@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/lib/auth'
 import { LanguageToggle } from '@/components/LanguageToggle'
+import { aviso } from '@/lib/avisos'
 
 type Charge = { id: string; amount: number; due_date: string; status: string; format: string | null }
 type Hydration = { ml: number; target_ml: number }
@@ -269,13 +270,13 @@ export function AlunoHome() {
                   <div className="w-11 h-11 rounded-md bg-surface-input flex flex-col items-center justify-center shrink-0">
                     <div className="text-white text-rt-14 font-bold leading-none">{d.getDate()}</div>
                     <div className="text-white/60 text-rt-9 uppercase">
-                      {d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}
+                      {d.toLocaleDateString(localeDe(), { month: 'short' }).replace('.', '')}
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-white text-rt-14 font-semibold truncate">{c.title}</div>
                     <div className="text-white/60 text-rt-11">
-                      {d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      {d.toLocaleTimeString(localeDe(), { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
                 </li>
@@ -341,8 +342,8 @@ export function AlunoHome() {
               format: cur.format, amount: cur.amount, due_date: dueDate, status: 'pending',
             })
             await supabase.from('notifications').insert({
-              user_id: inv.teacher_id, type: 'invite', title: 'Proposta aceita!',
-              body: `${profile.full_name ?? 'Aluno'} aceitou sua contraproposta.`,
+              user_id: inv.teacher_id, type: 'invite',
+              ...aviso('counterAccepted', { who: profile.full_name }),
             })
             nav('/aluno', { replace: true })
             location.reload()

@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { AlertTriangle, HelpCircle } from 'lucide-react'
 
 /**
@@ -10,8 +11,8 @@ import { AlertTriangle, HelpCircle } from 'lucide-react'
 export function ConfirmDialog({
   message,
   detail,
-  confirmLabel = 'Confirmar',
-  cancelLabel = 'Cancelar',
+  confirmLabel,
+  cancelLabel,
   tone = 'normal',
   children,
   onConfirm,
@@ -26,6 +27,7 @@ export function ConfirmDialog({
   onConfirm: () => void
   onCancel: () => void
 }) {
+  const { t } = useTranslation()
   const peligro = tone === 'danger'
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 px-8" onClick={onCancel}>
@@ -50,7 +52,7 @@ export function ConfirmDialog({
             onClick={onCancel}
             className="flex-1 h-11 rounded-[22px] border border-grey-700 text-white/80 text-rt-14 font-semibold"
           >
-            {cancelLabel}
+            {cancelLabel ?? t('general:ui.cancel')}
           </button>
           <button
             type="button"
@@ -60,7 +62,7 @@ export function ConfirmDialog({
               (peligro ? 'bg-[#E53935]' : 'bg-brand')
             }
           >
-            {confirmLabel}
+            {confirmLabel ?? t('general:ui.confirm')}
           </button>
         </div>
       </div>

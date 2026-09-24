@@ -120,7 +120,7 @@ function NuevaRutina({ ejercicios, onCerrar, onListo, onError }: {
             className="w-full h-[60px] px-4 rounded-[14px] bg-surface-input border border-surface-line text-white text-rt-15 placeholder:text-grey-600 outline-none focus:border-brand"
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
-            placeholder="TREINO - A"
+            placeholder={t('general:ui.workoutName')}
           />
         </div>
         <CajaSelector label={t('projetos:c.difficulty')} valor={dificultad} placeholder={t('projetos:c.beginnerPh')} lista={dificultades} lang={i18n.language} onAbrir={() => setAbriendo('dificuldade')} />

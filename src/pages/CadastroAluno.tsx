@@ -8,11 +8,12 @@ import { RutynLogo } from '@/components/RutynLogo'
 import { SelectSheet } from '@/components/SelectSheet'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { countryByCode } from '@/lib/countries'
+import { idiomaDe } from '@/lib/catalogos'
 
 export function CadastroAlunoPage() {
   const { t, i18n } = useTranslation()
   const nav = useNavigate()
-  const lang = (i18n.language.startsWith('es') ? 'es' : 'pt') as 'pt' | 'es'
+  const lang = idiomaDe(i18n.language)
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -47,7 +48,7 @@ export function CadastroAlunoPage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (!accept) { setError('Aceite os termos'); return }
+    if (!accept) { setError(t('general:acceptTerms')); return }
     if (password !== confirmPassword) { setError(t('signupTeacher:passwordMismatch')); return }
     if (hasTeacher && teacherState !== 'ok') { setError(t('signupStudent:teacherNotFound')); return }
     setError(null)
@@ -117,7 +118,7 @@ export function CadastroAlunoPage() {
             <div className="relative">
               <label className="block text-rt-11 text-ink-placeholder font-semibold">{t('password')}</label>
               <input type={showPw ? 'text' : 'password'} required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className="input-light-underline pr-8" />
-              <button type="button" onClick={() => setShowPw((v) => !v)} className="absolute right-0 bottom-2 text-brand" aria-label="Mostrar senha">
+              <button type="button" onClick={() => setShowPw((v) => !v)} className="absolute right-0 bottom-2 text-brand" aria-label={t('general:showPassword')}>
                 {showPw ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
@@ -132,7 +133,7 @@ export function CadastroAlunoPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="input-light-underline pr-8"
               />
-              <button type="button" onClick={() => setShowPw2((v) => !v)} className="absolute right-0 bottom-2 text-brand" aria-label="Mostrar senha">
+              <button type="button" onClick={() => setShowPw2((v) => !v)} className="absolute right-0 bottom-2 text-brand" aria-label={t('general:showPassword')}>
                 {showPw2 ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>

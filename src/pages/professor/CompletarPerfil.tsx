@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { PRICE_RANGES, currencyOf, formatMoney } from '@/lib/plans'
 import { DarkSelectSheet, DarkMultiSheet } from '@/components/DarkSheets'
-import { COUNTRIES } from '@/lib/countries'
+import { COUNTRIES, nombrePais } from '@/lib/countries'
 import { InputInterno, CampoInterno } from '@/components/CampoInterno'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { atuacoes, especialidades, formatosTrabalho, clientesIdeais, etiqueta } from '@/lib/catalogos'
@@ -107,7 +107,7 @@ export function CompletarPerfilPage() {
           searchable
           options={COUNTRIES.map((c) => ({
             id: c.code,
-            label: `${c.flag}  ${lang.startsWith('es') ? c.name_es : c.name_pt}`,
+            label: `${c.flag}  ${nombrePais(c, lang)}`,
           }))}
         />
 
@@ -203,6 +203,7 @@ function RangeField({
   label: string; min: number; max: number; step: number; currency: string
   valueMin: number; valueMax: number; onChange: (a: number, b: number) => void
 }) {
+  const { t } = useTranslation()
   const pct = (v: number) => ((v - min) / (max - min)) * 100
   return (
     <div>
@@ -220,13 +221,13 @@ function RangeField({
         />
         <input
           type="range" min={min} max={max} step={step} value={valueMin}
-          aria-label={`${label} — mínimo`}
+          aria-label={t('general:ui.min', { label })}
           onChange={(e) => onChange(Math.min(Number(e.target.value), valueMax - step), valueMax)}
           className="rango-doble"
         />
         <input
           type="range" min={min} max={max} step={step} value={valueMax}
-          aria-label={`${label} — máximo`}
+          aria-label={t('general:ui.max', { label })}
           onChange={(e) => onChange(valueMin, Math.max(Number(e.target.value), valueMin + step))}
           className="rango-doble"
         />

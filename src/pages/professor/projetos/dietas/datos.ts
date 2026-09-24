@@ -3,6 +3,7 @@ import { macrosDe, sumarMacros, type Macros } from '@/lib/nutricion'
 import { abreviaturaUnidad, etiquetaDe, tiposRefeicao } from '@/lib/catalogos'
 import { nombreEjercicio as nombreEnIdioma } from '@/lib/nombreEjercicio'
 import type { Food } from '../FoodsTab'
+import i18n from '@/lib/i18n'
 
 /** Alimento dentro de una refeição: guarda copia de nombre y macros (regla 10). */
 export type AlimentoComida = {
@@ -151,7 +152,7 @@ export function copiaParaAlumno(d: Dieta, lang = 'pt') {
 /** Duplica una dieta completa (refeições, receitas y alimentos) para el mismo profesor. */
 export async function duplicarDieta(d: Dieta, ownerId: string, position: number) {
   const { data: nueva, error } = await supabase.from('diets')
-    .insert({ owner_id: ownerId, name: `${d.name} (cópia)`, goal: d.goal, is_favorite: false, position })
+    .insert({ owner_id: ownerId, name: i18n.t('general:ui.copy', { name: d.name }), goal: d.goal, is_favorite: false, position })
     .select('id').single()
   if (error) throw error
   for (const m of d.meals) {

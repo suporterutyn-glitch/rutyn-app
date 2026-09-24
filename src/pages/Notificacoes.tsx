@@ -5,13 +5,15 @@ import { ArrowLeft, Bell, MessageSquare, Wallet, ClipboardCheck, Dumbbell, Alert
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { EmptyState } from '@/pages/professor/projetos/RoutinesTab'
+import { textoAviso, type DatosAviso } from '@/lib/avisos'
+import { localeDe } from '@/lib/fechas'
 
 type N = {
   id: string
   type: string
   title: string
   body: string | null
-  data: { image_url?: string } | null
+  data: { image_url?: string; key?: string; params?: DatosAviso } | null
   read_at: string | null
   created_at: string
 }
@@ -45,8 +47,8 @@ const TONO: Record<string, { fondo: string; texto: string; tag: string }> = {
 export function NotificacoesPage() {
   const nav = useNavigate()
   const { profile } = useAuth()
-  const { t } = useTranslation()
-  const [items, setItems] = useState<N[]>([])
+  const { t, i18n } = useTranslation()
+  const [crudas, setItems] = useState<N[]>([])
   const [loading, setLoading] = useState(true)
   const [filtro, setFiltro] = useState<Filtro>('all')
   const [abierta, setAbierta] = useState<N | null>(null)
@@ -79,6 +81,12 @@ export function NotificacoesPage() {
       setLoading(false)
     })()
   }, [profile?.id])
+
+  // Los avisos de la app llegan como clave + datos: se traducen acá.
+  const items = useMemo(
+    () => crudas.map((n) => ({ ...n, ...textoAviso(n, t, i18n.language) })),
+    [crudas, t, i18n.language],
+  )
 
   const filtradas = useMemo(
     () => (filtro === 'all' ? items : items.filter((n) => EN_FILTRO[filtro].includes(n.type))),
@@ -144,7 +152,7 @@ export function NotificacoesPage() {
       </div>
 
       {loading ? (
-        <div className="text-white/60 text-rt-13 py-8 text-center">Carregando…</div>
+        <div className="text-white/60 text-rt-13 py-8 text-center">{t('common:loading')}</div>
       ) : filtradas.length === 0 ? (
         <EmptyState icon={Bell} title={t('notifications:none')} body={t('notifications:noneSub')} />
       ) : (
@@ -179,7 +187,7 @@ export function NotificacoesPage() {
           <button
             onClick={() => setImagenGrande(null)}
             className="absolute top-[calc(env(safe-area-inset-top)+16px)] right-4 w-10 h-10 rounded-full bg-black/60 flex items-center justify-center text-white"
-            aria-label="Fechar"
+            aria-label={t('common:close')}
           >
             <X size={22} />
           </button>
@@ -192,6 +200,7 @@ export function NotificacoesPage() {
 function DetalleNotificacion({ n, tag, onVerImagen, onClose }: {
   n: N; tag: string; onVerImagen: (url: string) => void; onClose: () => void
 }) {
+  const { t, i18n } = useTranslation()
   const Icon = ICON[n.type] ?? Bell
   const tono = TONO[n.type] ?? TONO.system
   const imagen = n.data?.image_url
@@ -208,11 +217,11 @@ function DetalleNotificacion({ n, tag, onVerImagen, onClose }: {
           <div className="flex-1 min-w-0">
             <div className="text-white text-rt-18 font-bold leading-tight">{n.title}</div>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-grey-500 text-rt-11">{new Date(n.created_at).toLocaleString()}</span>
+              <span className="text-grey-500 text-rt-11">{new Date(n.created_at).toLocaleString(localeDe(i18n.language))}</span>
               <span className={'text-rt-10 font-semibold px-2 py-0.5 rounded-tag ' + tono.tag}>{tag}</span>
             </div>
           </div>
-          <button onClick={onClose} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white shrink-0" aria-label="Fechar">
+          <button onClick={onClose} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white shrink-0" aria-label={t('common:close')}>
             <X size={18} />
           </button>
         </div>

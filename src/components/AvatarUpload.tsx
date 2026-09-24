@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Camera, User as UserIcon, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
@@ -6,6 +7,7 @@ import { useAuth } from '@/lib/auth'
 type Props = { size?: number; className?: string }
 
 export function AvatarUpload({ size = 96, className = '' }: Props) {
+  const { t } = useTranslation()
   const { profile, refresh } = useAuth()
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
@@ -14,7 +16,7 @@ export function AvatarUpload({ size = 96, className = '' }: Props) {
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file || !profile?.id) return
-    if (file.size > 2 * 1024 * 1024) { setError('Máximo 2MB'); return }
+    if (file.size > 2 * 1024 * 1024) { setError(t('general:ui.maxSize')); return }
     setError(null); setUploading(true)
 
     const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
@@ -46,7 +48,7 @@ export function AvatarUpload({ size = 96, className = '' }: Props) {
         onClick={() => inputRef.current?.click()}
         className="relative rounded-full bg-surface-raised border-2 border-brand overflow-hidden active:scale-95 transition"
         style={{ width: size, height: size }}
-        aria-label="Alterar foto"
+        aria-label={t('general:ui.changePhoto')}
       >
         {profile?.avatar_url ? (
           <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />

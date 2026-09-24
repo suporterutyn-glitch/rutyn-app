@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Copy, CheckCircle2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { currencyOf, formatMoney } from '@/lib/plans'
+import { localeDe } from '@/lib/fechas'
+import { aviso } from '@/lib/avisos'
 
 type Charge = { id: string; amount: number; due_date: string; status: string }
 type Teacher = { full_name: string | null; bank_holder: string | null; bank_name: string | null; bank_agency: string | null; bank_account: string | null; pix_key: string | null; country: string | null }
 type Proposal = { id: string; new_amount: number; new_format: string; reason: string | null; teacher_id: string }
 
 export function MensalidadePage() {
+  const { t, i18n } = useTranslation()
   const nav = useNavigate()
   const { profile } = useAuth()
   const [charge, setCharge] = useState<Charge | null>(null)
@@ -39,8 +43,7 @@ export function MensalidadePage() {
     }).eq('id', proposal.id)
     await supabase.from('notifications').insert({
       user_id: proposal.teacher_id, type: 'payment',
-      title: accept ? 'Aluno aceitou a alteração' : 'Aluno recusou a alteração',
-      body: `${profile.full_name ?? 'Aluno'} ${accept ? 'aceitou' : 'recusou'} a proposta de alteração da cobrança.`,
+      ...aviso(accept ? 'changeAccepted' : 'changeRejected', { who: profile.full_name }),
     })
     setProposal(null)
   }
@@ -67,26 +70,26 @@ export function MensalidadePage() {
         <button onClick={() => nav(-1)} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-white text-rt-20 font-bold">Mensalidade</h1>
+        <h1 className="text-white text-rt-20 font-bold">{t('cuenta:mens.title')}</h1>
       </div>
 
       {proposal && (
         <div className="card-dark p-4 mb-4 border-warning/60">
-          <div className="text-warning text-rt-11 uppercase font-semibold tracking-wide mb-1">Proposta de alteração</div>
+          <div className="text-warning text-rt-11 uppercase font-semibold tracking-wide mb-1">{t('cuenta:mens.proposal')}</div>
           <div className="text-white text-rt-18 font-bold mt-1">
             {formatMoney(Number(proposal.new_amount), currency)}
-            <span className="text-rt-13 text-white/70 font-normal"> / {proposal.new_format === 'monthly' ? 'mês' : 'hora'}</span>
+            <span className="text-rt-13 text-white/70 font-normal"> / {proposal.new_format === 'monthly' ? t('cuenta:mens.month') : t('cuenta:mens.hour')}</span>
           </div>
           {proposal.reason && <div className="text-white/70 text-rt-12 mt-1">{proposal.reason}</div>}
           <div className="flex gap-2 mt-3">
-            <button onClick={() => respondProposal(false)} className="flex-1 h-10 rounded-btn-pill bg-danger-wine text-white text-rt-13 font-semibold">Recusar</button>
-            <button onClick={() => respondProposal(true)} className="flex-1 h-10 rounded-btn-pill bg-brand text-white text-rt-13 font-bold">Aceitar</button>
+            <button onClick={() => respondProposal(false)} className="flex-1 h-10 rounded-btn-pill bg-danger-wine text-white text-rt-13 font-semibold">{t('cuenta:mens.reject')}</button>
+            <button onClick={() => respondProposal(true)} className="flex-1 h-10 rounded-btn-pill bg-brand text-white text-rt-13 font-bold">{t('cuenta:mens.accept')}</button>
           </div>
         </div>
       )}
 
       {!charge ? (
-        <div className="card-dark p-6 text-center text-white/70 text-rt-13">Nenhuma cobrança pendente 🎉</div>
+        <div className="card-dark p-6 text-center text-white/70 text-rt-13">{t('cuenta:mens.none')}</div>
       ) : (
         <>
           <div className={
@@ -94,41 +97,41 @@ export function MensalidadePage() {
             (charge.status === 'awaiting' ? 'bg-pay-awaiting border-info/40' : 'bg-pay-pending border-danger-wine/40')
           }>
             <div className="text-white/70 text-rt-11 uppercase tracking-wide font-semibold">
-              {charge.status === 'awaiting' ? 'Aguardando confirmação' : 'Vence em'}
+              {charge.status === 'awaiting' ? t('cuenta:mens.awaiting') : t('cuenta:mens.due')}
             </div>
             <div className="text-white text-rt-32 font-bold leading-none mt-1">
               {formatMoney(Number(charge.amount), currency)}
             </div>
             <div className="text-white/80 text-rt-13 mt-1">
-              {new Date(charge.due_date + 'T00:00:00').toLocaleDateString('pt-BR')}
+              {new Date(charge.due_date + 'T00:00:00').toLocaleDateString(localeDe(i18n.language))}
             </div>
           </div>
 
           {teacher && (
             <div className="card-dark p-4 mb-4">
               <div className="text-white/60 text-rt-11 uppercase font-semibold tracking-wide mb-2">
-                Dados para pagamento
+                {t('cuenta:mens.payData')}
               </div>
               {teacher.pix_key && (
-                <CopyRow label="Chave PIX" value={teacher.pix_key} copied={copied === 'pix'} onCopy={() => copy(teacher.pix_key!, 'pix')} />
+                <CopyRow label={t('cuenta:mens.pix')} value={teacher.pix_key} copied={copied === 'pix'} onCopy={() => copy(teacher.pix_key!, 'pix')} />
               )}
-              {teacher.bank_holder && <InfoRow label="Titular" value={teacher.bank_holder} />}
-              {teacher.bank_name && <InfoRow label="Banco" value={teacher.bank_name} />}
-              {teacher.bank_agency && <InfoRow label="Agência" value={teacher.bank_agency} />}
+              {teacher.bank_holder && <InfoRow label={t('cuenta:mens.holder')} value={teacher.bank_holder} />}
+              {teacher.bank_name && <InfoRow label={t('cuenta:mens.bank')} value={teacher.bank_name} />}
+              {teacher.bank_agency && <InfoRow label={t('cuenta:mens.agency')} value={teacher.bank_agency} />}
               {teacher.bank_account && (
-                <CopyRow label="Conta" value={teacher.bank_account} copied={copied === 'account'} onCopy={() => copy(teacher.bank_account!, 'account')} />
+                <CopyRow label={t('cuenta:mens.account')} value={teacher.bank_account} copied={copied === 'account'} onCopy={() => copy(teacher.bank_account!, 'account')} />
               )}
             </div>
           )}
 
           {charge.status === 'pending' ? (
             <button className="btn-save" disabled={declaring} onClick={declarePaid}>
-              {declaring ? 'Enviando…' : 'Já Paguei'}
+              {declaring ? t('cuenta:mens.sending') : t('cuenta:mens.paid')}
             </button>
           ) : (
             <div className="card-dark p-4 flex items-center gap-3 border-info/40">
               <CheckCircle2 className="text-info" />
-              <div className="text-white text-rt-13">Aguardando o professor confirmar o pagamento.</div>
+              <div className="text-white text-rt-13">{t('cuenta:mens.waitingTeacher')}</div>
             </div>
           )}
         </>

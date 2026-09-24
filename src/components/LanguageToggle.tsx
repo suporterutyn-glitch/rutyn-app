@@ -6,7 +6,7 @@ const LANGS = ['pt', 'es', 'en'] as const
 const FLAGS = { pt: '🇧🇷', es: '🇪🇸', en: '🇺🇸' }
 
 export function LanguageToggle() {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [current, setCurrent] = useState<'pt' | 'es' | 'en'>(() => {
     const stored = localStorage.getItem('rutyn.lang')
     return (stored === 'pt' || stored === 'es' || stored === 'en') ? stored : 'pt'
@@ -41,7 +41,7 @@ export function LanguageToggle() {
       type="button"
       onClick={handleClick}
       className="flex items-center gap-2 px-3 h-9 rounded-menu bg-surface-raised text-white text-rt-12 font-semibold transition active:scale-95"
-      aria-label="Alternar idioma"
+      aria-label={t('general:ui.switchLang')}
     >
       <span className="text-lg leading-none">{FLAGS[current]}</span>
       <span className="uppercase">{current}</span>

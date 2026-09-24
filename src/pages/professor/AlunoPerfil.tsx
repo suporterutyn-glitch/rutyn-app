@@ -11,6 +11,7 @@ import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { ProgressaoCarga } from '@/components/ProgressaoCarga'
 import { RotinasAluno } from './aluno/RotinasAluno'
 import { DietsTab } from './projetos/DietsTab'
+import { aviso } from '@/lib/avisos'
 
 type StudentProfile = {
   id: string
@@ -77,7 +78,7 @@ export function AlunoPerfilPage() {
     setConfirmando(null)
     const { error } = await supabase.rpc('gestionar_vinculo_aluno', { aluno_id: id, accion: 'suspender', mensaje: null })
     if (error) { setErrorAccion(error.message); return }
-    await supabase.from('notifications').insert({ user_id: id, type: 'warning', title: 'Sua conta foi suspensa', body: 'Fale com seu professor para regularizar.' })
+    await supabase.from('notifications').insert({ user_id: id, type: 'warning', ...aviso('suspended') })
     await load(); setMenuOpen(false)
   }
   async function reactivate() {
@@ -94,8 +95,7 @@ export function AlunoPerfilPage() {
     if (error) { setErrorAccion(error.message); return }
     await supabase.from('notifications').insert({
       user_id: id, type: 'warning',
-      title: 'Removido da lista',
-      body: `${me?.full_name ?? 'Seu professor'} te removeu.${reason ? ` Motivo: ${reason}` : ''}`,
+      ...aviso(reason ? 'removedReason' : 'removed', { who: me?.full_name, reason }),
     })
     nav('/professor/alunos', { replace: true })
   }

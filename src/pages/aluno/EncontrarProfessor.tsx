@@ -7,6 +7,8 @@ import { useAuth } from '@/lib/auth'
 import { useTranslation } from 'react-i18next'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { currencyOf, formatMoneyShort } from '@/lib/plans'
+import { atuacoes, especialidades, formatosTrabalho, etiquetaDe } from '@/lib/catalogos'
+import { countryByCode, nombrePais } from '@/lib/countries'
 
 type Teacher = {
   id: string
@@ -100,7 +102,7 @@ export function EncontrarProfessorPage() {
         <div className="flex items-center justify-between mb-5">
           <div className="min-w-0">
             <div className="text-white text-rt-20 font-bold truncate">
-              {t('aluno:hello', { name: profile?.full_name?.split(' ')[0] ?? 'Aluno' })}
+              {t('aluno:hello', { name: profile?.full_name?.split(' ')[0] ?? t('cuenta:mk.student') })}
             </div>
             <div className="text-white/60 text-rt-11 mt-0.5 truncate">{t('aluno:welcome')}</div>
           </div>
@@ -109,7 +111,7 @@ export function EncontrarProfessorPage() {
             <button
               onClick={() => nav('/aluno/notificacoes')}
               className="w-10 h-10 rounded-full bg-surface-raised flex items-center justify-center"
-              aria-label="Notificações"
+              aria-label={t('cuenta:mk.notifications')}
             >
               <Bell size={20} className="text-white" />
             </button>
@@ -136,7 +138,7 @@ export function EncontrarProfessorPage() {
               'w-[50px] h-[50px] rounded-[10px] relative flex items-center justify-center ' +
               (activeFilters > 0 ? 'bg-brand/20 border border-brand' : 'bg-white/10 border border-white/30')
             }
-            aria-label="Filtros"
+            aria-label={t('cuenta:mk.filters')}
           >
             <Filter size={20} className={activeFilters > 0 ? 'text-brand' : 'text-white'} />
             {activeFilters > 0 && (
@@ -148,7 +150,7 @@ export function EncontrarProfessorPage() {
         </div>
 
         {loading ? (
-          <div className="text-white/60 text-rt-13 py-8 text-center">Carregando…</div>
+          <div className="text-white/60 text-rt-13 py-8 text-center">{t('common:loading')}</div>
         ) : filtered.length === 0 ? (
           <div className="card-dark p-6 text-center">
             <UserIcon size={48} className="text-grey-600 mx-auto mb-3" />
@@ -182,7 +184,7 @@ export function EncontrarProfessorPage() {
         )}
 
         {!profile?.teacher_id && (
-          <button onClick={signOut} className="text-white/50 text-rt-12 mt-6 text-center block mx-auto">Sair</button>
+          <button onClick={signOut} className="text-white/50 text-rt-12 mt-6 text-center block mx-auto">{t('cuenta:mk.exit')}</button>
         )}
 
         {filtersOpen && (
@@ -208,13 +210,14 @@ export function EncontrarProfessorPage() {
 
 /** Tarjeta de la lista: nombre, rol + formato, región y rango de precio. */
 function TarjetaProfesor({ t: prof, invitado = false, lang }: { t: Teacher; invitado?: boolean; lang: 'pt' | 'es' | 'en' }) {
+  const { t } = useTranslation()
   const moneda = currencyOf(prof.country)
-  const formato = FORMATO_LABEL[lang][(prof.work_formats ?? [])[0] ?? ''] ?? ''
+  const formato = etiquetaDe(formatosTrabalho, (prof.work_formats ?? [])[0], lang)
   const region = [prof.state, prof.city].filter(Boolean).join(' - ')
 
   const rango =
     prof.price_monthly_min != null && prof.price_monthly_max != null
-      ? `${formatMoneyShort(Number(prof.price_monthly_min), moneda)} - ${formatMoneyShort(Number(prof.price_monthly_max), moneda)}/${SUFIJO_MES[lang]}`
+      ? `${formatMoneyShort(Number(prof.price_monthly_min), moneda)} - ${formatMoneyShort(Number(prof.price_monthly_max), moneda)}/${t('cuenta:mk.perMonth')}`
       : prof.price_hourly_min != null && prof.price_hourly_max != null
         ? `${formatMoneyShort(Number(prof.price_hourly_min), moneda)} - ${formatMoneyShort(Number(prof.price_hourly_max), moneda)}/h`
         : null
@@ -234,14 +237,14 @@ function TarjetaProfesor({ t: prof, invitado = false, lang }: { t: Teacher; invi
 
         <div className="flex-1 min-w-0">
           <div className="text-white text-rt-16 font-bold truncate">{prof.full_name}</div>
-          <div className="text-white/60 text-rt-12">{ROL_LABEL[lang]}</div>
+          <div className="text-white/60 text-rt-12">{prof.occupation ? etiquetaDe(atuacoes, prof.occupation, lang) : t('cuenta:mk.instructor')}</div>
           {formato && <div className="text-white/60 text-rt-12">{formato}</div>}
         </div>
 
         <div className="flex flex-col items-end gap-2 min-w-0 max-w-[46%]">
           {invitado ? (
             <span className="px-3 h-7 rounded-btn-pill bg-brand text-white text-rt-11 font-semibold flex items-center">
-              {INVITADO_LABEL[lang]}
+              {t('cuenta:mk.inviteSent')}
             </span>
           ) : region ? (
             <span className="px-3 py-1 rounded-btn-pill bg-tone-rose text-white text-rt-11 font-medium max-w-full truncate block">
@@ -256,20 +259,12 @@ function TarjetaProfesor({ t: prof, invitado = false, lang }: { t: Teacher; invi
   )
 }
 
-const ROL_LABEL: Record<string, string> = { pt: 'Instrutor', es: 'Instructor', en: 'Instructor' }
-const INVITADO_LABEL: Record<string, string> = { pt: 'Convite enviado', es: 'Invitación enviada', en: 'Invite sent' }
-const SUFIJO_MES: Record<string, string> = { pt: 'mês', es: 'mes', en: 'mo' }
-const FORMATO_LABEL: Record<string, Record<string, string>> = {
-  pt: { presencial: 'Presencial', hibrido: 'Híbrido', online: 'Online' },
-  es: { presencial: 'Presencial', hibrido: 'Híbrido', online: 'Online' },
-  en: { presencial: 'In person', hibrido: 'Hybrid', online: 'Online' },
-}
-
 function FiltersSheet({ filters, teachers, textos, onClose, onApply }: {
   filters: Filters; teachers: Teacher[]
   textos: Record<string, string>
   onClose: () => void; onApply: (f: Filters) => void
 }) {
+  const { t, i18n } = useTranslation()
   const [f, setF] = useState<Filters>(filters)
   const occupations = uniq(teachers.map((t) => t.occupation).filter(Boolean) as string[])
   const specialties = uniq(teachers.flatMap((t) => t.specialties ?? []))
@@ -285,7 +280,7 @@ function FiltersSheet({ filters, teachers, textos, onClose, onApply }: {
       >
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-white text-rt-20 font-bold flex-1 text-center">{textos.filterTitle}</h2>
-          <button onClick={onClose} className="w-10 h-10 rounded-full bg-surface-line flex items-center justify-center text-white" aria-label="Fechar">
+          <button onClick={onClose} className="w-10 h-10 rounded-full bg-surface-line flex items-center justify-center text-white" aria-label={t('common:close')}>
             <X size={20} />
           </button>
         </div>
@@ -303,13 +298,13 @@ function FiltersSheet({ filters, teachers, textos, onClose, onApply }: {
             val={f.payFormat}
             on={(v) => setF({ ...f, payFormat: v })}
           />
-          <Chips label={textos.professional} opts={occupations.map((o) => ({ v: o, l: o }))} val={f.occupation} on={(v) => setF({ ...f, occupation: v })} />
-          <Chips label={textos.specialty} opts={specialties.map((o) => ({ v: o, l: o }))} val={f.specialty} on={(v) => setF({ ...f, specialty: v })} />
+          <Chips label={textos.professional} opts={occupations.map((o) => ({ v: o, l: etiquetaDe(atuacoes, o, i18n.language) }))} val={f.occupation} on={(v) => setF({ ...f, occupation: v })} />
+          <Chips label={textos.specialty} opts={specialties.map((o) => ({ v: o, l: etiquetaDe(especialidades, o, i18n.language) }))} val={f.specialty} on={(v) => setF({ ...f, specialty: v })} />
 
           <div>
             <div className="text-white text-rt-16 font-bold mb-3">{textos.region}</div>
             <div className="flex flex-col gap-3">
-              <CajaSelect label={textos.country} val={f.country} opts={paises} on={(v) => setF({ ...f, country: v, state: '', city: '' })} />
+              <CajaSelect label={textos.country} val={f.country} opts={paises} etiquetas={Object.fromEntries(paises.map((c) => { const p = countryByCode(c); return [c, p ? `${p.flag} ${nombrePais(p, i18n.language)}` : c] }))} on={(v) => setF({ ...f, country: v, state: '', city: '' })} />
               <CajaSelect label={textos.state} val={f.state} opts={states} on={(v) => setF({ ...f, state: v, city: '' })} />
               <CajaSelect label={textos.city} val={f.city} opts={cities} on={(v) => setF({ ...f, city: v })} />
             </div>
@@ -354,7 +349,7 @@ function Segmento({ label, opts, val, on }: { label: string; opts: { v: string; 
 }
 
 /** Caja con etiqueta arriba, como País/Estado/Cidade del diseño. */
-function CajaSelect({ label, val, opts, on }: { label: string; val: string; opts: string[]; on: (v: string) => void }) {
+function CajaSelect({ label, val, opts, on, etiquetas }: { label: string; val: string; opts: string[]; on: (v: string) => void; etiquetas?: Record<string, string> }) {
   return (
     <div className="relative rounded-[12px] bg-surface-input border border-surface-line px-4 pt-2 pb-1">
       <div className={'text-rt-11 ' + (val ? 'text-brand' : 'text-white/40')}>{label}</div>
@@ -364,7 +359,7 @@ function CajaSelect({ label, val, opts, on }: { label: string; val: string; opts
         className="w-full bg-transparent text-white text-rt-15 outline-none appearance-none py-1 pr-6"
       >
         <option value="">—</option>
-        {opts.map((o) => <option key={o} value={o}>{o}</option>)}
+        {opts.map((o) => <option key={o} value={o}>{etiquetas?.[o] ?? o}</option>)}
       </select>
       <ChevronDown size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-grey-500 pointer-events-none" />
     </div>

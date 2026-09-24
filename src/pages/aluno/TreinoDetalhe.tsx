@@ -7,6 +7,7 @@ import { DragSlider } from '@/components/DragSlider'
 import { BannerMedia, MiniaturaMedia } from '@/components/MediaExercicio'
 import { useTranslation } from 'react-i18next'
 import { objetivosTreino, gruposMusculares, etiquetaDe } from '@/lib/catalogos'
+import { localeDe } from '@/lib/fechas'
 
 type SR = {
   id: string
@@ -162,13 +163,13 @@ function ProgressChart({ points }: { points: { date: string; vol: number }[] }) 
         <circle key={i} cx={c.x} cy={c.y} r="3" fill="#91C145" />
       ))}
       <text x={P} y={H - 2} fontSize="9" fill="#9E9E9E">
-        {new Date(points[0].date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+        {new Date(points[0].date).toLocaleDateString(localeDe(), { day: '2-digit', month: '2-digit' })}
       </text>
       <text x={W - P} y={H - 2} fontSize="9" fill="#9E9E9E" textAnchor="end">
-        {new Date(points[points.length - 1].date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+        {new Date(points[points.length - 1].date).toLocaleDateString(localeDe(), { day: '2-digit', month: '2-digit' })}
       </text>
       <text x={W - P} y={12} fontSize="10" fill="#7CB342" textAnchor="end" fontWeight="700">
-        {Math.round(coords[coords.length - 1].vol).toLocaleString('pt-BR')} kg
+        {Math.round(coords[coords.length - 1].vol).toLocaleString(localeDe())} kg
       </text>
     </svg>
   )

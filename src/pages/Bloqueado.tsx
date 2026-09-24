@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Ban, UserX, CreditCard, MessageCircle } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
@@ -13,6 +14,7 @@ type Profesor = { full_name: string | null; phone: string | null }
  * como en los prints 022, 023 y 024 del módulo 01.
  */
 export function BloqueadoPage() {
+  const { t } = useTranslation()
   const [sp] = useSearchParams()
   const nav = useNavigate()
   const { profile, signOut } = useAuth()
@@ -46,22 +48,22 @@ export function BloqueadoPage() {
         <DialogoEstado
           icono={<Ban size={38} className="text-danger" />}
           tonoIcono="rojo"
-          titulo="Conta Suspensa"
-          destacado="Sua conta foi suspensa pelo seu professor."
+          titulo={t('cuenta:bloq.suspended')}
+          destacado={t('cuenta:bloq.suspendedHi')}
           cuerpo={profile?.link_message
             ? undefined
-            : 'Entre em contato com o seu professor para regularizar a situação e voltar a acessar o app.'}
+            : t('cuenta:bloq.suspendedBody')}
           acciones={
             <>
               <BotonWhatsapp onClick={hablarConProfesor}>
-                <MessageCircle size={18} /> Falar com Professor
+                <MessageCircle size={18} /> {t('cuenta:bloq.talkTeacher')}
               </BotonWhatsapp>
-              <BotonSuave onClick={signOut}>Sair</BotonSuave>
+              <BotonSuave onClick={signOut}>{t('cuenta:bloq.exit')}</BotonSuave>
             </>
           }
         >
           {profile?.link_message && (
-            <CajaMensaje titulo="Mensagem do professor:" texto={profile.link_message} />
+            <CajaMensaje titulo={t('cuenta:bloq.teacherMsg')} texto={profile.link_message} />
           )}
           {profesor?.full_name && <ChipProfesor nombre={profesor.full_name} />}
         </DialogoEstado>
@@ -75,20 +77,20 @@ export function BloqueadoPage() {
         <DialogoEstado
           icono={<UserX size={38} className="text-warning" />}
           tonoIcono="naranja"
-          titulo="Removido da Lista"
-          destacado={`${profesor?.full_name ?? 'Seu professor'} removeu você da lista de alunos.`}
-          cuerpo="Você pode buscar outro professor para continuar treinando."
+          titulo={t('cuenta:bloq.removed')}
+          destacado={t('cuenta:bloq.removedHi', { who: profesor?.full_name ?? t('cuenta:bloq.yourTeacher') })}
+          cuerpo={t('cuenta:bloq.removedBody')}
           acciones={
             <>
               <BotonVerde onClick={() => nav('/aluno/encontrar-professor', { replace: true })}>
-                Buscar Novo Professor
+                {t('cuenta:bloq.findNew')}
               </BotonVerde>
-              <EnlaceTexto onClick={signOut}>Sair</EnlaceTexto>
+              <EnlaceTexto onClick={signOut}>{t('cuenta:bloq.exit')}</EnlaceTexto>
             </>
           }
         >
           {profile?.link_message && (
-            <CajaMensaje titulo="Mensagem do professor:" texto={profile.link_message} />
+            <CajaMensaje titulo={t('cuenta:bloq.teacherMsg')} texto={profile.link_message} />
           )}
         </DialogoEstado>
       </Fondo>
@@ -102,13 +104,13 @@ export function BloqueadoPage() {
           icono={<CreditCard size={30} className="text-danger" />}
           tonoIcono="rojo"
           tituloEnLinea
-          titulo="Assinatura Expirada"
-          destacado="Sua assinatura expirou!"
-          cuerpo="Para continuar utilizando o app e gerenciar seus alunos, é necessário regularizar seu pagamento."
+          titulo={t('cuenta:bloq.expired')}
+          destacado={t('cuenta:bloq.expiredHi')}
+          cuerpo={t('cuenta:bloq.expiredBody')}
           acciones={
             <>
-              <BotonVerde onClick={() => nav('/professor/assinatura')}>Regularizar Pagamento</BotonVerde>
-              <EnlaceTexto onClick={() => window.open('https://wa.me/', '_blank')}>Falar com Suporte</EnlaceTexto>
+              <BotonVerde onClick={() => nav('/professor/assinatura')}>{t('cuenta:bloq.pay')}</BotonVerde>
+              <EnlaceTexto onClick={() => window.open('https://wa.me/', '_blank')}>{t('cuenta:bloq.support')}</EnlaceTexto>
             </>
           }
         />
@@ -117,8 +119,8 @@ export function BloqueadoPage() {
   }
 
   const textos = motivo === 'exclusao'
-    ? { titulo: 'Conta em Exclusão', cuerpo: 'Sua conta está em processo de exclusão.' }
-    : { titulo: 'Conta Desativada', cuerpo: 'Entre em contato com o suporte para reativar sua conta.' }
+    ? { titulo: t('cuenta:bloq.deleting'), cuerpo: t('cuenta:bloq.deletingBody') }
+    : { titulo: t('cuenta:bloq.disabled'), cuerpo: t('cuenta:bloq.disabledBody') }
 
   return (
     <Fondo>
@@ -130,9 +132,9 @@ export function BloqueadoPage() {
         acciones={
           <>
             <BotonWhatsapp onClick={() => window.open('https://wa.me/', '_blank')}>
-              <MessageCircle size={18} /> Falar com Suporte
+              <MessageCircle size={18} /> {t('cuenta:bloq.support')}
             </BotonWhatsapp>
-            <EnlaceTexto onClick={signOut}>Sair</EnlaceTexto>
+            <EnlaceTexto onClick={signOut}>{t('cuenta:bloq.exit')}</EnlaceTexto>
           </>
         }
       />

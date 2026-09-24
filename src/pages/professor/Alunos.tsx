@@ -11,6 +11,8 @@ import { WhatsAppInput } from '@/components/WhatsAppInput'
 import { DarkSelectSheet } from '@/components/DarkSheets'
 import { countryByCode } from '@/lib/countries'
 import { currencyOf, formatMoney } from '@/lib/plans'
+import { aviso } from '@/lib/avisos'
+import { idiomaDe } from '@/lib/catalogos'
 
 type Student = {
   id: string
@@ -117,8 +119,7 @@ export function AlunosPage() {
       await supabase.from('notifications').insert({
         user_id: alumno.id,
         type: 'warning',
-        title: 'Removido da lista',
-        body: `${profile?.full_name ?? 'Seu professor'} te removeu.`,
+        ...aviso('removed', { who: profile?.full_name }),
       })
     }
     setGestionando(null)
@@ -282,7 +283,7 @@ export function AlunosPage() {
 
 function NewStudentSheet({ profile, onClose, onCreated }: { profile: any; onClose: () => void; onCreated: () => void }) {
   const { t, i18n } = useTranslation()
-  const lang = (i18n.language.startsWith('es') ? 'es' : 'pt') as 'pt' | 'es'
+  const lang = idiomaDe(i18n.language)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [countryCode, setCountryCode] = useState(profile?.country ?? 'BR')

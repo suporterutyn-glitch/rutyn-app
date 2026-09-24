@@ -98,7 +98,7 @@ export function DietsTab({ query, filtro, alumno }: { query: string; filtro: Fil
     const ids = borrando.map((d) => d.id)
     const { error } = await supabase.from('diets').delete().in('id', ids)
     setBorrando(null)
-    if (error) { setAviso({ kind: 'error', message: 'Erro: ' + error.message }); return }
+    if (error) { setAviso({ kind: 'error', message: error.message }); return }
     setSeleccion((p) => p.filter((x) => !ids.includes(x)))
     await load()
   }

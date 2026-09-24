@@ -29,8 +29,8 @@ export function RedefinirSenhaPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
-    if (pw.length < 6) { setError('Senha muito curta (mínimo 6 caracteres)'); return }
-    if (pw !== pw2) { setError('Senhas não coincidem'); return }
+    if (pw.length < 6) { setError(t('general:rs.tooShort')); return }
+    if (pw !== pw2) { setError(t('general:rs.mismatch')); return }
     setSaving(true)
     const { error } = await supabase.auth.updateUser({ password: pw })
     setSaving(false)
@@ -47,30 +47,30 @@ export function RedefinirSenhaPage() {
         </button>
 
         <div className="flex-1 flex flex-col justify-center gap-6">
-          <h1 className="text-white text-rt-22 font-bold">Redefinir senha</h1>
+          <h1 className="text-white text-rt-22 font-bold">{t('general:rs.title')}</h1>
 
           {!ready ? (
             <div className="flex flex-col gap-4">
               <p className="text-white/80 text-rt-13">
                 {errorDeLinkRecuperacion === 'otp_expired'
-                  ? 'Este link expirou ou já foi usado. Peça um novo na tela de login.'
+                  ? t('general:rs.expired')
                   : errorDeLinkRecuperacion
-                    ? 'Este link não é válido. Peça um novo na tela de login.'
-                    : 'Abra o link enviado ao seu e-mail para redefinir a senha.'}
+                    ? t('general:rs.invalid')
+                    : t('general:rs.openLink')}
               </p>
               {errorDeLinkRecuperacion && (
-                <button onClick={() => nav('/login', { replace: true })} className="btn-save">Voltar ao login</button>
+                <button onClick={() => nav('/login', { replace: true })} className="btn-save">{t('general:rs.backToLogin')}</button>
               )}
             </div>
           ) : done ? (
             <div className="card-dark p-4 flex items-center gap-3 border-brand/40">
               <div className="w-10 h-10 rounded-full bg-brand/20 flex items-center justify-center text-brand text-xl">✓</div>
-              <div className="text-white text-rt-14">Senha atualizada com sucesso.</div>
+              <div className="text-white text-rt-14">{t('general:rs.done')}</div>
             </div>
           ) : (
             <form onSubmit={submit} className="flex flex-col gap-4">
               <div className="relative">
-                <label className="block text-white text-rt-13 font-semibold mb-2">Nova senha</label>
+                <label className="block text-white text-rt-13 font-semibold mb-2">{t('general:rs.newPassword')}</label>
                 <input
                   type={show ? 'text' : 'password'}
                   required
@@ -80,13 +80,13 @@ export function RedefinirSenhaPage() {
                   className="input-dark pr-10"
                   autoComplete="new-password"
                 />
-                <button type="button" onClick={() => setShow((v) => !v)} className="absolute right-3 top-11 text-brand" aria-label="Mostrar senha">
+                <button type="button" onClick={() => setShow((v) => !v)} className="absolute right-3 top-11 text-brand" aria-label={t('general:showPassword')}>
                   {show ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
 
               <div>
-                <label className="block text-white text-rt-13 font-semibold mb-2">Confirmar senha</label>
+                <label className="block text-white text-rt-13 font-semibold mb-2">{t('general:rs.confirmPassword')}</label>
                 <input
                   type={show ? 'text' : 'password'}
                   required
@@ -100,7 +100,7 @@ export function RedefinirSenhaPage() {
 
 
               <button type="submit" disabled={saving} className="btn-save mt-4">
-                {saving ? t('loading') : 'Salvar nova senha'}
+                {saving ? t('loading') : t('general:rs.save')}
               </button>
             </form>
           )}

@@ -11,7 +11,7 @@ import { cargarDieta, macrosDieta, type Dieta } from './projetos/dietas/datos'
 export function EditorDietaPage() {
   const { id } = useParams<{ id: string }>()
   const nav = useNavigate()
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [dieta, setDieta] = useState<Dieta | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -24,7 +24,7 @@ export function EditorDietaPage() {
   return (
     <div className="pt-[calc(env(safe-area-inset-top)+16px)] px-4 pb-32">
       <div className="flex items-center gap-3 mb-4">
-        <button onClick={() => nav(-1)} aria-label="Voltar" className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white"><ArrowLeft size={20} /></button>
+        <button onClick={() => nav(-1)} aria-label={t('general:ui.back')} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white"><ArrowLeft size={20} /></button>
         <div className="flex-1 min-w-0">
           <h1 className="text-white text-rt-20 font-bold truncate">{dieta?.name ?? '...'}</h1>
           {dieta?.goal && <div className="text-white/60 text-rt-11">{etiquetaDe(objetivosDieta, dieta.goal, i18n.language)}</div>}

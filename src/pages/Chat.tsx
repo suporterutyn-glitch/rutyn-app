@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Send, MessageSquare, User as UserIcon } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { EmptyState } from '@/pages/professor/projetos/RoutinesTab'
+import { localeDe } from '@/lib/fechas'
 
 type Conv = {
   id: string; teacher_id: string; student_id: string
@@ -12,6 +14,7 @@ type Conv = {
 }
 
 export function ConversasPage() {
+  const { t } = useTranslation()
   const { profile } = useAuth()
   const nav = useNavigate()
   const [convs, setConvs] = useState<Conv[]>([])
@@ -74,13 +77,13 @@ export function ConversasPage() {
             <ArrowLeft size={20} />
           </button>
         )}
-        <h1 className="text-white text-rt-20 font-bold">Mensagens</h1>
+        <h1 className="text-white text-rt-20 font-bold">{t('general:chat.title')}</h1>
       </div>
 
       {loading ? (
-        <div className="text-white/60 text-rt-13 py-8 text-center">Carregando…</div>
+        <div className="text-white/60 text-rt-13 py-8 text-center">{t('common:loading')}</div>
       ) : convs.length === 0 ? (
-        <EmptyState icon={MessageSquare} title="Sem conversas" body={isTeacher ? "Assim que você tiver alunos ativos aparecerão aqui." : "Aguarde ser vinculado a um professor."} />
+        <EmptyState icon={MessageSquare} title={t('general:chat.none')} body={isTeacher ? t('general:chat.noneTeacher') : t('general:chat.noneStudent')} />
       ) : (
         <ul className="flex flex-col gap-2">
           {convs.map((c) => {
@@ -102,7 +105,7 @@ export function ConversasPage() {
                 </div>
                 {c.last_message_at && (
                   <div className="text-grey-500 text-rt-10 self-start mt-1">
-                    {new Date(c.last_message_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    {new Date(c.last_message_at).toLocaleTimeString(localeDe(), { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 )}
                 </button>
@@ -118,6 +121,7 @@ export function ConversasPage() {
 type Msg = { id: string; conversation_id: string; sender_id: string; body: string; created_at: string }
 
 export function ConversaPage() {
+  const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const nav = useNavigate()
   const { profile } = useAuth()
@@ -177,7 +181,7 @@ export function ConversaPage() {
               <div key={m.id} className={'max-w-[80%] rounded-bubble px-3 py-2 ' + (mine ? 'self-end bg-brand text-white rounded-br-none' : 'self-start bg-surface-raised text-white rounded-bl-none')}>
                 <div className="text-rt-14 whitespace-pre-wrap break-words">{m.body}</div>
                 <div className={'text-rt-10 mt-0.5 ' + (mine ? 'text-white/70 text-right' : 'text-grey-500')}>
-                  {new Date(m.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(m.created_at).toLocaleTimeString(localeDe(), { hour: '2-digit', minute: '2-digit' })}
                 </div>
               </div>
             )
@@ -190,7 +194,7 @@ export function ConversaPage() {
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send() } }}
-            placeholder="Digite sua mensagem…"
+            placeholder={t('general:chat.placeholder')}
             className="flex-1 h-11 px-4 rounded-sheet-lg bg-surface-raised text-white text-rt-14 outline-none focus:ring-1 focus:ring-brand placeholder:text-grey-500"
           />
           <button onClick={send} disabled={!text.trim()} className="w-11 h-11 rounded-full bg-brand flex items-center justify-center disabled:opacity-40">

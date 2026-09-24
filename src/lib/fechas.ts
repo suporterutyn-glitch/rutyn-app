@@ -1,7 +1,8 @@
 import { idiomaDe } from './catalogos'
+import i18n from './i18n'
 
-/** Locale para fechas y números según el idioma de la app. */
-export function localeDe(lang: string | undefined | null) {
+/** Locale para fechas y números según el idioma de la app (sin argumento, el actual). */
+export function localeDe(lang: string | undefined | null = i18n.language) {
   const l = idiomaDe(lang)
   return l === 'es' ? 'es-ES' : l === 'en' ? 'en-US' : 'pt-BR'
 }

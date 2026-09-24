@@ -6,14 +6,15 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { AvatarUpload } from '@/components/AvatarUpload'
 import { WhatsAppInput } from '@/components/WhatsAppInput'
-import { COUNTRIES, countryByCode } from '@/lib/countries'
+import { COUNTRIES, countryByCode, nombrePais } from '@/lib/countries'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
+import { idiomaDe } from '@/lib/catalogos'
 
 export function MeuPerfilPage() {
   const nav = useNavigate()
   const { t, i18n } = useTranslation()
   const { profile, refresh } = useAuth()
-  const lang = (i18n.language.startsWith('es') ? 'es' : 'pt') as 'pt' | 'es'
+  const lang = idiomaDe(i18n.language)
   const esAluno = profile?.role === 'student'
 
   const [name, setName] = useState('')
@@ -97,7 +98,7 @@ export function MeuPerfilPage() {
             className="w-full flex items-center gap-2 border-b border-surface-divider py-2 text-left"
           >
             <span className="text-rt-16">{pais.flag}</span>
-            <span className="flex-1 text-white text-rt-14">{lang === 'es' ? pais.name_es : pais.name_pt}</span>
+            <span className="flex-1 text-white text-rt-14">{nombrePais(pais, lang)}</span>
             <ChevronDown size={18} className="text-grey-500" />
           </button>
         </div>
@@ -170,7 +171,7 @@ function CampoBloqueado({ label, value }: { label: string; value: string }) {
 }
 
 function SheetPais({ titulo, lang, value, onChange, onClose }: {
-  titulo: string; lang: 'pt' | 'es'; value: string; onChange: (c: string) => void; onClose: () => void
+  titulo: string; lang: string; value: string; onChange: (c: string) => void; onClose: () => void
 }) {
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/70" onClick={onClose}>
@@ -190,7 +191,7 @@ function SheetPais({ titulo, lang, value, onChange, onClose }: {
                 }
               >
                 <span className="text-rt-18">{c.flag}</span>
-                <span className="flex-1 text-rt-14">{lang === 'es' ? c.name_es : c.name_pt}</span>
+                <span className="flex-1 text-rt-14">{nombrePais(c, lang)}</span>
                 <span className="text-grey-500 text-rt-12">{c.dial}</span>
               </button>
             </li>

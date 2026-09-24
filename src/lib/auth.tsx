@@ -14,7 +14,7 @@ export type Profile = {
   full_name: string | null
   email?: string | null
   country: string | null
-  language: 'pt' | 'es' | null
+  language: 'pt' | 'es' | 'en' | null
   profile_complete: boolean
   teacher_id: string | null
   plan: 'free' | 'pro' | 'master' | 'elite' | null

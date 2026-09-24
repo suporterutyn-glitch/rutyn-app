@@ -5,21 +5,31 @@ import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { EmptyState, FullScreenSheet } from '@/pages/professor/projetos/RoutinesTab'
+import { aviso } from '@/lib/avisos'
+import { idiomaDe } from '@/lib/catalogos'
+import { localeDe } from '@/lib/fechas'
+import type { TFunction } from 'i18next'
 
-type Q = { id: string; label_pt: string; label_es: string; type: 'text' | 'select' | 'yesno' | 'number'; options?: string[] }
-type Template = { id: string; name: string; questions: Q[] }
+type Q = {
+  id: string; label_pt: string; label_es: string; label_en?: string
+  type: 'text' | 'select' | 'yesno' | 'number'
+  /** La respuesta se guarda con el texto en portugués; es/en solo se muestran. */
+  options?: string[]; options_es?: string[]; options_en?: string[]
+}
+type Template = { id: string; name: string; name_es?: string | null; name_en?: string | null; questions: Q[] }
 type Answer = {
   id: string
   template_id: string
   student_id: string
   submitted_at: string | null
   answers: Record<string, any>
-  anamnesis_templates?: { name: string; questions: Q[] }
+  anamnesis_templates?: Omit<Template, 'id'>
   profiles?: { full_name: string | null }
 }
 
 // PROFESSOR — lista de anamneses de um aluno + botão enviar novo modelo
 export function AnamneseProfessorPage() {
+  const { t, i18n } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const nav = useNavigate()
   const { profile } = useAuth()
@@ -32,8 +42,8 @@ export function AnamneseProfessorPage() {
     if (!id || !profile?.id) return
     setLoading(true)
     const [{ data: ans }, { data: tpls }] = await Promise.all([
-      supabase.from('anamnesis_answers').select('*,anamnesis_templates(name,questions)').eq('student_id', id).eq('teacher_id', profile.id).order('created_at', { ascending: false }),
-      supabase.from('anamnesis_templates').select('id,name,questions').eq('is_active', true),
+      supabase.from('anamnesis_answers').select('*,anamnesis_templates(name,name_es,name_en,questions)').eq('student_id', id).eq('teacher_id', profile.id).order('created_at', { ascending: false }),
+      supabase.from('anamnesis_templates').select('id,name,name_es,name_en,questions').eq('is_active', true),
     ])
     setAnswers((ans as unknown as Answer[]) ?? [])
     setTemplates((tpls as Template[]) ?? [])
@@ -44,7 +54,7 @@ export function AnamneseProfessorPage() {
   async function send(templateId: string) {
     if (!id || !profile?.id) return
     await supabase.from('anamnesis_answers').insert({ student_id: id, teacher_id: profile.id, template_id: templateId })
-    await supabase.from('notifications').insert({ user_id: id, type: 'evaluation', title: 'Anamnese pendente', body: 'Seu professor enviou uma anamnese para responder.' })
+    await supabase.from('notifications').insert({ user_id: id, type: 'evaluation', ...aviso('anamnesis') })
     setShowSend(false)
     await load()
   }
@@ -55,33 +65,33 @@ export function AnamneseProfessorPage() {
         <button onClick={() => nav(-1)} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-white text-rt-20 font-bold">Anamneses</h1>
+        <h1 className="text-white text-rt-20 font-bold">{t('anamnese:title')}</h1>
       </div>
 
       {loading ? (
-        <div className="text-white/60 text-rt-13 py-8 text-center">Carregando…</div>
+        <div className="text-white/60 text-rt-13 py-8 text-center">{t('common:loading')}</div>
       ) : answers.length === 0 ? (
-        <EmptyState icon={FileText} title="Sem anamneses" body="Envie uma anamnese para o aluno responder." />
+        <EmptyState icon={FileText} title={t('anamnese:none')} body={t('anamnese:noneTeacher')} />
       ) : (
         <ul className="flex flex-col gap-3 mb-6">
           {answers.map((a) => (
             <li key={a.id} className="card-dark p-4">
               <div className="flex items-center gap-2 mb-1">
                 <FileText size={16} className="text-brand-assess" />
-                <span className="text-white text-rt-14 font-bold">{a.anamnesis_templates?.name}</span>
+                <span className="text-white text-rt-14 font-bold">{nombreModelo(a.anamnesis_templates, i18n.language)}</span>
               </div>
               <div className="text-white/60 text-rt-11">
                 {a.submitted_at
-                  ? `Respondida em ${new Date(a.submitted_at).toLocaleDateString('pt-BR')}`
-                  : 'Aguardando o aluno responder'}
+                  ? t('anamnese:answeredOn', { date: new Date(a.submitted_at).toLocaleDateString(localeDe(i18n.language)) })
+                  : t('anamnese:waiting')}
               </div>
               {a.submitted_at && Object.keys(a.answers).length > 0 && (
                 <details className="mt-3">
-                  <summary className="text-brand text-rt-12 font-semibold cursor-pointer">Ver respostas</summary>
+                  <summary className="text-brand text-rt-12 font-semibold cursor-pointer">{t('anamnese:seeAnswers')}</summary>
                   <ul className="mt-2 flex flex-col gap-1.5">
                     {(a.anamnesis_templates?.questions ?? []).map((q) => (
                       <li key={q.id} className="text-white/80 text-rt-12">
-                        <strong className="text-white">{q.label_pt}:</strong> {String(a.answers[q.id] ?? '—')}
+                        <strong className="text-white">{pregunta(q, i18n.language)}:</strong> {respuesta(q, a.answers[q.id], t, i18n.language)}
                       </li>
                     ))}
                   </ul>
@@ -93,19 +103,19 @@ export function AnamneseProfessorPage() {
       )}
 
       <button onClick={() => setShowSend(true)} className="btn-primary-pill">
-        <Send size={18} /> Enviar nova anamnese
+        <Send size={18} /> {t('anamnese:sendNew')}
       </button>
 
       {showSend && (
-        <FullScreenSheet title="Escolher anamnese" onClose={() => setShowSend(false)}>
+        <FullScreenSheet title={t('anamnese:choose')} onClose={() => setShowSend(false)}>
           <ul className="flex flex-col gap-3">
-            {templates.map((t) => (
-              <li key={t.id}>
-                <button onClick={() => send(t.id)} className="w-full card-dark p-4 flex items-center gap-3">
+            {templates.map((tpl) => (
+              <li key={tpl.id}>
+                <button onClick={() => send(tpl.id)} className="w-full card-dark p-4 flex items-center gap-3">
                   <FileText size={20} className="text-brand-assess" />
                   <div className="flex-1 text-left">
-                    <div className="text-white text-rt-14 font-bold">{t.name}</div>
-                    <div className="text-white/60 text-rt-11">{t.questions.length} perguntas</div>
+                    <div className="text-white text-rt-14 font-bold">{nombreModelo(tpl, i18n.language)}</div>
+                    <div className="text-white/60 text-rt-11">{t('anamnese:questions', { count: tpl.questions.length })}</div>
                   </div>
                   <ChevronRight size={20} className="text-grey-500" />
                 </button>
@@ -120,6 +130,7 @@ export function AnamneseProfessorPage() {
 
 // ALUNO — lista de anamneses pendentes + responde
 export function AnamneseAlunoListaPage() {
+  const { t, i18n } = useTranslation()
   const nav = useNavigate()
   const { profile } = useAuth()
   const [items, setItems] = useState<Answer[]>([])
@@ -128,7 +139,7 @@ export function AnamneseAlunoListaPage() {
   useEffect(() => {
     if (!profile?.id) return
     void (async () => {
-      const { data } = await supabase.from('anamnesis_answers').select('*,anamnesis_templates(name,questions)').eq('student_id', profile.id).order('created_at', { ascending: false })
+      const { data } = await supabase.from('anamnesis_answers').select('*,anamnesis_templates(name,name_es,name_en,questions)').eq('student_id', profile.id).order('created_at', { ascending: false })
       setItems((data as unknown as Answer[]) ?? [])
       setLoading(false)
     })()
@@ -140,13 +151,13 @@ export function AnamneseAlunoListaPage() {
         <button onClick={() => nav(-1)} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-white text-rt-20 font-bold">Anamneses</h1>
+        <h1 className="text-white text-rt-20 font-bold">{t('anamnese:title')}</h1>
       </div>
 
       {loading ? (
-        <div className="text-white/60 text-rt-13 py-8 text-center">Carregando…</div>
+        <div className="text-white/60 text-rt-13 py-8 text-center">{t('common:loading')}</div>
       ) : items.length === 0 ? (
-        <EmptyState icon={FileText} title="Sem anamneses" body="Seu professor ainda não enviou nenhuma anamnese." />
+        <EmptyState icon={FileText} title={t('anamnese:none')} body={t('anamnese:noneStudent')} />
       ) : (
         <ul className="flex flex-col gap-3">
           {items.map((a) => (
@@ -156,9 +167,9 @@ export function AnamneseAlunoListaPage() {
                   <FileText size={20} className={a.submitted_at ? 'text-brand' : 'text-warning'} />
                 </div>
                 <div className="flex-1 text-left">
-                  <div className="text-white text-rt-14 font-bold">{a.anamnesis_templates?.name}</div>
+                  <div className="text-white text-rt-14 font-bold">{nombreModelo(a.anamnesis_templates, i18n.language)}</div>
                   <div className={'text-rt-11 ' + (a.submitted_at ? 'text-brand' : 'text-warning')}>
-                    {a.submitted_at ? 'Respondida' : 'Pendente'}
+                    {a.submitted_at ? t('anamnese:answered') : t('anamnese:pending')}
                   </div>
                 </div>
                 <ChevronRight size={20} className="text-grey-500" />
@@ -176,7 +187,6 @@ export function AnamneseResponderPage() {
   const { id } = useParams<{ id: string }>()
   const nav = useNavigate()
   const { t, i18n } = useTranslation()
-  const lang = i18n.language.startsWith('es') ? 'es' : 'pt'
   const [ans, setAns] = useState<Answer | null>(null)
   const [step, setStep] = useState(0)
   const [values, setValues] = useState<Record<string, any>>({})
@@ -185,7 +195,7 @@ export function AnamneseResponderPage() {
   useEffect(() => {
     if (!id) return
     void (async () => {
-      const { data } = await supabase.from('anamnesis_answers').select('*,anamnesis_templates(name,questions)').eq('id', id).single()
+      const { data } = await supabase.from('anamnesis_answers').select('*,anamnesis_templates(name,name_es,name_en,questions)').eq('id', id).single()
       setAns(data as unknown as Answer)
       setValues((data?.answers as any) ?? {})
     })()
@@ -194,7 +204,7 @@ export function AnamneseResponderPage() {
   const questions = ans?.anamnesis_templates?.questions ?? []
   const q = questions[step]
   const isLast = step === questions.length - 1
-  const label = q ? (lang === 'es' ? q.label_es : q.label_pt) : ''
+  const label = q ? pregunta(q, i18n.language) : ''
 
   async function next() {
     if (!q) return
@@ -219,7 +229,7 @@ export function AnamneseResponderPage() {
         <button onClick={() => nav(-1)} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-white text-rt-18 font-semibold">{ans?.anamnesis_templates?.name}</h1>
+        <h1 className="text-white text-rt-18 font-semibold">{nombreModelo(ans?.anamnesis_templates, i18n.language)}</h1>
       </div>
 
       {q ? (
@@ -234,7 +244,7 @@ export function AnamneseResponderPage() {
           <div className="text-white text-rt-18 font-bold mb-6">{label}</div>
 
           {q.type === 'text' && (
-            <textarea className="input-dark h-32 py-3 resize-none w-full" value={val} onChange={(e) => setValues({ ...values, [q.id]: e.target.value })} placeholder={t('common:type', { defaultValue: 'Escreva sua resposta…' })} />
+            <textarea className="input-dark h-32 py-3 resize-none w-full" value={val} onChange={(e) => setValues({ ...values, [q.id]: e.target.value })} placeholder={t('anamnese:placeholder')} />
           )}
           {q.type === 'number' && (
             <input type="number" inputMode="numeric" className="input-dark" value={val} onChange={(e) => setValues({ ...values, [q.id]: e.target.value })} />
@@ -245,7 +255,7 @@ export function AnamneseResponderPage() {
                 <button key={opt} onClick={() => setValues({ ...values, [q.id]: opt })} className={
                   'flex-1 h-14 rounded-btn-pill border-2 text-rt-16 font-bold ' +
                   (val === opt ? 'bg-brand border-brand text-white' : 'bg-transparent border-grey-700 text-grey-400')
-                }>{lang === 'es' ? (opt === 'Sim' ? 'Sí' : 'No') : opt}</button>
+                }>{respuesta(q, opt, t, i18n.language)}</button>
               ))}
             </div>
           )}
@@ -255,7 +265,7 @@ export function AnamneseResponderPage() {
                 <button key={opt} onClick={() => setValues({ ...values, [q.id]: opt })} className={
                   'h-12 rounded-btn-pill border text-rt-14 font-semibold px-4 text-left ' +
                   (val === opt ? 'bg-brand border-brand text-white' : 'bg-surface-raised border-transparent text-white')
-                }>{opt}</button>
+                }>{respuesta(q, opt, t, i18n.language)}</button>
               ))}
             </div>
           )}
@@ -263,13 +273,37 @@ export function AnamneseResponderPage() {
           <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-app px-4 pb-4"
                style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 96px)' }}>
             <button onClick={next} disabled={!canNext || saving} className="btn-save disabled:opacity-50">
-              {isLast ? (saving ? '...' : 'Enviar') : t('common:continue', { defaultValue: 'Continuar' })}
+              {isLast ? (saving ? '...' : t('anamnese:send')) : t('common:continue')}
             </button>
           </div>
         </>
       ) : (
-        <div className="text-white/60 text-rt-13 py-8 text-center">Carregando…</div>
+        <div className="text-white/60 text-rt-13 py-8 text-center">{t('common:loading')}</div>
       )}
     </div>
   )
+}
+
+function nombreModelo(tpl: Pick<Template, 'name' | 'name_es' | 'name_en'> | null | undefined, lang: string) {
+  if (!tpl) return ''
+  const l = idiomaDe(lang)
+  return (l === 'es' ? tpl.name_es : l === 'en' ? tpl.name_en : null) || tpl.name
+}
+
+function pregunta(q: Q, lang: string) {
+  const l = idiomaDe(lang)
+  return (l === 'es' ? q.label_es : l === 'en' ? q.label_en : null) || q.label_pt
+}
+
+/** Respuesta guardada (en portugués) mostrada en el idioma actual. */
+function respuesta(q: Q, v: unknown, t: TFunction, lang: string): string {
+  if (v == null || v === '') return '—'
+  if (q.type === 'yesno') return v === 'Sim' ? t('anamnese:yes') : v === 'Não' ? t('anamnese:no') : String(v)
+  if (q.type === 'select') {
+    const i = (q.options ?? []).indexOf(String(v))
+    const l = idiomaDe(lang)
+    const lista = l === 'es' ? q.options_es : l === 'en' ? q.options_en : q.options
+    return (i >= 0 && lista?.[i]) || String(v)
+  }
+  return String(v)
 }

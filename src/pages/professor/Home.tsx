@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { AnnouncementModal } from '@/components/AnnouncementModal'
 import { WeekCalendar } from '@/components/WeekCalendar'
+import { localeDe } from '@/lib/fechas'
 
 type Stats = {
   active_students: number
@@ -234,7 +235,7 @@ export function ProfessorHome() {
             <ul className="flex flex-col gap-2">
               {appointmentsForDate.slice(0, showMoreAppointments ? appointmentsForDate.length : 3).map((a) => {
                 const d = new Date(a.starts_at)
-                const timeStr = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+                const timeStr = d.toLocaleTimeString(localeDe(), { hour: '2-digit', minute: '2-digit' })
                 return (
                   <li key={a.id} className="card-dark p-3 flex items-start gap-3 group relative">
                     <div className="text-brand text-rt-15 font-bold min-w-[50px]">{timeStr}</div>

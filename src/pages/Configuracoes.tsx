@@ -34,7 +34,7 @@ export function ConfiguracoesPage() {
     } else {
       const res = await subscribeToPush(profile.id)
       if (res.ok) setPushOn(true)
-      else setPushErr(res.error ?? 'Erro ao ativar')
+      else setPushErr(res.error ?? t('general:cfg.pushError'))
     }
   }
 
@@ -83,7 +83,7 @@ export function ConfiguracoesPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Bell size={18} className="text-brand" />
-              <span className="text-white text-rt-14 font-semibold">Notificações push</span>
+              <span className="text-white text-rt-14 font-semibold">{t('general:cfg.push')}</span>
             </div>
             <button
               onClick={togglePush}
@@ -91,7 +91,7 @@ export function ConfiguracoesPage() {
                 'w-12 h-7 rounded-full flex items-center px-0.5 transition ' +
                 (pushOn ? 'bg-brand justify-end' : 'bg-surface-raised justify-start')
               }
-              aria-label="Toggle push"
+              aria-label={t('general:cfg.togglePush')}
             >
               <span className="w-6 h-6 rounded-full bg-white" />
             </button>
@@ -158,9 +158,9 @@ export function ConfiguracoesPage() {
       )}
       {confirmandoExclusao && (
         <ConfirmDialog
-          message="Excluir sua conta?"
-          detail="Sua conta fica marcada para exclusão e você sai do aplicativo."
-          confirmLabel="Excluir"
+          message={t('general:cfg.deleteQ')}
+          detail={t('general:cfg.deleteDetail')}
+          confirmLabel={t('general:cfg.delete')}
           tone="danger"
           onConfirm={() => void deleteAccount()}
           onCancel={() => setConfirmandoExclusao(false)}

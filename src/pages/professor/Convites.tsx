@@ -8,6 +8,8 @@ import { currencyOf, formatMoney } from '@/lib/plans'
 import { EmptyState, FullScreenSheet, Field } from './projetos/RoutinesTab'
 import { PLAN_LIMITS } from '@/lib/plans'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
+import { aviso } from '@/lib/avisos'
+import { formatosTrabalho, etiquetaDe } from '@/lib/catalogos'
 
 type Invite = {
   id: string
@@ -24,7 +26,7 @@ type Invite = {
 }
 
 export function ConvitesPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const nav = useNavigate()
   const { profile, refresh } = useAuth()
   const [invites, setInvites] = useState<Invite[]>([])
@@ -72,8 +74,7 @@ export function ConvitesPage() {
       due_date: due.toISOString().slice(0, 10), status: 'pending',
     })
     await supabase.from('notifications').insert({
-      user_id: inv.student_id, type: 'invite', title: 'Proposta aceita!',
-      body: `${profile!.full_name ?? 'Seu professor'} aceitou sua proposta.`,
+      user_id: inv.student_id, type: 'invite', ...aviso('inviteAccepted', { who: profile!.full_name }),
     })
     await refresh()
     await load()
@@ -83,8 +84,7 @@ export function ConvitesPage() {
     const { error } = await supabase.from('invites').update({ status: 'rejected' }).eq('id', inv.id)
     if (error) { setErrorAccion(error.message); return }
     await supabase.from('notifications').insert({
-      user_id: inv.student_id, type: 'invite', title: 'Proposta recusada',
-      body: `${profile!.full_name ?? 'O professor'} recusou sua proposta.`,
+      user_id: inv.student_id, type: 'invite', ...aviso('inviteRejected', { who: profile!.full_name }),
     })
     await load()
   }
@@ -117,7 +117,7 @@ export function ConvitesPage() {
               </div>
 
               <div className="text-white text-rt-13 mb-2">
-                <strong>{formatMoney(Number(inv.amount ?? 0), currency)}</strong> · {inv.format === 'monthly' ? t('financeiro:c.monthly') : t('financeiro:c.hourly')} · {t('financeiro:conv.perWeekShort', { n: inv.frequency })} · {inv.model}
+                <strong>{formatMoney(Number(inv.amount ?? 0), currency)}</strong> · {inv.format === 'monthly' ? t('financeiro:c.monthly') : t('financeiro:c.hourly')} · {t('financeiro:conv.perWeekShort', { n: inv.frequency })} · {etiquetaDe(formatosTrabalho, inv.model, i18n.language)}
               </div>
               {inv.objectives && inv.objectives.length > 0 && (
                 <div className="flex flex-wrap gap-1 mb-3">
@@ -183,8 +183,7 @@ function CounterSheet({ invite, currency, onClose, onSent }: {
     }).eq('id', invite.id)
     await supabase.from('notifications').insert({
       user_id: invite.student_id, type: 'invite',
-      title: 'Contraproposta recebida',
-      body: `${profile.full_name ?? 'Seu professor'} enviou uma contraproposta.`,
+      ...aviso('counterProposal', { who: profile.full_name }),
     })
     setSaving(false)
     onSent()

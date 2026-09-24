@@ -149,10 +149,10 @@ function Grafico({ puntos }: { puntos: Punto[] }) {
           <circle key={i} cx={x(i)} cy={y(p.carga)} r="3.5" fill="#7CB342" />
         ))}
         <text x={margen.izq} y={alto - 6} fontSize="9" fill="#9E9E9E">
-          {new Date(puntos[0].fecha).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+          {new Date(puntos[0].fecha).toLocaleDateString(localeDe(), { day: '2-digit', month: 'short' })}
         </text>
         <text x={ancho - margen.der} y={alto - 6} fontSize="9" fill="#9E9E9E" textAnchor="end">
-          {new Date(puntos[puntos.length - 1].fecha).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+          {new Date(puntos[puntos.length - 1].fecha).toLocaleDateString(localeDe(), { day: '2-digit', month: 'short' })}
         </text>
       </svg>
     </div>

@@ -1,6 +1,7 @@
 import { supabase } from './supabase'
 import { normalizarParams } from './parametros'
 import { SELECT_DIETA, copiaParaAlumno, type Dieta } from '@/pages/professor/projetos/dietas/datos'
+import { aviso } from '@/lib/avisos'
 
 /**
  * Las rutinas y dietas del alumno son copias editables (routines/diets con
@@ -80,7 +81,7 @@ export async function asignarRutina(opts: { rutinaId: string; alumnoId: string; 
     position: count ?? 0, data: await copiaDeRutina(nuevaId as string),
   })
   if (e2) throw e2
-  await avisar(opts.alumnoId, 'Nova rotina', `${opts.profesorNombre ?? 'Seu professor'} atribuiu a rotina "${r?.name}".`)
+  await avisar(opts.alumnoId, aviso('newRoutine', { who: opts.profesorNombre, name: r?.name }))
   return nuevaId as string
 }
 
@@ -135,7 +136,7 @@ export async function asignarDieta(opts: { dieta: Dieta; alumnoId: string; profe
     student_id: opts.alumnoId, teacher_id: opts.profesorId, source_diet_id: d.id, diet_id: nueva.id, name: d.name, data: copiaParaAlumno(copia as Dieta),
   })
   if (e4) throw e4
-  await avisar(opts.alumnoId, 'Nova dieta', `${opts.profesorNombre ?? 'Seu professor'} atribuiu a dieta "${d.name}".`)
+  await avisar(opts.alumnoId, aviso('newDiet', { who: opts.profesorNombre, name: d.name }))
   return nueva.id as string
 }
 
@@ -151,6 +152,6 @@ export async function crearDietaAlumno(opts: { alumnoId: string; profesorId: str
   return data.id as string
 }
 
-async function avisar(alumnoId: string, titulo: string, cuerpo: string) {
-  await supabase.from('notifications').insert({ user_id: alumnoId, type: 'routine', title: titulo, body: cuerpo })
+async function avisar(alumnoId: string, texto: ReturnType<typeof aviso>) {
+  await supabase.from('notifications').insert({ user_id: alumnoId, type: 'routine', ...texto })
 }

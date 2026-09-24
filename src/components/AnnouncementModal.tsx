@@ -3,19 +3,21 @@ import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
+import { idiomaDe } from '@/lib/catalogos'
 
 type Ann = {
-  id: string; title_pt: string; title_es: string | null
-  body_pt: string | null; body_es: string | null
-  media_url: string | null; cta_label_pt: string | null; cta_url: string | null
+  id: string; title_pt: string; title_es: string | null; title_en: string | null
+  body_pt: string | null; body_es: string | null; body_en: string | null
+  media_url: string | null; cta_url: string | null
+  cta_label_pt: string | null; cta_label_es: string | null; cta_label_en: string | null
   audience: 'all' | 'teachers' | 'students'
   priority: number
 }
 
 export function AnnouncementModal() {
   const { profile } = useAuth()
-  const { i18n } = useTranslation()
-  const lang = i18n.language.startsWith('es') ? 'es' : 'pt'
+  const { t, i18n } = useTranslation()
+  const lang = idiomaDe(i18n.language)
   const [ann, setAnn] = useState<Ann | null>(null)
 
   useEffect(() => {
@@ -43,8 +45,10 @@ export function AnnouncementModal() {
     setAnn(null)
   }
 
-  const title = (lang === 'es' && ann.title_es) ? ann.title_es : ann.title_pt
-  const body = (lang === 'es' && ann.body_es) ? ann.body_es : ann.body_pt
+  // Cada texto en el idioma de la app; si falta, en portugués.
+  const title = ann[`title_${lang}`] || ann.title_pt
+  const body = ann[`body_${lang}`] || ann.body_pt
+  const cta = ann[`cta_label_${lang}`] || ann.cta_label_pt
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6" onClick={dismiss}>
@@ -61,10 +65,10 @@ export function AnnouncementModal() {
           {ann.cta_url && (
             <a href={ann.cta_url} target="_blank" rel="noreferrer" onClick={dismiss}
                className="block mt-4 h-11 rounded-btn-pill bg-brand text-white text-rt-14 font-bold flex items-center justify-center">
-              {ann.cta_label_pt ?? 'Saber mais'}
+              {cta || t('general:ui.learnMore')}
             </a>
           )}
-          <button onClick={dismiss} className="w-full mt-3 h-10 text-white/60 text-rt-12">Depois</button>
+          <button onClick={dismiss} className="w-full mt-3 h-10 text-white/60 text-rt-12">{t('general:ui.later')}</button>
         </div>
       </div>
     </div>

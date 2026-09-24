@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { useAuth } from '@/lib/auth'
 import { Field } from './projetos/RoutinesTab'
+import { aviso } from '@/lib/avisos'
 
 const KINDS = [
   { v: 'training', l: 'prof:appt.training' },
@@ -58,8 +59,7 @@ export function NovoCompromissoPage() {
       // por eso se dice, en vez de seguir como si nada.
       const { error } = await supabase.from('notifications').insert({
         user_id: studentId, type: 'info',
-        title: `Novo compromisso: ${title.trim()}`,
-        body: `${new Date(startsAt).toLocaleString('pt-BR')}`,
+        ...aviso('appointment', { name: title.trim(), at: new Date(startsAt).toISOString() }),
       })
       if (error) { setSaving(false); setErrorAviso(error.message); return }
     }

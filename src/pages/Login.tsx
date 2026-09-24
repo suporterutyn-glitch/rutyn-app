@@ -130,7 +130,7 @@ export function LoginPage() {
                 type="button"
                 className="absolute right-0 top-[26px] text-brand"
                 onClick={() => setShowPw((v) => !v)}
-                aria-label="Mostrar senha"
+                aria-label={t('general:showPassword')}
               >
                 {showPw ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>

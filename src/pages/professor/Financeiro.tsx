@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { currencyOf, formatMoney } from '@/lib/plans'
 import { EmptyState, FullScreenSheet, Field } from './projetos/RoutinesTab'
+import { aviso } from '@/lib/avisos'
 
 type Charge = {
   id: string
@@ -175,8 +176,7 @@ function ProposalSheet({ charge, currency, onClose, onSent }: { charge: Charge; 
     })
     await supabase.from('notifications').insert({
       user_id: charge.student_id, type: 'payment',
-      title: 'Proposta de alteração de mensalidade',
-      body: `${profile.full_name ?? 'Seu professor'} propôs ${formatMoney(Number(newAmount) || 0, currency)}/${newFormat === 'monthly' ? 'mês' : 'hora'}.`,
+      ...aviso('changeProposal', { who: profile.full_name, amount: formatMoney(Number(newAmount) || 0, currency), fmt: newFormat }),
     })
     setSaving(false)
     onSent()

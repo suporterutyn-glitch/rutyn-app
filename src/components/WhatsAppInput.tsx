@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ChevronDown, X } from 'lucide-react'
-import { COUNTRIES, type Country } from '@/lib/countries'
+import { COUNTRIES, nombrePais, type Country } from '@/lib/countries'
 
 type Props = {
   countryCode: string
@@ -8,7 +9,7 @@ type Props = {
   value: string
   onChange: (v: string) => void
   label?: string
-  lang: 'pt' | 'es'
+  lang: string
   /**
    * 'light' = subrayado sobre tarjeta clara (cadastros).
    * 'dark' = caja oscura (app interna).
@@ -18,6 +19,7 @@ type Props = {
 }
 
 export function WhatsAppInput({ countryCode, onCountry, value, onChange, label = 'WhatsApp', lang, variant = 'light' }: Props) {
+  const { t } = useTranslation()
   const caja = variant === 'dark'
   const textoClaro = variant !== 'light'
   const [open, setOpen] = useState(false)
@@ -59,7 +61,7 @@ export function WhatsAppInput({ countryCode, onCountry, value, onChange, label =
               <div className="w-10 h-1 rounded-full bg-grey-300" />
               <div className="flex w-full items-center justify-between px-4 mt-2">
                 <span className="text-rt-16 font-bold text-black/90">
-                  {lang === 'pt' ? 'Selecionar País' : 'Seleccionar País'}
+                  {t('settings:chooseCountry')}
                 </span>
                 <button onClick={() => setOpen(false)} className="w-7 h-7 rounded-full bg-grey-200 flex items-center justify-center">
                   <X size={16} className="text-black/70" />
@@ -81,7 +83,7 @@ export function WhatsAppInput({ countryCode, onCountry, value, onChange, label =
                   }}
                 >
                   <span className="text-2xl leading-none">{c.flag}</span>
-                  <span className="flex-1 text-rt-14">{lang === 'pt' ? c.name_pt : c.name_es}</span>
+                  <span className="flex-1 text-rt-14">{nombrePais(c, lang)}</span>
                   <span className="text-rt-12 text-grey-600">{c.dial}</span>
                 </li>
               ))}

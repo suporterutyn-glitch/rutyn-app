@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import i18n from './i18n'
 
 const VAPID_PUBLIC = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined
 
@@ -10,11 +11,11 @@ export async function currentPermission(): Promise<NotificationPermission> {
 }
 
 export async function subscribeToPush(userId: string): Promise<{ ok: boolean; error?: string }> {
-  if (!isPushSupported()) return { ok: false, error: 'Web Push não suportado neste navegador' }
-  if (!VAPID_PUBLIC) return { ok: false, error: 'VITE_VAPID_PUBLIC_KEY não configurado' }
+  if (!isPushSupported()) return { ok: false, error: i18n.t('general:pushErr.unsupported') }
+  if (!VAPID_PUBLIC) return { ok: false, error: i18n.t('general:pushErr.notConfigured') }
 
   const perm = await Notification.requestPermission()
-  if (perm !== 'granted') return { ok: false, error: 'Permissão negada' }
+  if (perm !== 'granted') return { ok: false, error: i18n.t('general:pushErr.denied') }
 
   const reg = await navigator.serviceWorker.ready
   const existing = await reg.pushManager.getSubscription()
@@ -25,7 +26,7 @@ export async function subscribeToPush(userId: string): Promise<{ ok: boolean; er
 
   const json = sub.toJSON() as { endpoint?: string; keys?: { p256dh?: string; auth?: string } }
   if (!json.endpoint || !json.keys?.p256dh || !json.keys.auth) {
-    return { ok: false, error: 'Subscription inválida' }
+    return { ok: false, error: i18n.t('general:pushErr.invalid') }
   }
 
   const { error } = await supabase.from('push_subscriptions').upsert({
