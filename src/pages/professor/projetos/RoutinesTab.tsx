@@ -93,20 +93,20 @@ export function RoutinesTab({ query, filtro }: { query: string; filtro: Filtro }
             onClick={() => setConfirmando({ ids: [...seleccion] })}
             className="h-10 px-6 rounded-btn-pill bg-[#D32F2F] text-white text-rt-14 font-semibold"
           >
-            Excluir
+            {t('projetos:c.delete')}
           </button>
           <button
             type="button"
             onClick={() => setSeleccion(new Set(filtered.map((r) => r.id)))}
             className="text-white/80 text-rt-14"
           >
-            Selecionar tudo
+            {t('projetos:c.selectAll')}
           </button>
         </div>
       )}
 
       {loading ? (
-        <div className="text-white/60 text-rt-13 py-8 text-center">Carregando…</div>
+        <div className="text-white/60 text-rt-13 py-8 text-center">{t('projetos:rot.loading')}</div>
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={Dumbbell}
@@ -150,7 +150,7 @@ export function RoutinesTab({ query, filtro }: { query: string; filtro: Filtro }
 
       <FixedBottomActions>
         <button className="btn-primary-pill h-12 rounded-btn-pill" onClick={() => setShowNew(true)}>
-          <Plus size={20} /> Criar nova Rotina
+          <Plus size={20} /> {t('projetos:rot.createNew')}
         </button>
       </FixedBottomActions>
 
@@ -171,13 +171,13 @@ export function RoutinesTab({ query, filtro }: { query: string; filtro: Filtro }
 
       {confirmando && (
         <ConfirmDialog
-          message={confirmando.ids.length > 1 ? 'Excluir rotinas' : 'Excluir rotina'}
+          message={confirmando.ids.length > 1 ? t('projetos:rot.deleteMany') : t('projetos:rot.deleteOne')}
           detail={
             confirmando.nombre
-              ? `Tem certeza que deseja excluir "${confirmando.nombre}"?`
-              : `Tem certeza que deseja excluir ${confirmando.ids.length} rotina(s)?`
+              ? t('projetos:rot.confirmOne', { name: confirmando.nombre })
+              : t('projetos:rot.confirmMany', { n: confirmando.ids.length })
           }
-          confirmLabel="Excluir"
+          confirmLabel={t('projetos:c.delete')}
           tone="danger"
           onConfirm={() => void excluir(confirmando.ids)}
           onCancel={() => setConfirmando(null)}
@@ -190,6 +190,7 @@ export function RoutinesTab({ query, filtro }: { query: string; filtro: Filtro }
 }
 
 export function SearchBar({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
+  const { t } = useTranslation()
   return (
     <div className="relative mb-4">
       <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-grey-500" />
@@ -200,7 +201,7 @@ export function SearchBar({ value, onChange, placeholder }: { value: string; onC
         className="w-full h-[42px] pl-11 pr-10 rounded-[20px] bg-black/30 border border-brand/30 text-white text-rt-13 placeholder:text-grey-600 outline-none focus:border-brand"
       />
       {value && (
-        <button onClick={() => onChange('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-grey-500" aria-label="Limpar">
+        <button onClick={() => onChange('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-grey-500" aria-label={t('projetos:c.clear')}>
           <X size={18} />
         </button>
       )}
@@ -241,7 +242,7 @@ export function FixedBottomActions({ children }: { children: React.ReactNode }) 
 
 function NewRoutineSheet({ rotina, onClose, onCreated }: { rotina?: Routine; onClose: () => void; onCreated: () => void }) {
   const { profile } = useAuth()
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const editando = Boolean(rotina)
   const [name, setName] = useState(rotina?.name ?? '')
   const [difficulty, setDifficulty] = useState(rotina?.difficulty ?? '')
@@ -267,31 +268,31 @@ function NewRoutineSheet({ rotina, onClose, onCreated }: { rotina?: Routine; onC
   }
 
   return (
-    <FullScreenSheet title={editando ? 'Editar Rotina' : 'Nova Rotina'} onClose={onClose}>
+    <FullScreenSheet title={editando ? t('projetos:rot.editTitle') : t('projetos:rot.newTitle')} onClose={onClose}>
       <div className="flex flex-col gap-7">
         <div>
-          <label className="block text-white text-rt-15 font-bold mb-2">Nome da Rotina</label>
+          <label className="block text-white text-rt-15 font-bold mb-2">{t('projetos:c.routineName')}</label>
           <input
             className="w-full h-[60px] px-4 rounded-[14px] bg-surface-input border border-surface-line text-white text-rt-15 placeholder:text-grey-600 outline-none focus:border-brand"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="TREINO - A"
+            placeholder={t('projetos:rot.namePh')}
           />
         </div>
 
         <CajaSelector
-          label="Dificuldade"
+          label={t('projetos:c.difficulty')}
           valor={difficulty}
-          placeholder="Iniciante"
+          placeholder={t('projetos:c.beginnerPh')}
           lista={dificultades}
           lang={i18n.language}
           onAbrir={() => setAbriendo('dificuldade')}
         />
 
         <CajaSelector
-          label="Objetivo"
+          label={t('projetos:c.objective')}
           valor={objective}
-          placeholder="Hipertrofia"
+          placeholder={t('projetos:c.hypertrophyPh')}
           lista={objetivosTreino}
           lang={i18n.language}
           onAbrir={() => setAbriendo('objetivo')}
@@ -300,7 +301,7 @@ function NewRoutineSheet({ rotina, onClose, onCreated }: { rotina?: Routine; onC
 
       <div className="mt-10">
         <button className="btn-save" disabled={saving || !name.trim()} onClick={save}>
-          {saving ? 'Salvando...' : editando ? 'Salvar alterações' : 'Criar Rotina'}
+          {saving ? t('projetos:c.saving') : editando ? t('projetos:rot.saveChanges') : t('projetos:rot.create')}
         </button>
       </div>
 
@@ -329,13 +330,14 @@ function NewRoutineSheet({ rotina, onClose, onCreated }: { rotina?: Routine; onC
 }
 
 export function FullScreenSheet({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  const { t } = useTranslation()
   return (
     <div className="fixed inset-0 z-40 bg-surface-card overflow-y-auto overflow-x-hidden animate-slide-up-in">
       <div className="max-w-app mx-auto min-h-dvh px-6 pt-[calc(env(safe-area-inset-top)+80px)] pb-8 relative">
         <button
           onClick={onClose}
           className="absolute top-[calc(env(safe-area-inset-top)+16px)] right-4 w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white"
-          aria-label="Fechar"
+          aria-label={t('projetos:c.close')}
         >
           <X size={20} />
         </button>

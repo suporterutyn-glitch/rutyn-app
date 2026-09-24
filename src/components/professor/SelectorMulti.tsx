@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { type Catalogo, etiqueta } from '@/lib/catalogos'
 import { ChevronDown, X } from 'lucide-react'
 
@@ -44,6 +45,7 @@ export function HojaMulti({ titulo, lista, valores, lang, onCambiar, onCerrar }:
   onCambiar: (ids: string[]) => void
   onCerrar: () => void
 }) {
+  const { t } = useTranslation()
   return (
     <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/60" onClick={onCerrar}>
       <div
@@ -52,7 +54,7 @@ export function HojaMulti({ titulo, lista, valores, lang, onCambiar, onCerrar }:
       >
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-white text-rt-16 font-bold">{titulo}</h2>
-          <button onClick={onCerrar} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white" aria-label="Fechar">
+          <button onClick={onCerrar} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white" aria-label={t('projetos:ser.close')}>
             <X size={18} />
           </button>
         </div>
@@ -78,7 +80,7 @@ export function HojaMulti({ titulo, lista, valores, lang, onCambiar, onCerrar }:
             )
           })}
         </ul>
-        <button onClick={onCerrar} className="btn-save mt-5">Pronto</button>
+        <button onClick={onCerrar} className="btn-save mt-5">{t('projetos:ser.done')}</button>
       </div>
     </div>
   )

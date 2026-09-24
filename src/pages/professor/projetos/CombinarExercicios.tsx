@@ -35,6 +35,7 @@ export function CombinarExercicios({ ejercicios, onCerrar, onListo, onError }: {
   onListo: (mensaje: string) => void
   onError: (mensaje: string) => void
 }) {
+  const { t } = useTranslation()
   const [paso, setPaso] = useState<'opciones' | 'nueva' | 'existente'>('opciones')
   const n = ejercicios.length
 
@@ -45,15 +46,15 @@ export function CombinarExercicios({ ejercicios, onCerrar, onListo, onError }: {
     <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/60" onClick={onCerrar}>
       <div className="w-full max-w-app rounded-t-[20px] bg-[#1E1E1E] p-6 pb-[calc(env(safe-area-inset-bottom)+20px)]" onClick={(e) => e.stopPropagation()}>
         <div className="w-10 h-1 rounded-full bg-grey-600 mx-auto mb-5" />
-        <h2 className="text-white text-rt-20 font-bold text-center">Combinar Exercícios</h2>
+        <h2 className="text-white text-rt-20 font-bold text-center">{t('projetos:comb.title')}</h2>
         <p className="text-[#BDBDBD] text-rt-14 text-center mt-1">
-          {n} {n === 1 ? 'exercício selecionado' : 'exercícios selecionados'}
+          {t('projetos:comb.selected', { count: n })}
         </p>
         <div className="flex flex-col gap-4 mt-8">
-          <Opcion icono={PlusCircle} titulo="Criar nova rotina" sub="Crie uma rotina do zero com os exercícios selecionados" onClick={() => setPaso('nueva')} />
-          <Opcion icono={ListPlus} titulo="Adicionar a rotina existente" sub="Adicione os exercícios a uma rotina que você já tem" onClick={() => setPaso('existente')} />
+          <Opcion icono={PlusCircle} titulo={t('projetos:comb.newRoutine')} sub={t('projetos:comb.newRoutineSub')} onClick={() => setPaso('nueva')} />
+          <Opcion icono={ListPlus} titulo={t('projetos:comb.existing')} sub={t('projetos:comb.existingSub')} onClick={() => setPaso('existente')} />
         </div>
-        <button onClick={onCerrar} className="w-full mt-6 text-[#9E9E9E] text-rt-14">Cancelar</button>
+        <button onClick={onCerrar} className="w-full mt-6 text-[#9E9E9E] text-rt-14">{t('projetos:c.cancel')}</button>
       </div>
     </div>
   )
@@ -86,7 +87,7 @@ function NuevaRutina({ ejercicios, onCerrar, onListo, onError }: {
   onError: (m: string) => void
 }) {
   const { profile } = useAuth()
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [nombre, setNombre] = useState('')
   const [dificultad, setDificultad] = useState('')
   const [objetivo, setObjetivo] = useState('')
@@ -103,18 +104,18 @@ function NuevaRutina({ ejercicios, onCerrar, onListo, onError }: {
         .select('id').single()
       if (error) throw error
       const n = await agregarARutina(data.id, ejercicios.filter((e) => marcados.includes(e.id)), new Set(), 0, i18n.language)
-      onListo(`Rotina "${nombre.trim()}" criada com ${n} exercício(s)!`)
+      onListo(t('projetos:comb.created', { name: nombre.trim(), n }))
     } catch (e) {
       setGuardando(false)
-      onError('Erro ao criar rotina: ' + (e as Error).message)
+      onError(t('projetos:comb.createError', { msg: (e as Error).message }))
     }
   }
 
   return (
-    <FullScreenSheet title="Combinar em Rotina" onClose={onCerrar}>
+    <FullScreenSheet title={t('projetos:comb.combineTitle')} onClose={onCerrar}>
       <div className="flex flex-col gap-6">
         <div>
-          <label className="block text-white text-rt-15 font-bold mb-2">Nome da Rotina</label>
+          <label className="block text-white text-rt-15 font-bold mb-2">{t('projetos:c.routineName')}</label>
           <input
             className="w-full h-[60px] px-4 rounded-[14px] bg-surface-input border border-surface-line text-white text-rt-15 placeholder:text-grey-600 outline-none focus:border-brand"
             value={nombre}
@@ -122,8 +123,8 @@ function NuevaRutina({ ejercicios, onCerrar, onListo, onError }: {
             placeholder="TREINO - A"
           />
         </div>
-        <CajaSelector label="Dificuldade" valor={dificultad} placeholder="Iniciante" lista={dificultades} lang={i18n.language} onAbrir={() => setAbriendo('dificuldade')} />
-        <CajaSelector label="Objetivo" valor={objetivo} placeholder="Hipertrofia" lista={objetivosTreino} lang={i18n.language} onAbrir={() => setAbriendo('objetivo')} />
+        <CajaSelector label={t('projetos:c.difficulty')} valor={dificultad} placeholder={t('projetos:c.beginnerPh')} lista={dificultades} lang={i18n.language} onAbrir={() => setAbriendo('dificuldade')} />
+        <CajaSelector label={t('projetos:c.objective')} valor={objetivo} placeholder={t('projetos:c.hypertrophyPh')} lista={objetivosTreino} lang={i18n.language} onAbrir={() => setAbriendo('objetivo')} />
         <ul className="flex flex-col gap-2">
           {ejercicios.map((e) => {
             const on = marcados.includes(e.id)
@@ -145,7 +146,7 @@ function NuevaRutina({ ejercicios, onCerrar, onListo, onError }: {
       </div>
       <div className="mt-8">
         <button className="btn-save" disabled={guardando || !nombre.trim() || marcados.length === 0} onClick={() => void crear()}>
-          {guardando ? 'Criando…' : `Criar Rotina com ${marcados.length} exercício(s)`}
+          {guardando ? t('projetos:comb.creating') : t('projetos:comb.createWith', { n: marcados.length })}
         </button>
       </div>
       {abriendo === 'dificuldade' && (
@@ -165,7 +166,7 @@ function RutinaExistente({ ejercicios, onCerrar, onListo, onError }: {
   onError: (m: string) => void
 }) {
   const { profile } = useAuth()
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [rutinas, setRutinas] = useState<Rutina[] | null>(null)
   const [busca, setBusca] = useState('')
   const [elegida, setElegida] = useState<string | null>(null)
@@ -193,12 +194,12 @@ function RutinaExistente({ ejercicios, onCerrar, onListo, onError }: {
       const repetidos = ejercicios.length - n
       onListo(
         n === 0
-          ? `Todos os exercícios já existem na rotina "${r.name}"`
-          : `${n} exercício(s) adicionado(s) à "${r.name}"!` + (repetidos > 0 ? ` ${repetidos} já existia(m).` : ''),
+          ? t('projetos:comb.allExist', { name: r.name })
+          : t('projetos:comb.added', { n, name: r.name }) + (repetidos > 0 ? t('projetos:comb.existed', { n: repetidos }) : ''),
       )
     } catch (e) {
       setEnviando(false)
-      onError('Erro ao adicionar exercícios: ' + (e as Error).message)
+      onError(t('projetos:comb.addError', { msg: (e as Error).message }))
     }
   }
 
@@ -209,10 +210,10 @@ function RutinaExistente({ ejercicios, onCerrar, onListo, onError }: {
           <div className="w-10 h-1 rounded-full bg-grey-600 mx-auto mb-4" />
           <div className="flex items-start gap-3">
             <div className="flex-1">
-              <h2 className="text-white text-rt-20 font-bold">Selecionar Rotina</h2>
-              <p className="text-[#BDBDBD] text-rt-13">Adicionar {ejercicios.length} exercício(s)</p>
+              <h2 className="text-white text-rt-20 font-bold">{t('projetos:comb.selectRoutine')}</h2>
+              <p className="text-[#BDBDBD] text-rt-13">{t('projetos:comb.addNEx', { n: ejercicios.length })}</p>
             </div>
-            <button onClick={onCerrar} aria-label="Fechar" className="w-9 h-9 rounded-full bg-[#333333] flex items-center justify-center">
+            <button onClick={onCerrar} aria-label={t('projetos:c.close')} className="w-9 h-9 rounded-full bg-[#333333] flex items-center justify-center">
               <X size={18} className="text-white" />
             </button>
           </div>
@@ -221,7 +222,7 @@ function RutinaExistente({ ejercicios, onCerrar, onListo, onError }: {
             <input
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
-              placeholder="Buscar rotina..."
+              placeholder={t('projetos:comb.searchRoutine')}
               className="w-full h-[46px] pl-10 pr-3 rounded-[12px] bg-[#252525] border border-[#333333] text-white text-rt-14 outline-none focus:border-brand"
             />
           </div>
@@ -230,9 +231,9 @@ function RutinaExistente({ ejercicios, onCerrar, onListo, onError }: {
           {rutinas === null ? (
             <div className="py-10 flex justify-center"><span className="w-8 h-8 rounded-full border-2 border-brand/30 border-t-brand animate-spin" /></div>
           ) : rutinas.length === 0 ? (
-            <p className="text-center py-10 text-white/60 text-rt-13">Nenhuma rotina criada.<br />Crie uma rotina primeiro.</p>
+            <p className="text-center py-10 text-white/60 text-rt-13">{t('projetos:comb.noRoutines')}<br />{t('projetos:comb.createFirst')}</p>
           ) : lista.length === 0 ? (
-            <p className="text-center py-10 text-white/60 text-rt-13">Nenhuma rotina encontrada.<br />Tente buscar com outro termo.</p>
+            <p className="text-center py-10 text-white/60 text-rt-13">{t('projetos:comb.notFound')}<br />{t('projetos:c.tryOther')}</p>
           ) : (
             <ul className="flex flex-col gap-3 pb-4">
               {lista.map((r) => {
@@ -249,7 +250,7 @@ function RutinaExistente({ ejercicios, onCerrar, onListo, onError }: {
                       <span className="flex-1 min-w-0">
                         <span className="block text-white text-rt-15 font-semibold truncate">{r.name}</span>
                         <span className="flex items-center gap-3 text-[#9E9E9E] text-rt-11 mt-0.5">
-                          <span className="flex items-center gap-1"><Dumbbell size={13} /> {r.routine_exercises.length} exercícios</span>
+                          <span className="flex items-center gap-1"><Dumbbell size={13} /> {t('projetos:comb.nExercises', { n: r.routine_exercises.length })}</span>
                           {r.objective && <span>{etiquetaDe(objetivosTreino, r.objective, i18n.language)}</span>}
                         </span>
                       </span>
@@ -266,7 +267,7 @@ function RutinaExistente({ ejercicios, onCerrar, onListo, onError }: {
             onClick={() => void agregar()}
             className={'w-full h-[54px] rounded-[27px] text-white text-rt-15 font-bold ' + (elegida ? 'bg-gradient-to-b from-[#7CB342] to-[#94E143]' : 'bg-[#616161]')}
           >
-            {enviando ? '…' : elegida ? 'Adicionar à Rotina' : 'Selecione uma rotina'}
+            {enviando ? '…' : elegida ? t('projetos:comb.addToRoutine') : t('projetos:comb.pickRoutine')}
           </button>
         </div>
       </div>

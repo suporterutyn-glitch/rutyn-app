@@ -46,9 +46,10 @@ function nombreIngrediente(i: Ingrediente, lang: string) {
 }
 
 export function FranjaMacros({ m }: { m: Macros }) {
+  const { t } = useTranslation()
   return (
     <div className="grid grid-cols-4 text-center py-2 bg-[#252525]">
-      {([['kcal', Math.round(m.kcal), '#64B5F6'], ['proteínas', m.p.toFixed(1) + 'g', '#E57373'], ['carboidrato', m.c.toFixed(1) + 'g', '#FFD54F'], ['gordura', m.g.toFixed(1) + 'g', '#81C784']] as const).map(([l, v, c]) => (
+      {([[t('projetos:rec.kcal'), Math.round(m.kcal), '#64B5F6'], [t('projetos:rec.proteins'), m.p.toFixed(1) + 'g', '#E57373'], [t('projetos:rec.carbs'), m.c.toFixed(1) + 'g', '#FFD54F'], [t('projetos:rec.fats'), m.g.toFixed(1) + 'g', '#81C784']] as const).map(([l, v, c]) => (
         <div key={l}><div className="text-rt-14 font-bold" style={{ color: c }}>{v}</div><div className="text-grey-500 text-rt-9">{l}</div></div>
       ))}
     </div>
@@ -57,7 +58,7 @@ export function FranjaMacros({ m }: { m: Macros }) {
 
 export function RecipesTab({ query, filtro }: { query: string; filtro: Filtro }) {
   const { profile } = useAuth()
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const lang = i18n.language
   const [items, setItems] = useState<Receita[]>([])
   const [loading, setLoading] = useState(true)
@@ -97,7 +98,7 @@ export function RecipesTab({ query, filtro }: { query: string; filtro: Filtro })
         recipe_id: data.id, food_id: i.food_id, food_name_snapshot: i.food_name_snapshot, quantity: i.quantity, unit: i.unit, position: i.position,
       })))
     }
-    setAviso({ kind: 'success', message: 'Receita duplicada!' })
+    setAviso({ kind: 'success', message: t('projetos:rec.duplicated') })
     await load()
   }
 
@@ -115,9 +116,9 @@ export function RecipesTab({ query, filtro }: { query: string; filtro: Filtro })
     <div className="pb-24">
       {seleccion.length > 0 && (
         <div className="sticky top-0 z-10 -mx-4 px-4 py-2.5 mb-3 bg-brand/10 backdrop-blur flex items-center gap-3">
-          <span className="text-brand text-rt-13 font-semibold flex-1">{seleccion.length} selecionada(s)</span>
-          <button onClick={() => setBorrando(items.filter((r) => seleccion.includes(r.id)))} className="px-4 py-1.5 rounded-[8px] bg-danger/10 border border-danger/30 text-[#EF5350] text-rt-13 font-semibold">Excluir</button>
-          <button onClick={() => setSeleccion([])} className="text-grey-400 text-rt-13">Cancelar</button>
+          <span className="text-brand text-rt-13 font-semibold flex-1">{t('projetos:rec.nSelected', { n: seleccion.length })}</span>
+          <button onClick={() => setBorrando(items.filter((r) => seleccion.includes(r.id)))} className="px-4 py-1.5 rounded-[8px] bg-danger/10 border border-danger/30 text-[#EF5350] text-rt-13 font-semibold">{t('projetos:c.delete')}</button>
+          <button onClick={() => setSeleccion([])} className="text-grey-400 text-rt-13">{t('projetos:c.cancel')}</button>
         </div>
       )}
 
@@ -126,11 +127,11 @@ export function RecipesTab({ query, filtro }: { query: string; filtro: Filtro })
       ) : errorCarga ? (
         <div className="flex flex-col items-center gap-2 py-12">
           <AlertCircle size={48} className="text-grey-500" />
-          <span className="text-white/70 text-rt-14">Erro ao carregar receitas</span>
-          <button onClick={() => void load()} className="text-brand text-rt-13 font-semibold">Tentar novamente</button>
+          <span className="text-white/70 text-rt-14">{t('projetos:rec.loadError')}</span>
+          <button onClick={() => void load()} className="text-brand text-rt-13 font-semibold">{t('projetos:rec.tryAgain')}</button>
         </div>
       ) : filtered.length === 0 ? (
-        <EmptyState icon={BookOpen} title="Nenhuma receita encontrada" body="Crie sua primeira receita" />
+        <EmptyState icon={BookOpen} title={t('projetos:rec.notFound')} body={t('projetos:rec.createFirst')} />
       ) : (
         <ul className="flex flex-col gap-3">
           {filtered.map((r) => (
@@ -153,7 +154,7 @@ export function RecipesTab({ query, filtro }: { query: string; filtro: Filtro })
 
       <FixedBottomActions>
         <button className="w-full h-12 rounded-[12px] bg-[#2D2D2D] border border-[#616161] text-white text-rt-14 font-semibold flex items-center justify-center gap-2" onClick={() => setFormAbierto('nueva')}>
-          <Plus size={18} /> Nova Receita
+          <Plus size={18} /> {t('projetos:rec.newRecipe')}
         </button>
       </FixedBottomActions>
 
@@ -166,9 +167,9 @@ export function RecipesTab({ query, filtro }: { query: string; filtro: Filtro })
       )}
       {borrando && (
         <ConfirmDialog
-          message={borrando.length === 1 ? 'Remover Receita' : `Excluir ${borrando.length} receita(s)`}
-          detail={borrando.length === 1 ? `Excluir "${borrando[0].name}"? Esta ação não pode ser desfeita.` : 'Esta ação não pode ser desfeita.'}
-          confirmLabel="Excluir"
+          message={borrando.length === 1 ? t('projetos:rec.removeOne') : t('projetos:rec.deleteMany', { n: borrando.length })}
+          detail={borrando.length === 1 ? t('projetos:rec.deleteOneDetail', { name: borrando[0].name }) : t('projetos:rec.cantUndo')}
+          confirmLabel={t('projetos:c.delete')}
           tone="danger"
           onConfirm={() => void borrar()}
           onCancel={() => setBorrando(null)}
@@ -191,6 +192,7 @@ function TarjetaReceita({ r, lang, expandida, seleccionada, onExpandir, onMarcar
   onEditar: () => void
   onExcluir: () => void
 }) {
+  const { t } = useTranslation()
   const { dx, abierto, handlers, cerrar, fueArrastre } = useDeslizar(210)
   const m = macrosReceita(r)
   const pasos = r.steps.filter((s) => s.trim())
@@ -199,9 +201,9 @@ function TarjetaReceita({ r, lang, expandida, seleccionada, onExpandir, onMarcar
       <FranjaMacros m={m} />
       <div className="relative overflow-hidden">
         <div className="absolute inset-y-0 right-0 flex w-[210px]">
-          {([['DUPLICAR', Copy, 'bg-[#616161]', onDuplicar], ['EDITAR', Pencil, 'bg-[#757575]', onEditar], ['EXCLUIR', Trash2, 'bg-[#B71C1C]', onExcluir]] as const).map(([t, I, c, fn]) => (
-            <button key={t} onClick={() => { cerrar(); fn() }} className={'flex-1 flex flex-col items-center justify-center gap-1 text-white ' + c}>
-              <I size={18} /><span className="text-[9px] font-semibold">{t}</span>
+          {([['projetos:rec.duplicate', Copy, 'bg-[#616161]', onDuplicar], ['projetos:rec.edit', Pencil, 'bg-[#757575]', onEditar], ['projetos:rec.delete', Trash2, 'bg-[#B71C1C]', onExcluir]] as const).map(([etq, I, c, fn]) => (
+            <button key={etq} onClick={() => { cerrar(); fn() }} className={'flex-1 flex flex-col items-center justify-center gap-1 text-white ' + c}>
+              <I size={18} /><span className="text-[9px] font-semibold">{t(etq)}</span>
             </button>
           ))}
         </div>
@@ -211,7 +213,7 @@ function TarjetaReceita({ r, lang, expandida, seleccionada, onExpandir, onMarcar
           style={{ transform: `translateX(${dx}px)` }}
           className="relative bg-[#1E1E1E] px-4 py-3.5 flex items-center gap-3 transition-transform touch-pan-y select-none cursor-pointer min-h-[95px]"
         >
-          <button onClick={(e) => { e.stopPropagation(); onMarcar() }} aria-label={seleccionada ? 'Desmarcar' : 'Marcar'}
+          <button onClick={(e) => { e.stopPropagation(); onMarcar() }} aria-label={seleccionada ? t('projetos:c.unmark') : t('projetos:c.mark')}
             className={'w-[22px] h-[22px] rounded-[6px] border-2 flex items-center justify-center shrink-0 text-rt-12 ' + (seleccionada ? 'bg-brand border-brand text-white' : 'border-grey-500')}>
             {seleccionada && '✓'}
           </button>
@@ -222,9 +224,9 @@ function TarjetaReceita({ r, lang, expandida, seleccionada, onExpandir, onMarcar
               <span className="text-rt-10 px-2 py-0.5 rounded-[8px] bg-[#333333] text-grey-400 truncate">{etiquetaDe(categoriasReceita, r.category, lang)}</span>
               <span className="text-rt-10 px-2 py-0.5 rounded-[8px] bg-[#333333] text-grey-400 shrink-0">{etiquetaDe(temposReceita, r.time_estimate, lang)}</span>
             </div>
-            <div className="text-grey-500 text-rt-11 mt-1">{r.recipe_ingredients.length} ingredientes • {pasos.length} etapas</div>
+            <div className="text-grey-500 text-rt-11 mt-1">{t('projetos:rec.counts', { i: r.recipe_ingredients.length, s: pasos.length })}</div>
           </div>
-          <button onClick={(e) => { e.stopPropagation(); onFavorito() }} aria-label="Favorito" className="p-0.5 shrink-0">
+          <button onClick={(e) => { e.stopPropagation(); onFavorito() }} aria-label={t('projetos:c.favorite')} className="p-0.5 shrink-0">
             <Star size={22} className={r.is_favorite ? 'text-[#FFD54F] fill-[#FFD54F]' : 'text-grey-500'} />
           </button>
           <ChevronLeft size={20} className={'text-grey-500 shrink-0 transition-transform ' + (expandida ? '-rotate-90' : '')} />
@@ -236,6 +238,7 @@ function TarjetaReceita({ r, lang, expandida, seleccionada, onExpandir, onMarcar
 }
 
 export function DetalleReceita({ r, lang }: { r: Pick<Receita, 'prep_type' | 'time_estimate' | 'utensils' | 'recipe_ingredients' | 'steps' | 'tips' | 'video_url'>; lang: string }) {
+  const { t } = useTranslation()
   const pasos = r.steps.filter((s) => s.trim())
   return (
     <div className="px-4 pb-4 pt-1 flex flex-col gap-4 border-t border-[#333333]">
@@ -245,12 +248,12 @@ export function DetalleReceita({ r, lang }: { r: Pick<Receita, 'prep_type' | 'ti
       </div>
       {r.utensils.length > 0 && (
         <div>
-          <div className="text-grey-400 text-rt-12 font-semibold mb-1.5">Utensílios</div>
+          <div className="text-grey-400 text-rt-12 font-semibold mb-1.5">{t('projetos:rec.utensils')}</div>
           <div className="flex flex-wrap gap-1.5">{r.utensils.map((u) => <span key={u} className="text-rt-11 px-2.5 py-1 rounded-[12px] bg-[#333333] text-white/80">{etiquetaDe(utensiliosReceita, u, lang)}</span>)}</div>
         </div>
       )}
       <div>
-        <div className="text-grey-400 text-rt-12 font-semibold mb-1.5">Ingredientes ({r.recipe_ingredients.length})</div>
+        <div className="text-grey-400 text-rt-12 font-semibold mb-1.5">{t('projetos:rec.ingredientsN', { n: r.recipe_ingredients.length })}</div>
         <ul className="flex flex-col gap-1">
           {r.recipe_ingredients.slice().sort((a, b) => a.position - b.position).map((i, n) => (
             <li key={i.id ?? n} className="flex items-center gap-2">
@@ -263,7 +266,7 @@ export function DetalleReceita({ r, lang }: { r: Pick<Receita, 'prep_type' | 'ti
       </div>
       {pasos.length > 0 && (
         <div>
-          <div className="text-grey-400 text-rt-12 font-semibold mb-1.5">Etapas de Preparo ({pasos.length})</div>
+          <div className="text-grey-400 text-rt-12 font-semibold mb-1.5">{t('projetos:rec.stepsN', { n: pasos.length })}</div>
           <ol className="flex flex-col gap-2">
             {pasos.map((p, n) => (
               <li key={n} className="flex gap-2.5">
@@ -280,7 +283,7 @@ export function DetalleReceita({ r, lang }: { r: Pick<Receita, 'prep_type' | 'ti
         </div>
       )}
       {r.video_url && (
-        <a href={r.video_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-brand text-rt-12 font-semibold"><Video size={16} /> Ver vídeo da receita</a>
+        <a href={r.video_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-brand text-rt-12 font-semibold"><Video size={16} /> {t('projetos:rec.watchVideo')}</a>
       )}
     </div>
   )
@@ -290,7 +293,7 @@ type IngForm = { food: Food; cantidad: number }
 
 function RecipeSheet({ receita, onClose, onSaved }: { receita?: Receita; onClose: () => void; onSaved: () => void }) {
   const { profile } = useAuth()
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const lang = i18n.language
   const [nombre, setNombre] = useState(receita?.name ?? '')
   const [categoria, setCategoria] = useState(receita?.category ?? 'outro')
@@ -315,7 +318,7 @@ function RecipeSheet({ receita, onClose, onSaved }: { receita?: Receita; onClose
   const totales = sumarMacros(ings.map((i) => macrosDe(i.food, i.cantidad)))
 
   async function guardar() {
-    if (!nombre.trim()) { setError({ nombre: 'Nome é obrigatório', banner: 'Preencha todos os campos obrigatórios' }); return }
+    if (!nombre.trim()) { setError({ nombre: t('projetos:rec.nameReq'), banner: t('projetos:rec.fillRequired') }); return }
     if (!profile?.id) return
     setError({})
     setGuardando(true)
@@ -334,7 +337,7 @@ function RecipeSheet({ receita, onClose, onSaved }: { receita?: Receita; onClose
     const { data, error: e1 } = receita
       ? await supabase.from('recipes').update(campos).eq('id', receita.id).select('id').single()
       : await supabase.from('recipes').insert({ owner_id: profile.id, ...campos }).select('id').single()
-    if (e1) { setGuardando(false); setError({ banner: 'Erro ao salvar: ' + e1.message }); return }
+    if (e1) { setGuardando(false); setError({ banner: t('projetos:rec.saveError', { msg: e1.message }) }); return }
     // Los ingredientes se reescriben: son pocos y así el orden queda como en el formulario.
     if (receita) await supabase.from('recipe_ingredients').delete().eq('recipe_id', receita.id)
     if (ings.length > 0) {
@@ -342,7 +345,7 @@ function RecipeSheet({ receita, onClose, onSaved }: { receita?: Receita; onClose
         recipe_id: data.id, food_id: i.food.id, food_name_snapshot: nombreEnIdioma(i.food, 'pt'),
         quantity: i.cantidad, unit: i.food.unit ?? 'g', position: n,
       })))
-      if (e2) { setGuardando(false); setError({ banner: 'Erro ao salvar ingredientes: ' + e2.message }); return }
+      if (e2) { setGuardando(false); setError({ banner: t('projetos:rec.saveIngError', { msg: e2.message }) }); return }
     }
     setGuardando(false)
     onSaved()
@@ -351,20 +354,20 @@ function RecipeSheet({ receita, onClose, onSaved }: { receita?: Receita; onClose
   const campo = 'w-full px-4 rounded-[12px] bg-[#252525] border border-[#333333] text-white text-rt-15 placeholder:text-grey-600 outline-none focus:border-brand'
 
   return (
-    <FullScreenSheet title={receita ? 'Editar Receita' : 'Nova Receita'} onClose={onClose}>
+    <FullScreenSheet title={receita ? t('projetos:rec.editTitle') : t('projetos:rec.newRecipe')} onClose={onClose}>
       {error.banner && <div className="mb-5 rounded-[12px] bg-danger/15 border border-danger/40 px-4 py-3 text-[#EF9A9A] text-rt-13">{error.banner}</div>}
       <div className="flex flex-col gap-6">
         <div>
-          <label className="block text-white text-rt-13 font-semibold mb-2">Nome da Receita</label>
-          <input className={campo + ' h-[52px] ' + (error.nombre ? 'border-danger' : '')} value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ex: Salmão grelhado com abacate" />
+          <label className="block text-white text-rt-13 font-semibold mb-2">{t('projetos:rec.name')}</label>
+          <input className={campo + ' h-[52px] ' + (error.nombre ? 'border-danger' : '')} value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder={t('projetos:rec.namePh')} />
           {error.nombre && <div className="text-danger text-rt-11 mt-1">{error.nombre}</div>}
         </div>
-        <CajaSelector label="Categoria" valor={categoria} placeholder="Outro" lista={categoriasReceita} lang={lang} onAbrir={() => setAbriendo('categoria')} />
-        <CajaSelector label="Tipo de Preparo" valor={preparo} placeholder="Fácil" lista={tiposPreparo} lang={lang} onAbrir={() => setAbriendo('preparo')} />
-        <CajaSelector label="Tempo Estimado" valor={tiempo} placeholder="< 30 min" lista={temposReceita} lang={lang} onAbrir={() => setAbriendo('tiempo')} />
+        <CajaSelector label={t('projetos:rec.category')} valor={categoria} placeholder={t('projetos:rec.otherPh')} lista={categoriasReceita} lang={lang} onAbrir={() => setAbriendo('categoria')} />
+        <CajaSelector label={t('projetos:rec.prepType')} valor={preparo} placeholder={t('projetos:rec.easyPh')} lista={tiposPreparo} lang={lang} onAbrir={() => setAbriendo('preparo')} />
+        <CajaSelector label={t('projetos:rec.time')} valor={tiempo} placeholder="< 30 min" lista={temposReceita} lang={lang} onAbrir={() => setAbriendo('tiempo')} />
 
         <div>
-          <label className="block text-white text-rt-13 font-semibold mb-2">Utensílios Necessários</label>
+          <label className="block text-white text-rt-13 font-semibold mb-2">{t('projetos:rec.utensilsNeeded')}</label>
           <div className="flex flex-wrap gap-2">
             {utensiliosReceita.map((u) => {
               const on = utensilios.includes(u.id)
@@ -379,7 +382,7 @@ function RecipeSheet({ receita, onClose, onSaved }: { receita?: Receita; onClose
         </div>
 
         <div>
-          <label className="block text-white text-rt-13 font-semibold mb-2">Ingredientes</label>
+          <label className="block text-white text-rt-13 font-semibold mb-2">{t('projetos:rec.ingredients')}</label>
           {ings.length > 0 && (
             <>
               <div className="rounded-[12px] overflow-hidden mb-2"><FranjaMacros m={totales} /></div>
@@ -390,67 +393,67 @@ function RecipeSheet({ receita, onClose, onSaved }: { receita?: Receita; onClose
                       <div className="text-white text-rt-13 font-medium truncate">{nombreEnIdioma(i.food, lang)}</div>
                       <div className="text-grey-500 text-rt-11">{i.cantidad}{abreviaturaUnidad(i.food.unit)} • {Math.round(macrosDe(i.food, i.cantidad).kcal)} kcal</div>
                     </div>
-                    <button type="button" onClick={() => setIngs((p) => p.filter((x) => x.food.id !== i.food.id))} aria-label="Remover ingrediente"><X size={18} className="text-[#EF5350]" /></button>
+                    <button type="button" onClick={() => setIngs((p) => p.filter((x) => x.food.id !== i.food.id))} aria-label={t('projetos:rec.removeIng')}><X size={18} className="text-[#EF5350]" /></button>
                   </li>
                 ))}
               </ul>
             </>
           )}
           <button type="button" onClick={() => setAgregandoIng(true)} className="w-full h-12 rounded-[12px] bg-[#252525] border border-brand/30 text-brand text-rt-14 font-semibold flex items-center justify-center gap-2">
-            <Plus size={18} /> Adicionar Ingrediente
+            <Plus size={18} /> {t('projetos:rec.addIng')}
           </button>
         </div>
 
         <div>
-          <label className="block text-white text-rt-13 font-semibold mb-2">Etapas de Preparo</label>
+          <label className="block text-white text-rt-13 font-semibold mb-2">{t('projetos:rec.steps')}</label>
           <ul className="flex flex-col gap-2 mb-2">
             {pasos.map((p, n) => (
               <li key={n} className="rounded-[10px] bg-[#252525] border border-[#333333] p-2.5 flex items-start gap-2.5">
                 <span className="w-7 h-7 rounded-full bg-brand/15 text-brand text-rt-12 font-bold flex items-center justify-center shrink-0">{n + 1}</span>
-                <textarea rows={2} value={p} onChange={(e) => setPasos((x) => x.map((y, k) => (k === n ? e.target.value : y)))} placeholder={`Descreva o passo ${n + 1}...`}
+                <textarea rows={2} value={p} onChange={(e) => setPasos((x) => x.map((y, k) => (k === n ? e.target.value : y)))} placeholder={t('projetos:rec.stepPh', { n: n + 1 })}
                   className="flex-1 bg-transparent text-white text-rt-13 outline-none resize-none placeholder:text-grey-600" />
-                <button type="button" onClick={() => setPasos((x) => x.filter((_, k) => k !== n))} aria-label="Remover etapa"><X size={18} className="text-[#EF5350]" /></button>
+                <button type="button" onClick={() => setPasos((x) => x.filter((_, k) => k !== n))} aria-label={t('projetos:rec.removeStep')}><X size={18} className="text-[#EF5350]" /></button>
               </li>
             ))}
           </ul>
           <button type="button" onClick={() => setPasos((x) => [...x, ''])} className="w-full h-12 rounded-[12px] bg-[#252525] border border-brand/30 text-brand text-rt-14 font-semibold flex items-center justify-center gap-2">
-            <Plus size={18} /> Adicionar Etapa
+            <Plus size={18} /> {t('projetos:rec.addStep')}
           </button>
         </div>
 
         <div>
-          <label className="block text-white text-rt-13 font-semibold mb-2">Dicas (opcional)</label>
-          <textarea rows={3} className={campo + ' py-3 resize-none'} value={dicas} onChange={(e) => setDicas(e.target.value)} placeholder="Dicas para melhorar a receita..." />
+          <label className="block text-white text-rt-13 font-semibold mb-2">{t('projetos:rec.tips')}</label>
+          <textarea rows={3} className={campo + ' py-3 resize-none'} value={dicas} onChange={(e) => setDicas(e.target.value)} placeholder={t('projetos:rec.tipsPh')} />
         </div>
 
         {foto ? (
-          <SubirArchivo etiqueta="Foto (opcional)" accept="image/*" url={foto} textoActual="Foto da receita" textoElegir="" imagen onSubiendo={setSubiendo} onSubido={setFoto} onError={(m) => setError({ banner: m })} />
+          <SubirArchivo etiqueta={t('projetos:rec.photo')} accept="image/*" url={foto} textoActual={t('projetos:rec.photoCurrent')} textoElegir="" imagen onSubiendo={setSubiendo} onSubido={setFoto} onError={(m) => setError({ banner: m })} />
         ) : (
           <div>
-            <label className="block text-white text-rt-13 font-semibold mb-2">Foto (opcional)</label>
+            <label className="block text-white text-rt-13 font-semibold mb-2">{t('projetos:rec.photo')}</label>
             <div className="rounded-[12px] bg-[#252525] p-5 flex flex-col items-center gap-2">
               <Camera size={40} className="text-grey-500" />
-              <span className="text-grey-500 text-rt-12">Selecione uma foto</span>
-              <SubirArchivo etiqueta="" accept="image/*" url="" textoActual="" textoElegir="Selecionar" imagen onSubiendo={setSubiendo} onSubido={setFoto} onError={(m) => setError({ banner: m })} />
+              <span className="text-grey-500 text-rt-12">{t('projetos:rec.pickPhoto')}</span>
+              <SubirArchivo etiqueta="" accept="image/*" url="" textoActual="" textoElegir={t('projetos:rec.select')} imagen onSubiendo={setSubiendo} onSubido={setFoto} onError={(m) => setError({ banner: m })} />
             </div>
           </div>
         )}
 
         <div>
-          <label className="block text-white text-rt-13 font-semibold mb-2">Vídeo (opcional)</label>
+          <label className="block text-white text-rt-13 font-semibold mb-2">{t('projetos:rec.video')}</label>
           <div className="rounded-[12px] bg-[#252525] p-3">
             <div className="flex gap-2 mb-3">
-              {([['youtube', 'Link YouTube', Link2], ['subir', 'Enviar vídeo', Video]] as const).map(([id, t, I]) => (
+              {([['youtube', t('projetos:rec.youtube'), Link2], ['subir', t('projetos:rec.upload'), Video]] as const).map(([id, txt, I]) => (
                 <button key={id} type="button" onClick={() => { if (id !== pestanaVideo) setVideo(''); setPestanaVideo(id) }}
                   className={'flex-1 h-10 rounded-[10px] border text-rt-12 font-semibold flex items-center justify-center gap-1.5 ' + (pestanaVideo === id ? 'bg-brand/15 border-brand text-brand' : 'border-[#333333] text-grey-400')}>
-                  <I size={15} />{t}
+                  <I size={15} />{txt}
                 </button>
               ))}
             </div>
             {pestanaVideo === 'youtube' ? (
               <input className={campo + ' h-12 bg-[#1E1E1E]'} value={video} onChange={(e) => setVideo(e.target.value)} placeholder="https://youtube.com/watch?v=..." />
             ) : (
-              <SubirArchivo etiqueta="" accept="video/*" url={video} textoActual="Vídeo da receita" textoElegir="Selecionar vídeo" onSubiendo={setSubiendo} onSubido={setVideo} onError={(m) => setError({ banner: m })} />
+              <SubirArchivo etiqueta="" accept="video/*" url={video} textoActual={t('projetos:rec.videoCurrent')} textoElegir={t('projetos:rec.pickVideo')} onSubiendo={setSubiendo} onSubido={setVideo} onError={(m) => setError({ banner: m })} />
             )}
           </div>
         </div>
@@ -458,7 +461,7 @@ function RecipeSheet({ receita, onClose, onSaved }: { receita?: Receita; onClose
 
       <div className="mt-8">
         <button className="btn-save" disabled={guardando || subiendo} onClick={() => void guardar()}>
-          {subiendo ? 'Enviando arquivo…' : guardando ? 'Salvando…' : receita ? 'Salvar Receita' : 'Criar Receita'}
+          {subiendo ? t('projetos:rec.uploading') : guardando ? t('projetos:c.saving') : receita ? t('projetos:rec.save') : t('projetos:rec.create')}
         </button>
       </div>
 

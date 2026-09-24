@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { diasCortos } from '@/lib/fechas'
 import { Plus, X, Check, Dumbbell, Search, CalendarCheck, Eye, EyeOff, RotateCcw } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
@@ -30,10 +31,10 @@ type Asignada = {
 }
 type Aviso = { kind: 'error' | 'success'; message: string }
 
-const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
 /** Aba Rotinas del perfil del alumno: sus rutinas editables con período y progreso. */
 export function RotinasAluno({ alumno }: { alumno: AlumnoCtx }) {
+  const { t } = useTranslation()
   const { profile } = useAuth()
   const [items, setItems] = useState<Asignada[] | null>(null)
   const [expandida, setExpandida] = useState<string | null>(null)
@@ -70,7 +71,7 @@ export function RotinasAluno({ alumno }: { alumno: AlumnoCtx }) {
 
   async function guardarComoModelo(r: Asignada) {
     const { error } = await supabase.rpc('copiar_rotina', { rotina_id: r.routine_id, para_alumno: null, nuevo_nombre: r.name })
-    setAviso(error ? { kind: 'error', message: error.message } : { kind: 'success', message: 'Rotina salva em Meus Projetos!' })
+    setAviso(error ? { kind: 'error', message: error.message } : { kind: 'success', message: t('projetos:ra.savedTemplate') })
   }
 
   async function duplicar(r: Asignada) {
@@ -78,7 +79,7 @@ export function RotinasAluno({ alumno }: { alumno: AlumnoCtx }) {
     try {
       await asignarRutina({
         rutinaId: r.routine_id, alumnoId: alumno.id, profesorId: profile.id, profesorNombre: profile.full_name ?? null,
-        nombre: `${r.name} (cópia)`, periodo: { starts_on: r.starts_on, ends_on: r.ends_on, weekdays: r.weekdays, frequency: r.frequency },
+        nombre: t('projetos:ra.copyName', { name: r.name }), periodo: { starts_on: r.starts_on, ends_on: r.ends_on, weekdays: r.weekdays, frequency: r.frequency },
       })
       await load()
     } catch (e) { setAviso({ kind: 'error', message: (e as Error).message }) }
@@ -98,10 +99,10 @@ export function RotinasAluno({ alumno }: { alumno: AlumnoCtx }) {
     <div className="pb-24">
       <div className="flex items-center gap-3 mb-3">
         <button onClick={() => setAgregando(true)} className="flex-[2] h-11 rounded-[16px] bg-gradient-to-r from-[#7CB342] to-[#558B2F] text-white text-rt-14 font-semibold flex items-center justify-center gap-2">
-          <Plus size={18} /> Adicionar Rotina
+          <Plus size={18} /> {t('projetos:ra.addRoutine')}
         </button>
         <div className="flex-1 text-right">
-          <div className="text-white/80 text-rt-14 font-medium">{hechos}/{total} Treinos</div>
+          <div className="text-white/80 text-rt-14 font-medium">{t('projetos:ra.workouts', { done: hechos, total })}</div>
           <div className="h-1.5 mt-1 rounded-full border border-white/50 overflow-hidden">
             <div className="h-full bg-brand" style={{ width: `${total ? Math.min(100, (hechos / total) * 100) : 0}%` }} />
           </div>
@@ -110,7 +111,7 @@ export function RotinasAluno({ alumno }: { alumno: AlumnoCtx }) {
 
       {seleccion.length > 0 && (
         <div className="flex items-center justify-between mb-3">
-          <button onClick={() => setBorrando((items ?? []).filter((r) => seleccion.includes(r.id)))} className="h-9 px-5 rounded-[20px] bg-[#D32F2F] text-white text-rt-13 font-semibold">Excluir</button>
+          <button onClick={() => setBorrando((items ?? []).filter((r) => seleccion.includes(r.id)))} className="h-9 px-5 rounded-[20px] bg-[#D32F2F] text-white text-rt-13 font-semibold">{t('projetos:ra.delete')}</button>
           <button onClick={() => setSeleccion(todas ? [] : (items ?? []).map((r) => r.id))} className="text-grey-400 text-rt-13">{todas ? 'Desselecionar tudo' : 'Selecionar tudo'}</button>
         </div>
       )}
@@ -118,7 +119,7 @@ export function RotinasAluno({ alumno }: { alumno: AlumnoCtx }) {
       {items === null ? (
         <div className="py-10 flex justify-center"><span className="w-8 h-8 rounded-full border-2 border-brand/30 border-t-brand animate-spin" /></div>
       ) : items.length === 0 ? (
-        <EmptyState icon={Dumbbell} title="Nenhuma rotina atribuída" body={`Adicione uma rotina para ${alumno.nombre}`} />
+        <EmptyState icon={Dumbbell} title={t('projetos:ra.noAssigned')} body={t('projetos:ra.addFor', { name: alumno.nombre })} />
       ) : (
         <ul className="flex flex-col gap-3">
           {items.map((r) => (
@@ -172,9 +173,9 @@ export function RotinasAluno({ alumno }: { alumno: AlumnoCtx }) {
       {clonando && <ClonarRotina r={clonando} origen={alumno.id} onCerrar={() => setClonando(null)} onResultado={(a) => { setClonando(null); setAviso(a) }} />}
       {borrando && (
         <ConfirmDialog
-          message={borrando.length === 1 ? 'Remover rotina' : `Remover ${borrando.length} rotinas`}
-          detail={borrando.length === 1 ? `Remover "${borrando[0].name}" de ${alumno.nombre}? Ela deixa de aparecer para o aluno.` : `Elas deixam de aparecer para ${alumno.nombre}.`}
-          confirmLabel="Remover"
+          message={borrando.length === 1 ? t('projetos:ra.removeOne') : t('projetos:ra.removeMany', { n: borrando.length })}
+          detail={borrando.length === 1 ? t('projetos:ra.removeOneDetail', { name: borrando[0].name, student: alumno.nombre }) : t('projetos:ra.removeManyDetail', { student: alumno.nombre })}
+          confirmLabel={t('projetos:ra.remove')}
           tone="danger"
           onConfirm={() => void borrar()}
           onCancel={() => setBorrando(null)}
@@ -193,6 +194,7 @@ function AdicionarRotina({ alumno, contrato, onCerrar, onCrear, onListo, onError
   onListo: () => void
   onError: (m: string) => void
 }) {
+  const { t } = useTranslation()
   const { profile } = useAuth()
   const [modelos, setModelos] = useState<{ id: string; name: string; routine_exercises: { id: string }[] }[] | null>(null)
   const [elegida, setElegida] = useState<string | null>(null)
@@ -215,7 +217,7 @@ function AdicionarRotina({ alumno, contrato, onCerrar, onCrear, onListo, onError
       onListo()
     } catch (e) {
       setEnviando(false)
-      onError('Erro ao adicionar rotina: ' + (e as Error).message)
+      onError(t('projetos:ra.addError', { msg: (e as Error).message }))
     }
   }
 
@@ -224,22 +226,22 @@ function AdicionarRotina({ alumno, contrato, onCerrar, onCrear, onListo, onError
       <div className="max-w-app w-full mx-auto flex flex-col flex-1 min-h-0 pt-[calc(env(safe-area-inset-top)+24px)]">
         <div className="px-5 flex items-start gap-3">
           <div className="flex-1">
-            <h1 className="text-white text-rt-20 font-bold">Adicionar Rotina</h1>
-            <p className="text-grey-500 text-rt-13">Selecione ou crie uma rotina para {alumno.nombre}</p>
+            <h1 className="text-white text-rt-20 font-bold">{t('projetos:ra.addRoutine')}</h1>
+            <p className="text-grey-500 text-rt-13">{t('projetos:ra.addSub', { name: alumno.nombre })}</p>
           </div>
-          <button onClick={onCerrar} aria-label="Fechar" className="w-9 h-9 rounded-full bg-[#333333] flex items-center justify-center"><X size={20} className="text-white" /></button>
+          <button onClick={onCerrar} aria-label={t('projetos:ra.close')} className="w-9 h-9 rounded-full bg-[#333333] flex items-center justify-center"><X size={20} className="text-white" /></button>
         </div>
         <div className="px-5 mt-5">
           <button onClick={onCrear} className="w-full h-12 rounded-[12px] bg-gradient-to-b from-[#91C145] to-[#5A8F2F] text-white text-rt-15 font-semibold flex items-center justify-center gap-2">
-            <Plus size={20} /> Criar Nova Rotina
+            <Plus size={20} /> {t('projetos:ra.createNew')}
           </button>
-          <div className="flex items-center gap-3 my-5 text-grey-500 text-rt-12"><span className="flex-1 h-px bg-grey-700" />ou selecione uma existente<span className="flex-1 h-px bg-grey-700" /></div>
+          <div className="flex items-center gap-3 my-5 text-grey-500 text-rt-12"><span className="flex-1 h-px bg-grey-700" />{t('projetos:ra.orExisting')}<span className="flex-1 h-px bg-grey-700" /></div>
         </div>
         <div className="flex-1 overflow-y-auto px-5 pb-4">
           {modelos === null ? (
             <div className="py-10 flex justify-center"><span className="w-8 h-8 rounded-full border-2 border-brand/30 border-t-brand animate-spin" /></div>
           ) : modelos.length === 0 ? (
-            <p className="text-center text-white/60 text-rt-13 py-8">Nenhuma rotina em Meus Projetos.</p>
+            <p className="text-center text-white/60 text-rt-13 py-8">{t('projetos:ra.noTemplates')}</p>
           ) : (
             <ul className="flex flex-col gap-3">
               {modelos.map((r) => {
@@ -250,7 +252,7 @@ function AdicionarRotina({ alumno, contrato, onCerrar, onCrear, onListo, onError
                       <span className="w-12 h-12 rounded-[10px] bg-[#1E1E1E] flex items-center justify-center shrink-0"><Dumbbell size={20} className="text-grey-400" /></span>
                       <span className="flex-1 min-w-0">
                         <span className="block text-white text-rt-15 font-semibold truncate">{r.name}</span>
-                        <span className="block text-grey-500 text-rt-12">{r.routine_exercises.length} exercícios</span>
+                        <span className="block text-grey-500 text-rt-12">{t('projetos:ra.nExercises', { n: r.routine_exercises.length })}</span>
                       </span>
                       <span className={'w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ' + (on ? 'bg-brand border-brand' : 'border-grey-500')}>{on && <Check size={14} className="text-white" />}</span>
                     </button>
@@ -263,7 +265,7 @@ function AdicionarRotina({ alumno, contrato, onCerrar, onCrear, onListo, onError
         <div className="px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+16px)] border-t border-grey-800">
           <button disabled={!elegida || enviando} onClick={() => void agregar()}
             className={'w-full h-[54px] rounded-[12px] text-rt-15 font-bold ' + (elegida ? 'bg-gradient-to-b from-[#91C145] to-[#5A8F2F] text-white' : 'bg-grey-700 text-white/60')}>
-            {enviando ? 'Adicionando…' : 'Adicionar Rotina Selecionada'}
+            {enviando ? t('projetos:ra.adding') : t('projetos:ra.addSelected')}
           </button>
         </div>
       </div>
@@ -280,7 +282,8 @@ function FormRotinaAluno({ alumno, asignada, contrato, posicion, onCerrar, onLis
   onListo: (nuevaId?: string) => void
 }) {
   const { profile } = useAuth()
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const DIAS = diasCortos(i18n.language)
   const lang = i18n.language
   const def = periodoPorDefecto()
   const [nombres, setNombres] = useState<string[]>([asignada?.routines?.name ?? asignada?.name ?? ''])
@@ -301,9 +304,9 @@ function FormRotinaAluno({ alumno, asignada, contrato, posicion, onCerrar, onLis
   const validos = nombres.map((n) => n.trim()).filter(Boolean)
 
   async function guardar() {
-    if (validos.length === 0) { setError('Informe o nome da rotina'); return }
-    if (dias.length === 0) { setError('Escolha ao menos um dia de treino'); return }
-    if (fin && fin < inicio) { setError('A data de fim deve ser depois do início'); return }
+    if (validos.length === 0) { setError(t('projetos:ra.nameReq')); return }
+    if (dias.length === 0) { setError(t('projetos:ra.dayReq')); return }
+    if (fin && fin < inicio) { setError(t('projetos:ra.endAfter')); return }
     if (!profile?.id) return
     setError(null)
     setGuardando(true)
@@ -327,49 +330,49 @@ function FormRotinaAluno({ alumno, asignada, contrato, posicion, onCerrar, onLis
       }
     } catch (e) {
       setGuardando(false)
-      setError('Erro ao salvar: ' + (e as Error).message)
+      setError(t('projetos:ra.saveError', { msg: (e as Error).message }))
     }
   }
 
   const campo = 'w-full h-[52px] px-4 rounded-[12px] bg-[#252525] border border-[#333333] text-white text-rt-15 placeholder:text-grey-600 outline-none focus:border-brand [color-scheme:dark]'
 
   return (
-    <FullScreenSheet title={asignada ? 'Editar Rotina' : 'Nova Rotina'} onClose={onCerrar}>
+    <FullScreenSheet title={asignada ? t('projetos:ra.editTitle') : t('projetos:ra.newTitle')} onClose={onCerrar}>
       {error && <div className="mb-5 rounded-[10px] bg-danger/10 border border-danger/30 px-3 py-2.5 text-[#EF5350] text-rt-13">{error}</div>}
       <div className="flex flex-col gap-6">
         <div>
-          <label className="block text-white text-rt-13 font-semibold mb-2">{nombres.length > 1 ? 'Nomes das Rotinas' : 'Nome da Rotina'}</label>
+          <label className="block text-white text-rt-13 font-semibold mb-2">{nombres.length > 1 ? t('projetos:ra.names') : t('projetos:ra.name')}</label>
           <div className="flex flex-col gap-2">
             {nombres.map((n, i) => (
               <div key={i} className="flex gap-2">
-                <input className={campo} value={n} onChange={(e) => setNombres((p) => p.map((x, k) => (k === i ? e.target.value : x)))} placeholder={`TREINO - ${String.fromCharCode(65 + i)}`} />
-                {i > 0 && <button onClick={() => setNombres((p) => p.filter((_, k) => k !== i))} aria-label="Remover nome"><X size={18} className="text-[#EF5350]" /></button>}
+                <input className={campo} value={n} onChange={(e) => setNombres((p) => p.map((x, k) => (k === i ? e.target.value : x)))} placeholder={t('projetos:ra.namePh', { letter: String.fromCharCode(65 + i) })} />
+                {i > 0 && <button onClick={() => setNombres((p) => p.filter((_, k) => k !== i))} aria-label={t('projetos:ra.removeName')}><X size={18} className="text-[#EF5350]" /></button>}
               </div>
             ))}
           </div>
           {!asignada && (
-            <button onClick={() => setNombres((p) => [...p, ''])} className="mt-2 text-brand text-rt-13 font-semibold flex items-center gap-1"><Plus size={16} /> Adicionar outra rotina</button>
+            <button onClick={() => setNombres((p) => [...p, ''])} className="mt-2 text-brand text-rt-13 font-semibold flex items-center gap-1"><Plus size={16} /> {t('projetos:ra.addAnother')}</button>
           )}
         </div>
-        <CajaSelector label="Dificuldade" valor={dificultad} placeholder="Iniciante" lista={dificultades} lang={lang} onAbrir={() => setAbriendo('dificuldade')} />
-        <CajaSelector label="Objetivo" valor={objetivo} placeholder="Hipertrofia" lista={objetivosTreino} lang={lang} onAbrir={() => setAbriendo('objetivo')} />
+        <CajaSelector label={t('projetos:c.difficulty')} valor={dificultad} placeholder={t('projetos:c.beginnerPh')} lista={dificultades} lang={lang} onAbrir={() => setAbriendo('dificuldade')} />
+        <CajaSelector label={t('projetos:c.objective')} valor={objetivo} placeholder={t('projetos:c.hypertrophyPh')} lista={objetivosTreino} lang={lang} onAbrir={() => setAbriendo('objetivo')} />
 
         <div className="border-t border-grey-800 pt-6">
-          <h3 className="text-white text-rt-17 font-bold">Período de Treino</h3>
-          <p className="text-grey-500 text-rt-12 mt-1 mb-4">Configure as datas e dias de treino para calcular a estimativa</p>
-          <label className="block text-white text-rt-13 font-semibold mb-2">Data de Início</label>
+          <h3 className="text-white text-rt-17 font-bold">{t('projetos:ra.period')}</h3>
+          <p className="text-grey-500 text-rt-12 mt-1 mb-4">{t('projetos:ra.periodSub')}</p>
+          <label className="block text-white text-rt-13 font-semibold mb-2">{t('projetos:ra.startDate')}</label>
           <input type="date" className={campo} value={inicio} onChange={(e) => setInicio(e.target.value)} />
-          <label className="block text-white text-rt-13 font-semibold mb-2 mt-4">Data de Fim</label>
+          <label className="block text-white text-rt-13 font-semibold mb-2 mt-4">{t('projetos:ra.endDate')}</label>
           <input type="date" className={campo} value={fin} onChange={(e) => setFin(e.target.value)} />
-          <label className="block text-white text-rt-13 font-semibold mb-2 mt-4">Dias de Treino</label>
+          <label className="block text-white text-rt-13 font-semibold mb-2 mt-4">{t('projetos:ra.days')}</label>
           {!manual && contrato ? (
             <div className="rounded-[12px] bg-[#252525] border border-[#333333] p-4 flex items-center gap-3">
               <CalendarCheck size={20} className="text-brand" />
               <span className="flex-1">
-                <span className="block text-white text-rt-14">Do contrato: {contrato.weekdays.map((d) => DIAS[d]).join(', ')}</span>
-                <span className="block text-grey-500 text-rt-12">{contrato.frequency}x / semana</span>
+                <span className="block text-white text-rt-14">{t('projetos:ra.fromContract', { days: contrato.weekdays.map((d) => DIAS[d]).join(', ') })}</span>
+                <span className="block text-grey-500 text-rt-12">{t('projetos:ra.perWeek', { n: contrato.frequency })}</span>
               </span>
-              <button onClick={() => setManual(true)} className="text-brand text-rt-13 font-semibold">Alterar</button>
+              <button onClick={() => setManual(true)} className="text-brand text-rt-13 font-semibold">{t('projetos:ra.change')}</button>
             </div>
           ) : (
             <div className="flex gap-1.5">
@@ -380,26 +383,26 @@ function FormRotinaAluno({ alumno, asignada, contrato, posicion, onCerrar, onLis
             </div>
           )}
           <div className="mt-4 rounded-[12px] border border-brand/40 bg-brand/10 px-4 py-3 flex items-center gap-2 text-brand text-rt-14 font-semibold">
-            <Dumbbell size={18} /> Treinos estimados: {estimados}{!fin && ' (sem data de fim)'}
+            <Dumbbell size={18} /> {t('projetos:ra.estimated', { n: estimados })}{!fin && t('projetos:ra.noEnd')}
           </div>
         </div>
 
         {asignada && (
           <div className="border-t border-grey-800 pt-6">
-            <h3 className="text-white text-rt-17 font-bold mb-3">Ações</h3>
+            <h3 className="text-white text-rt-17 font-bold mb-3">{t('projetos:ra.actions')}</h3>
             <button onClick={() => setOculta((v) => !v)} className="w-full h-12 rounded-[12px] bg-[#252525] border border-[#333333] px-4 flex items-center gap-3 text-white text-rt-14">
               {oculta ? <Eye size={18} className="text-brand" /> : <EyeOff size={18} className="text-grey-400" />}
-              {oculta ? 'Mostrar Rotina (oculta para o aluno)' : 'Ocultar Rotina'}
+              {oculta ? t('projetos:ra.show') : t('projetos:ra.hide')}
             </button>
             <button onClick={() => setResetear((v) => !v)} className={'w-full h-12 mt-2 rounded-[12px] border px-4 flex items-center gap-3 text-rt-14 ' + (resetear ? 'bg-danger/10 border-danger/40 text-[#EF5350]' : 'bg-[#252525] border-[#333333] text-white')}>
-              <RotateCcw size={18} /> {resetear ? `Contador será zerado ao salvar (${asignada.completed_workouts} feitos)` : 'Resetar Contador'}
+              <RotateCcw size={18} /> {resetear ? t('projetos:ra.resetPending', { n: asignada.completed_workouts }) : t('projetos:ra.reset')}
             </button>
           </div>
         )}
       </div>
       <div className="mt-8">
         <button onClick={() => void guardar()} disabled={guardando} className="w-full h-[54px] rounded-[27px] bg-gradient-to-b from-[#91C145] to-[#5A8F2F] text-white text-rt-16 font-bold disabled:opacity-60">
-          {guardando ? 'Salvando…' : asignada ? 'Salvar Rotina' : validos.length > 1 ? `Criar ${validos.length} Rotinas` : 'Criar Rotina'}
+          {guardando ? t('projetos:c.saving') : asignada ? t('projetos:ra.save') : validos.length > 1 ? t('projetos:ra.createN', { n: validos.length }) : t('projetos:ra.create')}
         </button>
       </div>
       {abriendo === 'dificuldade' && <HojaRadio lista={dificultades} valor={dificultad} lang={lang} onElegir={(id) => { setDificultad(id); setAbriendo(null) }} onCerrar={() => setAbriendo(null)} />}
@@ -409,6 +412,7 @@ function FormRotinaAluno({ alumno, asignada, contrato, posicion, onCerrar, onLis
 }
 
 function ClonarRotina({ r, origen, onCerrar, onResultado }: { r: Asignada; origen: string; onCerrar: () => void; onResultado: (a: Aviso) => void }) {
+  const { t } = useTranslation()
   const { profile } = useAuth()
   const [alumnos, setAlumnos] = useState<{ id: string; full_name: string | null; email: string | null }[] | null>(null)
   const [busca, setBusca] = useState('')
@@ -433,18 +437,18 @@ function ClonarRotina({ r, origen, onCerrar, onResultado }: { r: Asignada; orige
       } catch { /* se informa abajo */ }
     }
     const fallos = marcados.length - ok
-    onResultado(fallos === 0 ? { kind: 'success', message: `Rotina clonada para ${ok} aluno(s)` } : { kind: 'error', message: `Clonada para ${ok} aluno(s). ${fallos} erro(s).` })
+    onResultado(fallos === 0 ? { kind: 'success', message: t('projetos:ra.clonedN', { n: ok }) } : { kind: 'error', message: t('projetos:ra.clonedPartial', { ok, fail: fallos }) })
   }
 
   return (
-    <FullScreenSheet title="Clonar Rotina" onClose={onCerrar}>
-      <p className="text-grey-500 text-rt-13 -mt-6 mb-4">Selecione os alunos para receber "{r.name}"</p>
+    <FullScreenSheet title={t('projetos:ra.cloneTitle')} onClose={onCerrar}>
+      <p className="text-grey-500 text-rt-13 -mt-6 mb-4">{t('projetos:ra.cloneSub', { name: r.name })}</p>
       <div className="relative mb-4">
         <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-grey-500" />
-        <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar aluno..." className="w-full h-[50px] pl-10 pr-3 rounded-[12px] bg-[#2D2D2D] text-white text-rt-14 outline-none" />
+        <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder={t('projetos:ra.searchStudent')} className="w-full h-[50px] pl-10 pr-3 rounded-[12px] bg-[#2D2D2D] text-white text-rt-14 outline-none" />
       </div>
       {alumnos === null ? <div className="py-8 flex justify-center"><span className="w-8 h-8 rounded-full border-2 border-brand/30 border-t-brand animate-spin" /></div>
-        : lista.length === 0 ? <p className="text-white/60 text-rt-13 text-center py-6">Nenhum outro aluno ativo.</p> : (
+        : lista.length === 0 ? <p className="text-white/60 text-rt-13 text-center py-6">{t('projetos:ra.noOthers')}</p> : (
           <ul className="flex flex-col gap-2">
             {lista.map((a) => {
               const on = marcados.includes(a.id)
@@ -461,7 +465,7 @@ function ClonarRotina({ r, origen, onCerrar, onResultado }: { r: Asignada; orige
         )}
       <div className="mt-8">
         <button disabled={marcados.length === 0 || enviando} onClick={() => void clonar()} className={'w-full h-[54px] rounded-[12px] text-white text-rt-15 font-bold ' + (marcados.length ? 'bg-gradient-to-b from-[#91C145] to-[#5A8F2F]' : 'bg-grey-700')}>
-          {enviando ? 'Clonando…' : marcados.length ? `Clonar Rotina para ${marcados.length} aluno(s)` : 'Selecione ao menos 1 aluno'}
+          {enviando ? t('projetos:ra.cloning') : marcados.length ? t('projetos:ra.cloneFor', { n: marcados.length }) : t('projetos:ra.pickStudent')}
         </button>
       </div>
     </FullScreenSheet>

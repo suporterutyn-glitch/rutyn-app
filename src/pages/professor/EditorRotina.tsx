@@ -43,7 +43,7 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
   const id = routineId
   const nav = useNavigate()
   const { profile } = useAuth()
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [routine, setRoutine] = useState<Routine | null>(null)
   const [borrandoExercicio, setBorrandoExercicio] = useState<string | null>(null)
   const [exs, setExs] = useState<Ex[]>([])
@@ -156,7 +156,7 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
         position: exs.length + i,
         group_type: 'single',
       }).select('*').single()
-      if (error || !data) { setErrorGuardado(error?.message ?? 'Erro ao adicionar exercício'); break }
+      if (error || !data) { setErrorGuardado(error?.message ?? t('projetos:rot.addError')); break }
       await supabase.from('series').insert(Array.from({ length: 3 }, (_, n) => ({
         routine_exercise_id: data.id,
         position: n,
@@ -246,9 +246,9 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
       )}
 
       {loading ? (
-        <div className="text-white/60 text-rt-13 py-8 text-center">Carregando…</div>
+        <div className="text-white/60 text-rt-13 py-8 text-center">{t('projetos:rot.loading')}</div>
       ) : exs.length === 0 ? (
-        <EmptyState icon={Dumbbell} title="Sem exercícios" body="Adicione o primeiro exercício à rotina." />
+        <EmptyState icon={Dumbbell} title={t('projetos:rot.noExercises')} body={t('projetos:rot.noExercisesBody')} />
       ) : (
         <>
           {seleccion.length > 0 ? (
@@ -265,10 +265,10 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
                 onClick={() => void borrarSeleccion()}
                 className="h-10 px-5 rounded-btn-pill bg-danger text-white text-rt-14 font-semibold"
               >
-                Excluir
+                {t('projetos:c.delete')}
               </button>
               <button onClick={() => setSeleccion([])} className="ml-auto text-white/70 text-rt-14">
-                Cancelar
+                {t('projetos:c.cancel')}
               </button>
             </div>
           ) : (
@@ -276,7 +276,7 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
               onClick={() => setTodosAbiertos((v) => !v)}
               className="block ml-auto text-brand text-rt-13 font-semibold mb-2"
             >
-              {todosAbiertos ? 'Recolher todos' : 'Expandir todos'}
+              {todosAbiertos ? t('projetos:rot.collapseAll') : t('projetos:rot.expandAll')}
             </button>
           )}
 
@@ -328,7 +328,7 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
                     </span>
                     <button
                       onClick={() => setGrupoAbierto({ tipo: bloque.tipo, ids: bloque.exercicios.map((x) => x.id!) })}
-                      aria-label="Opções do grupo"
+                      aria-label={t('projetos:rot.groupOptions')}
                       className="w-7 h-7 flex items-center justify-center"
                     >
                       <MoreVertical size={16} className={esBiset ? 'text-group-biset' : 'text-group-triset'} />
@@ -371,11 +371,11 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
         ? 'flex gap-2 mt-3'
         : 'fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-app px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+96px)] flex gap-2 bg-surface-app/95 backdrop-blur'}>
         <button onClick={() => setPickerOpen(true)} className="flex-1 h-12 rounded-btn-pill bg-brand text-white text-rt-14 font-semibold flex items-center justify-center gap-2">
-          <Plus size={18} /> Adicionar Exercício
+          <Plus size={18} /> {t('projetos:rot.addExercise')}
         </button>
         {profile && exs.length > 0 && !routine?.student_id && (
           <button onClick={() => setAssignOpen(true)} className="flex-1 h-12 rounded-btn-pill bg-charge text-white text-rt-14 font-semibold flex items-center justify-center gap-2">
-            <Users size={18} /> Atribuir
+            <Users size={18} /> {t('projetos:rot.assign')}
           </button>
         )}
       </div>
@@ -404,9 +404,9 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
       {assignOpen && routine && <AssignSheet routine={routine} onClose={() => setAssignOpen(false)} />}
       {borrandoExercicio && (
         <ConfirmDialog
-          message="Remover este exercício?"
-          detail="As séries configuradas serão perdidas."
-          confirmLabel="Remover"
+          message={t('projetos:rot.removeExQ')}
+          detail={t('projetos:rot.removeExDetail')}
+          confirmLabel={t('projetos:c.remove')}
           tone="danger"
           onConfirm={() => void removeExercise(borrandoExercicio)}
           onCancel={() => setBorrandoExercicio(null)}
@@ -417,6 +417,7 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
 }
 
 function AssignSheet({ routine, onClose }: { routine: Routine; onClose: () => void }) {
+  const { t } = useTranslation()
   const { profile } = useAuth()
   const [students, setStudents] = useState<{ id: string; full_name: string | null; email: string | null }[]>([])
   const [selected, setSelected] = useState<Set<string>>(new Set())
@@ -474,11 +475,11 @@ function AssignSheet({ routine, onClose }: { routine: Routine; onClose: () => vo
   }
 
   return (
-    <FullScreenSheet title="Atribuir a alunos" onClose={onClose}>
+    <FullScreenSheet title={t('projetos:rot.assignTitle')} onClose={onClose}>
       <div className="flex flex-col gap-6">
-        <Field label={`Alunos (${selected.size})`}>
+        <Field label={t('projetos:rot.studentsN', { n: selected.size })}>
           {students.length === 0 ? (
-            <div className="text-white/60 text-rt-13">Nenhum aluno ativo.</div>
+            <div className="text-white/60 text-rt-13">{t('projetos:rot.noActive')}</div>
           ) : (
             <ul className="flex flex-col gap-2 max-h-56 overflow-y-auto">
               {students.map((s) => (
@@ -498,10 +499,10 @@ function AssignSheet({ routine, onClose }: { routine: Routine; onClose: () => vo
           )}
         </Field>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Início"><input type="date" className="input-dark" value={startsOn} onChange={(e) => setStartsOn(e.target.value)} /></Field>
-          <Field label="Fim"><input type="date" className="input-dark" value={endsOn} onChange={(e) => setEndsOn(e.target.value)} /></Field>
+          <Field label={t('projetos:rot.start')}><input type="date" className="input-dark" value={startsOn} onChange={(e) => setStartsOn(e.target.value)} /></Field>
+          <Field label={t('projetos:rot.end')}><input type="date" className="input-dark" value={endsOn} onChange={(e) => setEndsOn(e.target.value)} /></Field>
         </div>
-        <Field label="Frequência semanal">
+        <Field label={t('projetos:rot.weeklyFreq')}>
           <div className="flex gap-2">
             {[1, 2, 3, 4, 5, 6, 7].map((n) => (
               <button key={n} type="button" onClick={() => { setFreq(n); if (days.length > n) setDays(days.slice(0, n)) }} className={
@@ -511,9 +512,9 @@ function AssignSheet({ routine, onClose }: { routine: Routine; onClose: () => vo
             ))}
           </div>
         </Field>
-        <Field label={`Dias (${days.length}/${freq})`}>
+        <Field label={t('projetos:rot.daysN', { n: days.length, total: freq })}>
           <div className="flex gap-2">
-            {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((l, i) => (
+            {t('projetos:rot.weekInitials').split(',').map((l, i) => (
               <button key={i} type="button" onClick={() => toggleDay(i)} className={
                 'flex-1 h-10 rounded-lg text-rt-12 font-semibold ' +
                 (days.includes(i) ? 'bg-brand text-white' : 'bg-surface-raised text-grey-400')
@@ -522,12 +523,12 @@ function AssignSheet({ routine, onClose }: { routine: Routine; onClose: () => vo
           </div>
         </Field>
         <div className="card-dark p-3 text-white/70 text-rt-12">
-          Estimativa: <strong className="text-brand">{estimateWorkouts()}</strong> treinos no período.
+          {t('projetos:rot.estimate')} <strong className="text-brand">{estimateWorkouts()}</strong> {t('projetos:rot.workoutsInPeriod')}
         </div>
       </div>
       <div className="mt-8">
         <button className="btn-save" disabled={saving || selected.size === 0 || days.length !== freq} onClick={assign}>
-          {saving ? 'Atribuindo…' : 'Atribuir'}
+          {saving ? t('projetos:rot.assigning') : t('projetos:rot.assign')}
         </button>
       </div>
       {error && <FeedbackDialog kind="error" message={error} onClose={() => setError(null)} />}
@@ -584,6 +585,7 @@ function TarjetaExercicio({
   onNuevaSerie: () => void
   onReordenarSeries: (desdeId: string, hastaId: string) => void
 }) {
+  const { t } = useTranslation()
   const arrastreSeries = useArrastreLista<string>(onReordenarSeries)
   return (
     <div
@@ -601,7 +603,7 @@ function TarjetaExercicio({
         <button
           type="button"
           onPointerDown={arrastre.alBajar(re.id!)}
-          aria-label="Arrastar para reordenar"
+          aria-label={t('projetos:rot.drag')}
           className="shrink-0 touch-none cursor-grab active:cursor-grabbing"
         >
           <GripVertical size={16} className="text-grey-600" />
@@ -609,7 +611,7 @@ function TarjetaExercicio({
         <button
           type="button"
           onClick={onSeleccionar}
-          aria-label={seleccionado ? 'Desmarcar' : 'Marcar'}
+          aria-label={seleccionado ? t('projetos:c.unmark') : t('projetos:c.mark')}
           className={
             'w-6 h-6 rounded-[6px] border-2 flex items-center justify-center shrink-0 text-rt-12 ' +
             (seleccionado ? 'bg-brand border-brand text-white' : 'border-grey-600')
@@ -620,7 +622,7 @@ function TarjetaExercicio({
         <MiniaturaMedia media={media} tamano={48} />
         <div className="flex-1 min-w-0">
           <div className="text-white text-rt-14 font-semibold truncate">
-            {nombreEjercicio({ name: re.exercise_name_snapshot ?? 'Exercício', ...(media as { name_pt?: string | null; name_es?: string | null; name_en?: string | null }) }, lang)}
+            {nombreEjercicio({ name: re.exercise_name_snapshot ?? t('projetos:rot.exercise'), ...(media as { name_pt?: string | null; name_es?: string | null; name_en?: string | null }) }, lang)}
           </div>
           {chips.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-1">
@@ -630,10 +632,10 @@ function TarjetaExercicio({
             </div>
           )}
         </div>
-        <button onClick={onGrupo} className="w-7 h-7 rounded-md bg-surface-input flex items-center justify-center shrink-0" title="Alternar bi/tri-set">
+        <button onClick={onGrupo} className="w-7 h-7 rounded-md bg-surface-input flex items-center justify-center shrink-0" title={t('projetos:rot.toggleGroup')}>
           <Link2 size={14} className="text-brand" />
         </button>
-        <button onClick={onBorrar} className="w-7 h-7 rounded-md bg-surface-input flex items-center justify-center shrink-0" aria-label="Excluir exercício">
+        <button onClick={onBorrar} className="w-7 h-7 rounded-md bg-surface-input flex items-center justify-center shrink-0" aria-label={t('projetos:rot.deleteEx')}>
           <Trash2 size={14} className="text-danger" />
         </button>
         <button onClick={onAlternar} className="w-7 h-7 flex items-center justify-center shrink-0" aria-label={abierto ? 'Recolher' : 'Expandir'}>
@@ -646,8 +648,8 @@ function TarjetaExercicio({
           <BannerMedia media={media} />
 
           <div className="flex items-baseline gap-2 mt-4 mb-2">
-            <span className="text-white text-rt-14 font-semibold">Séries</span>
-            <span className="text-grey-500 text-rt-11 italic">(arraste para reordenar)</span>
+            <span className="text-white text-rt-14 font-semibold">{t('projetos:rot.series')}</span>
+            <span className="text-grey-500 text-rt-11 italic">{t('projetos:rot.dragHint')}</span>
           </div>
 
           <div className="flex flex-col gap-4">
@@ -669,7 +671,7 @@ function TarjetaExercicio({
           </div>
 
           <button onClick={onNuevaSerie} className="text-brand text-rt-14 font-semibold underline mt-4">
-            + Adicionar Nova Serie
+            {t('projetos:rot.addSeries')}
           </button>
         </div>
       )}
@@ -683,6 +685,7 @@ function HojaOpcionesGrupo({ tipo, onDesfazer, onCerrar }: {
   onDesfazer: () => void
   onCerrar: () => void
 }) {
+  const { t } = useTranslation()
   const etiqueta = tipo === 'biset' ? 'Bi-set' : 'Tri-set'
   return (
     <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/60" onClick={onCerrar}>
@@ -696,7 +699,7 @@ function HojaOpcionesGrupo({ tipo, onDesfazer, onCerrar }: {
           className="w-full flex items-center gap-4 px-6 py-4 text-left"
         >
           <Unlink size={22} className="text-white" />
-          <span className="text-white text-rt-16">Desfazer {etiqueta}</span>
+          <span className="text-white text-rt-16">{t('projetos:rot.undoGroup', { group: etiqueta })}</span>
         </button>
       </div>
     </div>

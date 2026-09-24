@@ -1,5 +1,6 @@
 import { etiqueta } from '@/lib/catalogos'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Trash2, GripVertical, X } from 'lucide-react'
 import {
   PARAMETROS, PARAMETRO_POR_ID, MAX_PARAMETROS_POR_SERIE,
@@ -44,6 +45,7 @@ export function FilaSerie({
   onDuplicar: () => void
   onEliminar: () => void
 }) {
+  const { t } = useTranslation()
   const [eligiendo, setEligiendo] = useState(false)
   const [editando, setEditando] = useState<Parametro | null>(null)
 
@@ -65,7 +67,7 @@ export function FilaSerie({
         <button
           type="button"
           onPointerDown={arrastre && id ? arrastre.alBajar(id) : undefined}
-          aria-label="Arrastar série"
+          aria-label={t('projetos:ser.dragSeries')}
           className="touch-none cursor-grab active:cursor-grabbing"
         >
           <GripVertical size={20} className="text-grey-600" />
@@ -80,7 +82,7 @@ export function FilaSerie({
             onClick={() => setEligiendo(true)}
             className="w-full h-10 rounded-lg bg-brand text-white text-rt-12 font-semibold"
           >
-            Adicionar Parâmetros
+            {t('projetos:ser.addParams')}
           </button>
         ) : (
           <>
@@ -90,19 +92,19 @@ export function FilaSerie({
                 onClick={() => setEligiendo(true)}
                 className="flex-[3] h-9 rounded-lg bg-brand text-white text-rt-10 font-semibold"
               >
-                Adicionar Campo
+                {t('projetos:ser.addField')}
               </button>
               <button
                 type="button"
                 onClick={onDuplicar}
                 className="flex-[3] h-9 rounded-lg border border-brand text-brand text-rt-10 font-semibold"
               >
-                Duplicar Série
+                {t('projetos:ser.duplicate')}
               </button>
               <button
                 type="button"
                 onClick={onEliminar}
-                aria-label="Excluir série"
+                aria-label={t('projetos:ser.deleteSeries')}
                 className="w-8 h-9 rounded-md bg-surface-card border border-surface-line flex items-center justify-center shrink-0"
               >
                 <Trash2 size={16} className="text-danger" />
@@ -127,7 +129,7 @@ export function FilaSerie({
                     onClick={() => setEditando(p)}
                     className="w-full h-5 rounded-md bg-white text-black text-[8px] font-bold mt-1"
                   >
-                    EDITAR
+                    {t('projetos:ser.edit')}
                   </button>
                 </div>
               ))}
@@ -136,11 +138,11 @@ export function FilaSerie({
         )}
 
         <div className="mt-3">
-          <label className="block text-grey-500 text-[10px] mb-1">Observação</label>
+          <label className="block text-grey-500 text-[10px] mb-1">{t('projetos:ser.note')}</label>
           <input
             value={observacion}
             onChange={(e) => onObservacion(e.target.value)}
-            placeholder="Ex: Última série fazer drop set"
+            placeholder={t('projetos:ser.notePh')}
             className="w-full h-10 px-3 rounded-[10px] bg-surface-card border border-surface-line text-white text-rt-12 outline-none focus:border-brand"
           />
         </div>
@@ -194,6 +196,7 @@ function SheetParametros({ lang, elegidos, onCerrar, onGuardar }: {
   onCerrar: () => void
   onGuardar: (ids: string[]) => void
 }) {
+  const { t } = useTranslation()
   const [sel, setSel] = useState<string[]>(elegidos)
   const lleno = sel.length >= MAX_PARAMETROS_POR_SERIE
 
@@ -208,12 +211,12 @@ function SheetParametros({ lang, elegidos, onCerrar, onGuardar }: {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-1">
-          <h2 className="text-white text-rt-18 font-bold">Parâmetros do exercício</h2>
-          <button onClick={onCerrar} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white" aria-label="Fechar">
+          <h2 className="text-white text-rt-18 font-bold">{t('projetos:ser.paramsTitle')}</h2>
+          <button onClick={onCerrar} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white" aria-label={t('projetos:ser.close')}>
             <X size={18} />
           </button>
         </div>
-        <p className="text-white/50 text-rt-11 mb-4">{sel.length} de {MAX_PARAMETROS_POR_SERIE}</p>
+        <p className="text-white/50 text-rt-11 mb-4">{t('projetos:ser.nOfMax', { n: sel.length, max: MAX_PARAMETROS_POR_SERIE })}</p>
 
         <ul className="flex flex-col">
           {PARAMETROS.map((p) => {
@@ -240,7 +243,7 @@ function SheetParametros({ lang, elegidos, onCerrar, onGuardar }: {
           })}
         </ul>
 
-        <button onClick={() => onGuardar(sel)} className="btn-save mt-6">Salvar Parâmetros</button>
+        <button onClick={() => onGuardar(sel)} className="btn-save mt-6">{t('projetos:ser.saveParams')}</button>
       </div>
     </div>
   )
@@ -254,6 +257,7 @@ function SheetValor({ parametro, valor, lang, onCerrar, onGuardar, onQuitar }: {
   onGuardar: (v: string) => void
   onQuitar: () => void
 }) {
+  const { t } = useTranslation()
   const esRango = parametro.id === 'repetition' && valor.includes('-')
   const [rango, setRango] = useState(esRango)
   const [v, setV] = useState(valor)
@@ -270,7 +274,7 @@ function SheetValor({ parametro, valor, lang, onCerrar, onGuardar, onQuitar }: {
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-white text-rt-18 font-bold">{etiquetaParametro(parametro, lang)}</h2>
-          <button onClick={onCerrar} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white" aria-label="Fechar">
+          <button onClick={onCerrar} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white" aria-label={t('projetos:ser.close')}>
             <X size={18} />
           </button>
         </div>
@@ -306,7 +310,7 @@ function SheetValor({ parametro, valor, lang, onCerrar, onGuardar, onQuitar }: {
                 }>
                   {rango && '✓'}
                 </span>
-                <span className="text-white text-rt-13">Usar intervalo (ex: 10-12)</span>
+                <span className="text-white text-rt-13">{t('projetos:ser.useRange')}</span>
               </button>
             )}
 
@@ -329,12 +333,12 @@ function SheetValor({ parametro, valor, lang, onCerrar, onGuardar, onQuitar }: {
               </div>
             )}
 
-            <button onClick={() => onGuardar(resultado)} className="btn-save mt-6">Salvar</button>
+            <button onClick={() => onGuardar(resultado)} className="btn-save mt-6">{t('projetos:ser.save')}</button>
           </>
         )}
 
         <button onClick={onQuitar} className="w-full h-11 mt-3 text-danger text-rt-13 font-semibold">
-          Remover Campo
+          {t('projetos:ser.removeField')}
         </button>
       </div>
     </div>

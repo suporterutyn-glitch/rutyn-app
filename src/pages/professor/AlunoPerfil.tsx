@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { localeDe } from '@/lib/fechas'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, User as UserIcon, MessageCircle, MoreVertical, Pause, Play, UserMinus, FileText, TrendingUp } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -22,16 +24,17 @@ type StudentProfile = {
 type Charge = { id: string; amount: number; due_date: string; status: string }
 
 const TABS = [
-  { key: 'perfil', label: 'Perfil' },
-  { key: 'rotinas', label: 'Rotinas' },
-  { key: 'dietas', label: 'Dietas' },
-  { key: 'avaliacoes', label: 'Avaliações' },
-  { key: 'desempenho', label: 'Desempenho' },
+  { key: 'perfil', label: 'alunos:perfil.tabProfile' },
+  { key: 'rotinas', label: 'alunos:perfil.tabRoutines' },
+  { key: 'dietas', label: 'alunos:perfil.tabDiets' },
+  { key: 'avaliacoes', label: 'alunos:perfil.tabAssessments' },
+  { key: 'desempenho', label: 'alunos:perfil.tabPerformance' },
 ] as const
 
 type TabKey = (typeof TABS)[number]['key']
 
 export function AlunoPerfilPage() {
+  const { t, i18n } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const nav = useNavigate()
   const { profile: me } = useAuth()
@@ -105,7 +108,7 @@ export function AlunoPerfilPage() {
         <button onClick={() => nav(-1)} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-white text-rt-20 font-bold flex-1">Perfil do Aluno</h1>
+        <h1 className="text-white text-rt-20 font-bold flex-1">{t('alunos:perfil.title')}</h1>
         <button onClick={() => setMenuOpen((v) => !v)} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white">
           <MoreVertical size={20} />
         </button>
@@ -113,18 +116,18 @@ export function AlunoPerfilPage() {
           <div className="absolute top-11 right-0 w-56 bg-surface-raised rounded-card border border-surface-line-strong z-30 py-1">
             {suspended ? (
               <button onClick={reactivate} className="w-full flex items-center gap-2 px-4 py-3 text-white text-rt-13 hover:bg-white/5">
-                <Play size={16} className="text-brand" /> Reativar aluno
+                <Play size={16} className="text-brand" /> {t('alunos:perfil.reactivate')}
               </button>
             ) : (
               <button onClick={() => { setMenuOpen(false); setConfirmando('suspender') }} className="w-full flex items-center gap-2 px-4 py-3 text-white text-rt-13 hover:bg-white/5">
-                <Pause size={16} className="text-warning" /> Suspender
+                <Pause size={16} className="text-warning" /> {t('alunos:perfil.suspend')}
               </button>
             )}
             <button onClick={() => { setMenuOpen(false); nav(`/professor/anamnese/${id}`) }} className="w-full flex items-center gap-2 px-4 py-3 text-white text-rt-13 hover:bg-white/5">
-              <FileText size={16} className="text-brand-assess" /> Anamneses
+              <FileText size={16} className="text-brand-assess" /> {t('alunos:perfil.anamneses')}
             </button>
             <button onClick={() => { setMenuOpen(false); setConfirmando('remover') }} className="w-full flex items-center gap-2 px-4 py-3 text-danger text-rt-13 hover:bg-white/5">
-              <UserMinus size={16} /> Remover da lista
+              <UserMinus size={16} /> {t('alunos:perfil.removeFromList')}
             </button>
           </div>
         )}
@@ -137,7 +140,7 @@ export function AlunoPerfilPage() {
         <div className="flex-1 min-w-0">
           <div className="text-white text-rt-17 font-bold truncate">{student?.full_name ?? '...'}</div>
           <div className="text-grey-500 text-rt-11 truncate">{student?.email}</div>
-          {suspended && <span className="text-warning text-rt-10 font-bold uppercase">Suspenso</span>}
+          {suspended && <span className="text-warning text-rt-10 font-bold uppercase">{t('alunos:perfil.suspended')}</span>}
         </div>
         {student?.phone && (
           <a href={`https://wa.me/${student.phone.replace(/\D/g, '')}`} target="_blank" rel="noreferrer"
@@ -148,13 +151,13 @@ export function AlunoPerfilPage() {
       </div>
 
       <div className="flex gap-2 mb-4 overflow-x-auto no-scrollbar">
-        {TABS.map((t) => {
-          const on = tab === t.key
+        {TABS.map((tab_) => {
+          const on = tab === tab_.key
           return (
-            <button key={t.key} onClick={() => setTab(t.key)} className={
+            <button key={tab_.key} onClick={() => setTab(tab_.key)} className={
               'shrink-0 px-3 h-8 rounded-card border text-rt-12 font-semibold ' +
               (on ? 'bg-brand border-brand text-white' : 'bg-transparent border-grey-700 text-grey-400')
-            }>{t.label}</button>
+            }>{t(tab_.label)}</button>
           )
         })}
       </div>
@@ -163,7 +166,7 @@ export function AlunoPerfilPage() {
         <div className="flex flex-col gap-3">
           {charge && (
             <div className="card-dark p-4">
-              <div className="text-white/60 text-rt-11 uppercase font-semibold tracking-wide">Última cobrança</div>
+              <div className="text-white/60 text-rt-11 uppercase font-semibold tracking-wide">{t('alunos:perfil.lastCharge')}</div>
               <div className="flex items-center justify-between mt-1">
                 <div className="text-white text-rt-15 font-bold">
                   {formatMoney(Number(charge.amount), currencyOf(me?.country))}
@@ -173,23 +176,23 @@ export function AlunoPerfilPage() {
                   (charge.status === 'paid' ? 'bg-brand text-white' :
                    charge.status === 'awaiting' ? 'bg-info text-white' :
                    charge.status === 'suspended' ? 'bg-danger-deep text-white' : 'bg-warning text-black')
-                }>{ETIQUETA_COBRANCA[charge.status] ?? charge.status}</span>
+                }>{ETIQUETA_COBRANCA[charge.status] ? t(ETIQUETA_COBRANCA[charge.status]) : charge.status}</span>
               </div>
-              <div className="text-white/60 text-rt-11 mt-1">Vence {new Date(charge.due_date + 'T00:00:00').toLocaleDateString('pt-BR')}</div>
+              <div className="text-white/60 text-rt-11 mt-1">{t('alunos:perfil.dueOn', { date: new Date(charge.due_date + 'T00:00:00').toLocaleDateString(localeDe(i18n.language)) })}</div>
             </div>
           )}
           <button onClick={() => nav('/professor/financeiro')} className="btn-outline-white h-11 rounded-btn-pill">
-            Ver financeiro
+            {t('alunos:perfil.seeFinancial')}
           </button>
         </div>
       )}
 
       {tab === 'rotinas' && id && (
-        <RotinasAluno alumno={{ id, nombre: student?.full_name ?? 'o aluno' }} />
+        <RotinasAluno alumno={{ id, nombre: student?.full_name ?? t('projetos:ra.theStudent') }} />
       )}
 
       {tab === 'dietas' && id && (
-        <DietsTab query="" filtro="todos" alumno={{ id, nombre: student?.full_name ?? 'o aluno' }} />
+        <DietsTab query="" filtro="todos" alumno={{ id, nombre: student?.full_name ?? t('projetos:ra.theStudent') }} />
       )}
 
       {tab === 'desempenho' && (
@@ -210,19 +213,19 @@ export function AlunoPerfilPage() {
       {tab === 'avaliacoes' && (
         <div className="flex flex-col gap-2">
           <button onClick={() => nav(`/professor/avaliacoes/${id}`)} className="btn-primary-pill">
-            Abrir avaliação física
+            {t('alunos:perfil.openAssessment')}
           </button>
           <button onClick={() => nav(`/professor/anamnese/${id}`)} className="btn-outline-white h-11 rounded-btn-pill">
-            Anamneses
+            {t('alunos:perfil.anamneses')}
           </button>
         </div>
       )}
 
       {confirmando === 'suspender' && (
         <ConfirmDialog
-          message="Suspender este aluno?"
-          detail="Ele perde acesso aos treinos até você reativá-lo."
-          confirmLabel="Suspender"
+          message={t('alunos:perfil.suspendQ')}
+          detail={t('alunos:perfil.suspendDetail')}
+          confirmLabel={t('alunos:perfil.suspend')}
           onConfirm={() => void suspend()}
           onCancel={() => setConfirmando(null)}
         />
@@ -230,10 +233,10 @@ export function AlunoPerfilPage() {
 
       {confirmando === 'remover' && (
         <ConfirmConMotivo
-          message="Remover este aluno da sua lista?"
-          detail="Ele deixa de ser seu aluno. Você pode contar o motivo."
-          placeholder="Motivo (opcional)"
-          confirmLabel="Remover"
+          message={t('alunos:perfil.removeQ')}
+          detail={t('alunos:perfil.removeDetail')}
+          placeholder={t('alunos:perfil.reasonPh')}
+          confirmLabel={t('alunos:perfil.remove')}
           onConfirm={(motivo) => void remove(motivo)}
           onCancel={() => setConfirmando(null)}
         />
@@ -248,10 +251,10 @@ export function AlunoPerfilPage() {
 
 /** El estado viene en inglés desde la base; acá se muestra en portugués. */
 const ETIQUETA_COBRANCA: Record<string, string> = {
-  pending: 'Pendente',
-  awaiting: 'Aguardando',
-  paid: 'Pago',
-  suspended: 'Suspenso',
+  pending: 'alunos:perfil.pending',
+  awaiting: 'alunos:perfil.awaiting',
+  paid: 'alunos:perfil.paid',
+  suspended: 'alunos:perfil.statusSuspended',
 }
 
 type SerieHecha = { done?: boolean; load?: string; reps?: number }
@@ -265,11 +268,11 @@ type Sesion = {
 }
 
 const ESFUERZO: Record<number, { emoji: string; texto: string }> = {
-  1: { emoji: '😌', texto: 'Leve' },
-  2: { emoji: '🙂', texto: 'Tranquilo' },
-  3: { emoji: '😐', texto: 'Moderado' },
-  4: { emoji: '😓', texto: 'Puxado' },
-  5: { emoji: '🥵', texto: 'Muito intenso' },
+  1: { emoji: '😌', texto: 'alunos:perfil.effort1' },
+  2: { emoji: '🙂', texto: 'alunos:perfil.effort2' },
+  3: { emoji: '😐', texto: 'alunos:perfil.effort3' },
+  4: { emoji: '😓', texto: 'alunos:perfil.effort4' },
+  5: { emoji: '🥵', texto: 'alunos:perfil.effort5' },
 }
 
 /** Carga total movida en una sesión: carga x repetições de cada série feita. */
@@ -289,12 +292,13 @@ function DesempenhoAluno({ sesiones, onVerExercicio }: {
   sesiones: Sesion[]
   onVerExercicio: (nombre: string) => void
 }) {
+  const { t, i18n } = useTranslation()
   if (sesiones.length === 0) {
     return (
       <div className="card-dark p-6 text-center">
-        <div className="text-white text-rt-15 font-bold mb-1">Sem treinos registrados</div>
+        <div className="text-white text-rt-15 font-bold mb-1">{t('alunos:perfil.noWorkouts')}</div>
         <div className="text-white/60 text-rt-12">
-          Quando o aluno concluir um treino, aparecem aqui as cargas e o esforço.
+          {t('alunos:perfil.noWorkoutsBody')}
         </div>
       </div>
     )
@@ -311,18 +315,18 @@ function DesempenhoAluno({ sesiones, onVerExercicio }: {
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-2 gap-2.5">
         <div className="card-dark p-3">
-          <div className="text-white text-rt-13 font-semibold">Treinos feitos</div>
+          <div className="text-white text-rt-13 font-semibold">{t('alunos:perfil.workoutsDone')}</div>
           <div className="text-white text-rt-29 font-bold mt-2">{sesiones.length}</div>
         </div>
         <div className="card-dark p-3">
-          <div className="text-white text-rt-13 font-semibold">Peso total movido</div>
+          <div className="text-white text-rt-13 font-semibold">{t('alunos:perfil.totalMoved')}</div>
           <div className="text-white text-rt-29 font-bold mt-2">{Math.round(volumeTotal)}<span className="text-rt-14"> kg</span></div>
         </div>
       </div>
 
       {exercicios.length > 0 && (
         <div>
-          <div className="text-white text-rt-15 font-bold mb-2">Progressão de carga</div>
+          <div className="text-white text-rt-15 font-bold mb-2">{t('alunos:perfil.loadProgress')}</div>
           <ul className="flex flex-col gap-2">
             {exercicios.map((nombre) => (
               <li key={nombre}>
@@ -341,7 +345,7 @@ function DesempenhoAluno({ sesiones, onVerExercicio }: {
       )}
 
       <div>
-        <div className="text-white text-rt-15 font-bold mb-2">Últimos treinos</div>
+        <div className="text-white text-rt-15 font-bold mb-2">{t('alunos:perfil.lastWorkouts')}</div>
         <ul className="flex flex-col gap-2">
           {sesiones.map((s) => {
             const esfuerzo = s.effort_1_5 ? ESFUERZO[s.effort_1_5] : null
@@ -350,10 +354,10 @@ function DesempenhoAluno({ sesiones, onVerExercicio }: {
               <li key={s.id} className="card-dark p-3">
                 <div className="flex items-center gap-2">
                   <span className="text-white text-rt-14 font-semibold flex-1">
-                    {new Date(s.started_at).toLocaleDateString('pt-BR')}
+                    {new Date(s.started_at).toLocaleDateString(localeDe(i18n.language))}
                   </span>
                   {esfuerzo && (
-                    <span className="text-rt-12 text-white/70">{esfuerzo.emoji} {esfuerzo.texto}</span>
+                    <span className="text-rt-12 text-white/70">{esfuerzo.emoji} {t(esfuerzo.texto)}</span>
                   )}
                 </div>
                 <div className="text-white/60 text-rt-12 mt-1">

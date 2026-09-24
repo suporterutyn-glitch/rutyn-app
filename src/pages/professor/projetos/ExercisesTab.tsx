@@ -32,7 +32,7 @@ type Exercise = {
 
 export function ExercisesTab({ query, filtro }: { query: string; filtro: Filtro }) {
   const { profile } = useAuth()
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [items, setItems] = useState<Exercise[]>([])
   const [loading, setLoading] = useState(true)
   const [showNew, setShowNew] = useState(false)
@@ -46,7 +46,7 @@ export function ExercisesTab({ query, filtro }: { query: string; filtro: Filtro 
   async function load() {
     setLoading(true)
     const { data, error } = await supabase.from('exercises').select('*').order('name')
-    if (error) setAviso({ kind: 'error', message: 'Erro ao carregar exercícios: ' + error.message })
+    if (error) setAviso({ kind: 'error', message: t('projetos:ex.loadError', { msg: error.message }) })
     setItems((data as Exercise[]) ?? [])
     setLoading(false)
   }
@@ -72,7 +72,7 @@ export function ExercisesTab({ query, filtro }: { query: string; filtro: Filtro 
   function tocar(e: Exercise) {
     if (enSeleccion) { alternarSeleccion(e.id); return }
     if (!e.video_url && !e.thumbnail_url) {
-      setAviso({ kind: 'error', message: 'Este exercício não possui mídia disponível' })
+      setAviso({ kind: 'error', message: t('projetos:ex.noMedia') })
       return
     }
     setViendo(e)
@@ -82,7 +82,7 @@ export function ExercisesTab({ query, filtro }: { query: string; filtro: Filtro 
   async function pedirBorrado() {
     const propios = items.filter((e) => seleccion.includes(e.id) && e.trainer_id === profile?.id)
     if (propios.length === 0) {
-      setAviso({ kind: 'error', message: 'Os exercícios do catálogo do app não podem ser excluídos. Selecione exercícios criados por você.' })
+      setAviso({ kind: 'error', message: t('projetos:ex.cantDeleteApp') })
       return
     }
     const { data } = await supabase
@@ -91,7 +91,7 @@ export function ExercisesTab({ query, filtro }: { query: string; filtro: Filtro 
       .in('exercise_id', propios.map((e) => e.id))
     const enUso = ((data as any[]) ?? []).map((r) => ({
       nombre: nombreEjercicio(propios.find((e) => e.id === r.exercise_id), i18n.language),
-      rutina: r.routines?.name ?? 'Rotina',
+      rutina: r.routines?.name ?? t('projetos:ex.routine'),
     }))
     setBorrando({ propios, enUso })
   }
@@ -110,7 +110,7 @@ export function ExercisesTab({ query, filtro }: { query: string; filtro: Filtro 
     setSeleccion([])
     setAviso({
       kind: 'success',
-      message: `${ids.length} exercício(s) excluído(s).` + (ignorados > 0 ? ` ${ignorados} do catálogo do app foram mantidos.` : ''),
+      message: t('projetos:ex.deleted', { n: ids.length }) + (ignorados > 0 ? t('projetos:ex.kept', { n: ignorados }) : ''),
     })
     await load()
   }
@@ -120,16 +120,16 @@ export function ExercisesTab({ query, filtro }: { query: string; filtro: Filtro 
       {enSeleccion && (
         <div className="sticky top-0 z-10 -mx-4 px-4 py-2 mb-3 bg-surface-app/95 backdrop-blur flex items-center gap-2">
           <button onClick={() => setCombinando(true)} className="px-5 py-2.5 rounded-[20px] bg-brand text-white text-rt-13 font-semibold">
-            Combinar
+            {t('projetos:c.combine')}
           </button>
           <button onClick={() => void pedirBorrado()} className="px-5 py-2.5 rounded-[20px] bg-[#D32F2F] text-white text-rt-13 font-semibold">
-            Excluir
+            {t('projetos:c.delete')}
           </button>
           <button
             onClick={() => setSeleccion(todosMarcados ? [] : filtered.map((e) => e.id))}
             className="ml-auto text-rt-13 text-grey-400"
           >
-            {todosMarcados ? 'Desselecionar tudo' : 'Selecionar tudo'}
+            {todosMarcados ? t('projetos:c.deselectAll') : t('projetos:c.selectAll')}
           </button>
         </div>
       )}
@@ -140,10 +140,10 @@ export function ExercisesTab({ query, filtro }: { query: string; filtro: Filtro 
         </div>
       ) : filtered.length === 0 ? (
         filtro === 'favoritos'
-          ? <EmptyState icon={Dumbbell} title="Nenhum exercício favoritado" body="Favorite exercícios para vê-los aqui" />
+          ? <EmptyState icon={Dumbbell} title={t('projetos:ex.noFav')} body={t('projetos:ex.noFavBody')} />
           : filtro === 'minhas'
-            ? <EmptyState icon={Dumbbell} title="Nenhum exercício criado" body="Crie seu primeiro exercício personalizado" />
-            : q ? null : <EmptyState icon={Dumbbell} title="Nenhum exercício cadastrado" body="Crie seu primeiro exercício personalizado" />
+            ? <EmptyState icon={Dumbbell} title={t('projetos:ex.noOwn')} body={t('projetos:ex.createFirst')} />
+            : q ? null : <EmptyState icon={Dumbbell} title={t('projetos:ex.none')} body={t('projetos:ex.createFirst')} />
       ) : (
         <ul className="flex flex-col gap-3">
           {filtered.map((e) => (
@@ -168,7 +168,7 @@ export function ExercisesTab({ query, filtro }: { query: string; filtro: Filtro 
           className="w-full h-12 rounded-[12px] bg-[#2D2D2D] border border-[#616161] text-white text-rt-14 font-semibold flex items-center justify-center gap-2"
           onClick={() => setShowNew(true)}
         >
-          <Plus size={18} /> Criar novo Exercício
+          <Plus size={18} /> {t('projetos:ex.createNew')}
         </button>
       </FixedBottomActions>
 
@@ -191,18 +191,18 @@ export function ExercisesTab({ query, filtro }: { query: string; filtro: Filtro 
       )}
       {borrando && (borrando.enUso.length === 0 ? (
         <ConfirmDialog
-          message="Excluir exercícios"
-          detail={`Excluir ${borrando.propios.length} exercício(s)? Esta ação não pode ser desfeita.`}
-          confirmLabel="Excluir"
+          message={t('projetos:ex.deleteTitle')}
+          detail={t('projetos:ex.deleteDetail', { n: borrando.propios.length })}
+          confirmLabel={t('projetos:c.delete')}
           tone="danger"
           onConfirm={() => void borrar()}
           onCancel={() => setBorrando(null)}
         />
       ) : (
         <ConfirmDialog
-          message="Exercícios em uso"
-          detail="Estes exercícios estão em rotinas. Se excluir, eles serão removidos dessas rotinas."
-          confirmLabel="Excluir mesmo assim"
+          message={t('projetos:ex.inUse')}
+          detail={t('projetos:ex.inUseDetail')}
+          confirmLabel={t('projetos:ex.deleteAnyway')}
           tone="danger"
           onConfirm={() => void borrar()}
           onCancel={() => setBorrando(null)}
@@ -232,6 +232,7 @@ function TarjetaCatalogo({ e, lang, propio, favorito, seleccionado, onTocar, onM
   onFavorito: () => void
   onEditar: () => void
 }) {
+  const { t } = useTranslation()
   // Toque largo entra en modo selección; el click que le sigue no debe abrir el video.
   const timer = useRef<number | null>(null)
   const largo = useRef(false)
@@ -260,7 +261,7 @@ function TarjetaCatalogo({ e, lang, propio, favorito, seleccionado, onTocar, onM
       <button
         type="button"
         onClick={(ev) => { ev.stopPropagation(); onMarcar() }}
-        aria-label={seleccionado ? 'Desmarcar' : 'Marcar'}
+        aria-label={seleccionado ? t('projetos:c.unmark') : t('projetos:c.mark')}
         className={
           'w-[22px] h-[22px] rounded-[4px] border-[1.5px] flex items-center justify-center shrink-0 text-rt-12 ' +
           (seleccionado ? 'bg-brand border-brand text-white' : 'border-grey-500')
@@ -278,11 +279,11 @@ function TarjetaCatalogo({ e, lang, propio, favorito, seleccionado, onTocar, onM
         </div>
       </div>
       <div className="flex flex-col items-center gap-2 shrink-0">
-        <button type="button" onClick={(ev) => { ev.stopPropagation(); onFavorito() }} aria-label="Favorito" className="p-0.5">
+        <button type="button" onClick={(ev) => { ev.stopPropagation(); onFavorito() }} aria-label={t('projetos:c.favorite')} className="p-0.5">
           <Star size={24} className={favorito ? 'text-[#FFC107] fill-[#FFC107]' : 'text-grey-500'} />
         </button>
         {propio && (
-          <button type="button" onClick={(ev) => { ev.stopPropagation(); onEditar() }} aria-label="Editar exercício" className="p-0.5">
+          <button type="button" onClick={(ev) => { ev.stopPropagation(); onEditar() }} aria-label={t('projetos:ex.edit')} className="p-0.5">
             <Pencil size={22} className="text-brand" />
           </button>
         )}
@@ -297,7 +298,7 @@ export function NewExerciseSheet({ exercicio, onClose, onCreated }: {
   onCreated: (id?: string) => void
 }) {
   const { user } = useAuth()
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const editando = Boolean(exercicio)
   const [name, setName] = useState(exercicio?.name ?? '')
   const [grupos, setGrupos] = useState<string[]>(
@@ -371,40 +372,40 @@ export function NewExerciseSheet({ exercicio, onClose, onCreated }: {
   }
 
   return (
-    <FullScreenSheet title={editando ? 'Editar Exercício' : 'Novo Exercício'} onClose={onClose}>
+    <FullScreenSheet title={editando ? t('projetos:ex.editTitle') : t('projetos:ex.newTitle')} onClose={onClose}>
       <div className="flex flex-col gap-7">
         <div>
-          <label className="block text-white text-rt-15 font-bold mb-2">Nome do Exercício *</label>
+          <label className="block text-white text-rt-15 font-bold mb-2">{t('projetos:ex.name')}</label>
           <input
             className="w-full h-[60px] px-4 rounded-[14px] bg-surface-input border border-surface-line text-white text-rt-15 placeholder:text-grey-600 outline-none focus:border-brand"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Ex: Supino reto com barra"
+            placeholder={t('projetos:ex.namePh')}
           />
         </div>
 
         <CajaMulti
-          label="Grupo Muscular *"
+          label={t('projetos:ex.muscleGroupReq')}
           valores={grupos}
-          placeholder="Escolha um ou mais"
+          placeholder={t('projetos:ex.chooseOneOrMore')}
           lista={gruposMusculares}
           lang={i18n.language}
           onAbrir={() => setAbriendo('grupos')}
         />
 
         <CajaSelector
-          label="Categoria *"
+          label={t('projetos:ex.categoryReq')}
           valor={categoria}
-          placeholder="Musculação"
+          placeholder={t('projetos:ex.categoryPh')}
           lista={categoriasExercicio}
           lang={i18n.language}
           onAbrir={() => setAbriendo('categoria')}
         />
 
         <CajaSelector
-          label="Mídia"
+          label={t('projetos:ex.media')}
           valor={tipoMidia}
-          placeholder="Sem mídia"
+          placeholder={t('projetos:ex.noMediaPh')}
           lista={tiposMidia}
           lang={i18n.language}
           onAbrir={() => setAbriendo('midia')}
@@ -412,7 +413,7 @@ export function NewExerciseSheet({ exercicio, onClose, onCreated }: {
 
         {tipoMidia === 'youtube' && (
           <div>
-            <label className="block text-white text-rt-15 font-bold mb-2">Link do YouTube</label>
+            <label className="block text-white text-rt-15 font-bold mb-2">{t('projetos:ex.youtubeLink')}</label>
             <input
               className="w-full h-[60px] px-4 rounded-[14px] bg-surface-input border border-surface-line text-white text-rt-15 placeholder:text-grey-600 outline-none focus:border-brand"
               value={midiaUrl}
@@ -424,11 +425,11 @@ export function NewExerciseSheet({ exercicio, onClose, onCreated }: {
 
         {(tipoMidia === 'video' || tipoMidia === 'gif') && (
           <SubirArchivo
-            etiqueta={tipoMidia === 'gif' ? 'GIF do exercício' : 'Vídeo do exercício'}
+            etiqueta={tipoMidia === 'gif' ? t('projetos:ex.gifLabel') : t('projetos:ex.videoLabel')}
             accept={tipoMidia === 'gif' ? 'image/gif' : 'video/*'}
             url={midiaUrl}
-            textoActual={tipoMidia === 'gif' ? 'GIF atual mantido' : 'Vídeo atual mantido'}
-            textoElegir={tipoMidia === 'gif' ? 'Selecionar GIF' : 'Selecionar vídeo da galeria ou câmera'}
+            textoActual={tipoMidia === 'gif' ? t('projetos:ex.gifKept') : t('projetos:ex.videoKept')}
+            textoElegir={tipoMidia === 'gif' ? t('projetos:ex.pickGif') : t('projetos:ex.pickVideo')}
             onSubiendo={setSubiendo}
             onSubido={setMidiaUrl}
             onError={setError}
@@ -436,11 +437,11 @@ export function NewExerciseSheet({ exercicio, onClose, onCreated }: {
         )}
 
         <SubirArchivo
-          etiqueta="Capa (opcional)"
+          etiqueta={t('projetos:ex.cover')}
           accept="image/*"
           url={capaUrl}
-          textoActual="Capa atual"
-          textoElegir="Selecionar imagem da galeria ou câmera"
+          textoActual={t('projetos:ex.coverCurrent')}
+          textoElegir={t('projetos:ex.pickImage')}
           imagen
           onSubiendo={setSubiendo}
           onSubido={setCapaUrl}
@@ -448,25 +449,25 @@ export function NewExerciseSheet({ exercicio, onClose, onCreated }: {
         />
 
         <div>
-          <label className="block text-white text-rt-15 font-bold mb-2">Observações (opcional)</label>
+          <label className="block text-white text-rt-15 font-bold mb-2">{t('projetos:ex.notes')}</label>
           <input
             className="w-full h-[60px] px-4 rounded-[14px] bg-surface-input border border-surface-line text-white text-rt-15 placeholder:text-grey-600 outline-none focus:border-brand"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Ex: Desça a barra controlando"
+            placeholder={t('projetos:ex.notesPh')}
           />
         </div>
       </div>
 
       <div className="mt-10">
         <button className="btn-save" disabled={saving || subiendo || !completo} onClick={save}>
-          {subiendo ? 'Enviando arquivo...' : saving ? 'Salvando...' : editando ? 'Salvar Alterações' : 'Criar Exercício'}
+          {subiendo ? t('projetos:ex.uploading') : saving ? t('projetos:c.saving') : editando ? t('projetos:ex.saveChanges') : t('projetos:ex.create')}
         </button>
       </div>
 
       {abriendo === 'grupos' && (
         <HojaMulti
-          titulo="Grupo Muscular"
+          titulo={t('projetos:ex.muscleGroup')}
           lista={gruposMusculares}
           valores={grupos}
           lang={i18n.language}
@@ -514,19 +515,20 @@ function DialogoPropagar({ usadoEn, onSoloTemplate, onTodas, onCerrar }: {
   onTodas: () => void
   onCerrar: () => void
 }) {
+  const { t } = useTranslation()
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center px-6 bg-black/70" onClick={onCerrar}>
       <div className="w-full max-w-[350px] rounded-[16px] bg-[#2D2D2D] border border-grey-700 px-6 pt-6 pb-5" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-white text-rt-18 font-bold">Atualizar exercício</h2>
+        <h2 className="text-white text-rt-18 font-bold">{t('projetos:ex.updateTitle')}</h2>
         <p className="text-white/70 text-rt-14 leading-[1.5] mt-2">
-          Este exercício está em {usadoEn} {usadoEn === 1 ? 'rotina' : 'rotinas'}. Onde aplicar a alteração?
+          {t('projetos:ex.updateDetail', { count: usadoEn })}
         </p>
         <div className="flex flex-col gap-2 mt-5">
           <button onClick={onTodas} className="w-full h-11 rounded-btn-pill bg-brand text-white text-rt-14 font-semibold">
-            Atualizar todas
+            {t('projetos:ex.updateAll')}
           </button>
           <button onClick={onSoloTemplate} className="w-full h-11 rounded-btn-pill border border-grey-700 text-white/80 text-rt-14 font-semibold">
-            Apenas template
+            {t('projetos:ex.onlyTemplate')}
           </button>
         </div>
       </div>
@@ -546,19 +548,20 @@ export function SubirArchivo({ etiqueta, accept, url, textoActual, textoElegir, 
   onSubido: (url: string) => void
   onError: (m: string) => void
 }) {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const input = useRef<HTMLInputElement>(null)
   const [cargando, setCargando] = useState(false)
 
   async function subir(f: File) {
     if (!user?.id) return
-    if (f.size > 50 * 1024 * 1024) { onError('Arquivo muito grande (máximo 50 MB).'); return }
+    if (f.size > 50 * 1024 * 1024) { onError(t('projetos:ex.tooBig')); return }
     setCargando(true); onSubiendo(true)
     const ext = (f.name.split('.').pop() || 'bin').toLowerCase()
     const ruta = `${user.id}/${crypto.randomUUID()}.${ext}`
     const { error } = await supabase.storage.from('exercise-media').upload(ruta, f, { contentType: f.type, upsert: false })
     setCargando(false); onSubiendo(false)
-    if (error) { onError('Erro ao enviar arquivo: ' + error.message); return }
+    if (error) { onError(t('projetos:ex.uploadError', { msg: error.message })); return }
     onSubido(supabase.storage.from('exercise-media').getPublicUrl(ruta).data.publicUrl)
   }
 
@@ -574,7 +577,7 @@ export function SubirArchivo({ etiqueta, accept, url, textoActual, textoElegir, 
       />
       {cargando ? (
         <div className="rounded-[14px] bg-surface-input border border-surface-line p-4">
-          <div className="text-white/80 text-rt-13 mb-2">Enviando…</div>
+          <div className="text-white/80 text-rt-13 mb-2">{t('projetos:c.sending')}</div>
           <div className="h-1.5 rounded-full bg-grey-700 overflow-hidden">
             <div className="h-full w-1/3 bg-brand rounded-full animate-[progreso_1.2s_ease-in-out_infinite]" />
           </div>
@@ -587,8 +590,8 @@ export function SubirArchivo({ etiqueta, accept, url, textoActual, textoElegir, 
             <MiniaturaMedia media={{ video_url: url, media_type: accept === 'image/gif' ? 'gif' : 'video' }} tamano={56} />
           )}
           <span className="flex-1 text-white text-rt-13">{textoActual}</span>
-          <button type="button" onClick={() => input.current?.click()} className="text-brand text-rt-13 font-semibold">Trocar</button>
-          <button type="button" onClick={() => onSubido('')} className="text-grey-500 text-rt-13">Remover</button>
+          <button type="button" onClick={() => input.current?.click()} className="text-brand text-rt-13 font-semibold">{t('projetos:c.change')}</button>
+          <button type="button" onClick={() => onSubido('')} className="text-grey-500 text-rt-13">{t('projetos:c.remove')}</button>
         </div>
       ) : (
         <button

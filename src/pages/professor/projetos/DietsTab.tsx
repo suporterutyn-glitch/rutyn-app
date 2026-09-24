@@ -25,7 +25,7 @@ export type AlumnoCtx = { id: string; nombre: string }
 
 export function DietsTab({ query, filtro, alumno }: { query: string; filtro: Filtro; alumno?: AlumnoCtx }) {
   const { profile } = useAuth()
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const lang = i18n.language
   const [items, setItems] = useState<Dieta[]>([])
   const [loading, setLoading] = useState(true)
@@ -78,18 +78,18 @@ export function DietsTab({ query, filtro, alumno }: { query: string; filtro: Fil
   async function favorito(d: Dieta) {
     setItems((p) => p.map((x) => (x.id === d.id ? { ...x, is_favorite: !x.is_favorite } : x)))
     const { error } = await supabase.from('diets').update({ is_favorite: !d.is_favorite }).eq('id', d.id)
-    if (error) { setAviso({ kind: 'error', message: 'Erro ao favoritar' }); void load() }
+    if (error) { setAviso({ kind: 'error', message: t('projetos:die.favError') }); void load() }
   }
 
   async function duplicar(d: Dieta) {
     if (!profile?.id) return
     try {
-      if (alumno) await asignarDieta({ dieta: { ...d, name: `${d.name} (cópia)` }, alumnoId: alumno.id, profesorId: profile.id, profesorNombre: profile.full_name ?? null })
+      if (alumno) await asignarDieta({ dieta: { ...d, name: t('projetos:die.copyName', { name: d.name }) }, alumnoId: alumno.id, profesorId: profile.id, profesorNombre: profile.full_name ?? null })
       else await duplicarDieta(d, profile.id, items.length)
-      setAviso({ kind: 'success', message: 'Dieta duplicada' })
+      setAviso({ kind: 'success', message: t('projetos:die.duplicated') })
       await load()
     } catch {
-      setAviso({ kind: 'error', message: 'Erro ao duplicar dieta' })
+      setAviso({ kind: 'error', message: t('projetos:die.duplicateError') })
     }
   }
 
@@ -116,12 +116,12 @@ export function DietsTab({ query, filtro, alumno }: { query: string; filtro: Fil
     <div className="pb-24">
       {alumno && (
         <button onClick={() => setAgregando(true)} className="w-full h-11 mb-3 rounded-[16px] bg-gradient-to-r from-[#7CB342] to-[#558B2F] text-white text-rt-14 font-semibold flex items-center justify-center gap-2">
-          <Plus size={18} /> Adicionar Dieta
+          <Plus size={18} /> {t('projetos:die.addDiet')}
         </button>
       )}
       {seleccion.length > 0 && (
         <div className="sticky top-0 z-10 -mx-4 px-4 py-2 mb-3 bg-surface-app/95 backdrop-blur flex items-center gap-2">
-          <button onClick={() => setBorrando(items.filter((d) => seleccion.includes(d.id)))} className="px-5 py-2.5 rounded-[20px] bg-[#D32F2F] text-white text-rt-13 font-semibold">Excluir</button>
+          <button onClick={() => setBorrando(items.filter((d) => seleccion.includes(d.id)))} className="px-5 py-2.5 rounded-[20px] bg-[#D32F2F] text-white text-rt-13 font-semibold">{t('projetos:die.delete')}</button>
           <button onClick={() => setSeleccion(todas ? [] : filtered.map((d) => d.id))} className="ml-auto text-rt-13 text-grey-400">{todas ? 'Desselecionar tudo' : 'Selecionar tudo'}</button>
         </div>
       )}
@@ -131,17 +131,17 @@ export function DietsTab({ query, filtro, alumno }: { query: string; filtro: Fil
       ) : errorCarga ? (
         <div className="flex flex-col items-center gap-2 py-12">
           <AlertCircle size={48} className="text-danger" />
-          <span className="text-grey-400 text-rt-16">Erro ao carregar dietas</span>
-          <button onClick={() => void load()} className="mt-2 px-5 h-10 rounded-btn-pill bg-brand text-white text-rt-13 font-semibold">Tentar novamente</button>
+          <span className="text-grey-400 text-rt-16">{t('projetos:die.loadError')}</span>
+          <button onClick={() => void load()} className="mt-2 px-5 h-10 rounded-btn-pill bg-brand text-white text-rt-13 font-semibold">{t('projetos:die.tryAgain')}</button>
         </div>
       ) : filtered.length === 0 ? (
         palabras.length > 0
-          ? <EmptyState icon={UtensilsCrossed} title="Nenhuma dieta encontrada" body="Tente buscar por outro termo" />
+          ? <EmptyState icon={UtensilsCrossed} title={t('projetos:die.notFound')} body={t('projetos:die.tryOther')} />
           : filtro === 'favoritos'
-            ? <EmptyState icon={UtensilsCrossed} title="Nenhuma dieta favorita" body="Favorite dietas para vê-las aqui" />
+            ? <EmptyState icon={UtensilsCrossed} title={t('projetos:die.noFav')} body={t('projetos:die.noFavBody')} />
             : alumno
-              ? <EmptyState icon={UtensilsCrossed} title="Nenhuma dieta atribuída" body={`Adicione uma dieta para ${alumno.nombre}`} />
-              : <EmptyState icon={UtensilsCrossed} title="Nenhuma dieta cadastrada" body="Crie sua primeira dieta" />
+              ? <EmptyState icon={UtensilsCrossed} title={t('projetos:die.noAssigned')} body={t('projetos:die.addFor', { name: alumno.nombre })} />
+              : <EmptyState icon={UtensilsCrossed} title={t('projetos:die.none')} body={t('projetos:die.createFirst')} />
       ) : (
         <ul className="flex flex-col gap-3">
           {filtered.map((d) => (
@@ -181,7 +181,7 @@ export function DietsTab({ query, filtro, alumno }: { query: string; filtro: Fil
       {!alumno && (
         <FixedBottomActions>
           <button className="w-full h-12 rounded-[12px] bg-[#2D2D2D] border border-[#616161] text-white text-rt-14 font-semibold flex items-center justify-center gap-2" onClick={() => setFormulario('nueva')}>
-            <Plus size={18} /> Criar nova Dieta
+            <Plus size={18} /> {t('projetos:die.createNew')}
           </button>
         </FixedBottomActions>
       )}
@@ -209,9 +209,9 @@ export function DietsTab({ query, filtro, alumno }: { query: string; filtro: Fil
       {clonando && <ClonarDieta dieta={clonando} onCerrar={() => setClonando(null)} onResultado={(a) => { setClonando(null); setAviso(a) }} />}
       {borrando && (
         <ConfirmDialog
-          message={alumno ? (borrando.length === 1 ? 'Remover dieta' : 'Remover dietas') : borrando.length === 1 ? 'Excluir dieta' : 'Excluir dietas'}
-          detail={borrando.length === 1 ? `Tem certeza que deseja excluir "${borrando[0].name}"?` : `Tem certeza que deseja excluir ${borrando.length} dieta(s)?`}
-          confirmLabel={alumno ? 'Remover' : 'Excluir'}
+          message={alumno ? (borrando.length === 1 ? t('projetos:die.removeOne') : t('projetos:die.removeMany')) : borrando.length === 1 ? t('projetos:die.deleteOne') : t('projetos:die.deleteMany')}
+          detail={borrando.length === 1 ? t('projetos:die.confirmOne', { name: borrando[0].name }) : t('projetos:die.confirmMany', { n: borrando.length })}
+          confirmLabel={alumno ? t('projetos:die.remove') : t('projetos:die.delete')}
           tone="danger"
           onConfirm={() => void borrar()}
           onCancel={() => setBorrando(null)}
@@ -237,12 +237,13 @@ function CabeceraDieta({ d, deAlumno, lang, expandida, seleccionada, onGrip, onE
   onEditar: () => void
   onExcluir: () => void
 }) {
+  const { t } = useTranslation()
   const { dx, abierto, handlers, cerrar, fueArrastre } = useDeslizar(280)
   return (
     <div className="relative overflow-hidden border-t border-[#333333]">
       <div className="absolute inset-y-0 right-0 flex w-[280px]">
-        {([['CLONAR', '#424242', onClonar], ['DUPLICAR', '#616161', onDuplicar], ['EDITAR', '#757575', onEditar], [deAlumno ? 'REMOVER' : 'EXCLUIR', '#B71C1C', onExcluir]] as const).map(([t, c, fn]) => (
-          <button key={t} onClick={() => { cerrar(); fn() }} className="flex-1 text-white text-[9px] font-semibold" style={{ background: c }}>{t}</button>
+        {([[t('projetos:die.clone'), '#424242', onClonar], [t('projetos:die.duplicate'), '#616161', onDuplicar], [t('projetos:die.edit'), '#757575', onEditar], [deAlumno ? t('projetos:die.removeUp') : t('projetos:die.deleteUp'), '#B71C1C', onExcluir]] as const).map(([etq, c, fn]) => (
+          <button key={etq} onClick={() => { cerrar(); fn() }} className="flex-1 text-white text-[9px] font-semibold" style={{ background: c }}>{etq}</button>
         ))}
       </div>
       <div
@@ -250,17 +251,17 @@ function CabeceraDieta({ d, deAlumno, lang, expandida, seleccionada, onGrip, onE
         style={{ transform: `translateX(${dx}px)` }}
         className="relative bg-[#1E1E1E] h-[72px] px-3 flex items-center gap-2.5 transition-transform touch-pan-y select-none"
       >
-        <button onClick={onMarcar} aria-label={seleccionada ? 'Desmarcar' : 'Marcar'}
+        <button onClick={onMarcar} aria-label={seleccionada ? t('projetos:c.unmark') : t('projetos:c.mark')}
           className={'w-[22px] h-[22px] rounded-[4px] border-[1.5px] flex items-center justify-center shrink-0 text-rt-12 ' + (seleccionada ? 'bg-brand border-brand text-white' : 'border-grey-500')}>
           {seleccionada && '✓'}
         </button>
-        <button onPointerDown={onGrip} aria-label="Arrastar para reordenar" className="touch-none cursor-grab shrink-0"><GripVertical size={18} className="text-grey-600" /></button>
+        <button onPointerDown={onGrip} aria-label={t('projetos:die.drag')} className="touch-none cursor-grab shrink-0"><GripVertical size={18} className="text-grey-600" /></button>
         <button onClick={() => { if (fueArrastre()) return; if (abierto) { cerrar(); return } onExpandir() }} className="flex-1 min-w-0 text-left">
           <span className="block text-white text-rt-14 font-bold truncate">{d.name}</span>
           {d.goal && <span className="inline-block mt-1 text-rt-10 px-2 py-0.5 rounded-[10px] bg-[#2D2D2D] text-grey-400">{etiquetaDe(objetivosDieta, d.goal, lang)}</span>}
         </button>
         {!deAlumno && (
-          <button onClick={onFavorito} aria-label="Favorito" className="shrink-0 p-0.5">
+          <button onClick={onFavorito} aria-label={t('projetos:c.favorite')} className="shrink-0 p-0.5">
             <Star size={22} className={d.is_favorite ? 'text-brand fill-brand' : 'text-brand'} />
           </button>
         )}
@@ -281,7 +282,7 @@ function DietSheet({ dieta, alumno, posicion, onClose, onCreada, onEditada }: {
   onEditada: () => void
 }) {
   const { profile } = useAuth()
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const lang = i18n.language
   const [nombre, setNombre] = useState(dieta?.name ?? '')
   const [objetivo, setObjetivo] = useState(dieta?.goal ?? 'maintenance')
@@ -291,7 +292,7 @@ function DietSheet({ dieta, alumno, posicion, onClose, onCreada, onEditada }: {
   const [guardando, setGuardando] = useState(false)
 
   async function guardar() {
-    if (!nombre.trim()) { setError('Nome da dieta é obrigatório'); return }
+    if (!nombre.trim()) { setError(t('projetos:die.nameReq')); return }
     if (!profile?.id) return
     setGuardando(true)
     // Editar cambia solo nombre y objetivo: las refeições se editan en el card
@@ -300,7 +301,7 @@ function DietSheet({ dieta, alumno, posicion, onClose, onCreada, onEditada }: {
       const { error: e } = await supabase.from('diets').update({ name: nombre.trim(), goal: objetivo }).eq('id', dieta.id)
       if (!e && alumno) await sincronizarDietaAlumno(dieta.id)
       setGuardando(false)
-      if (e) { setError('Erro ao salvar: ' + e.message); return }
+      if (e) { setError(t('projetos:die.saveError', { msg: e.message })); return }
       onEditada()
       return
     }
@@ -316,47 +317,47 @@ function DietSheet({ dieta, alumno, posicion, onClose, onCreada, onEditada }: {
         onCreada(id)
       } catch (e2) {
         setGuardando(false)
-        setError('Erro ao salvar: ' + (e2 as Error).message)
+        setError(t('projetos:die.saveError', { msg: (e2 as Error).message }))
       }
       return
     }
     const { data, error: e } = await supabase.from('diets').insert({ owner_id: profile.id, name: nombre.trim(), goal: objetivo, position: posicion }).select('id').single()
-    if (e) { setGuardando(false); setError('Erro ao salvar: ' + e.message); return }
+    if (e) { setGuardando(false); setError(t('projetos:die.saveError', { msg: e.message })); return }
     if (comidas.length > 0) {
       const { error: e2 } = await supabase.from('meals').insert(comidas.map((c, i) => ({ diet_id: data.id, name: c.name, time_of_day: c.time, meal_type: c.meal_type, position: i })))
-      if (e2) { setGuardando(false); setError('Erro ao salvar refeições: ' + e2.message); return }
+      if (e2) { setGuardando(false); setError(t('projetos:die.saveMealsError', { msg: e2.message })); return }
     }
     setGuardando(false)
     onCreada(data.id)
   }
 
   return (
-    <FullScreenSheet title={dieta ? 'Editar Dieta' : 'Nova Dieta'} onClose={onClose}>
+    <FullScreenSheet title={dieta ? t('projetos:die.editTitle') : t('projetos:die.newTitle')} onClose={onClose}>
       {error && (
         <div className="mb-5 rounded-[10px] bg-danger/10 border border-danger/30 px-3 py-2.5 flex items-center gap-2 text-[#EF5350] text-rt-12">
-          <AlertCircle size={16} /><span className="flex-1">{error}</span><button onClick={() => setError(null)} aria-label="Fechar"><X size={14} /></button>
+          <AlertCircle size={16} /><span className="flex-1">{error}</span><button onClick={() => setError(null)} aria-label={t('projetos:c.close')}><X size={14} /></button>
         </div>
       )}
       <div className="flex flex-col gap-6">
         <div>
-          <label className="block text-white text-rt-13 font-semibold mb-2">Nome da Dieta</label>
-          <input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ex: Dieta A · Dia de Treino"
+          <label className="block text-white text-rt-13 font-semibold mb-2">{t('projetos:die.name')}</label>
+          <input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder={t('projetos:die.namePh')}
             className="w-full h-[52px] px-4 rounded-[12px] bg-[#252525] border border-[#333333] text-white text-rt-15 placeholder:text-grey-600 outline-none focus:border-brand" />
         </div>
-        <CajaSelector label="Objetivo" valor={objetivo} placeholder="Manutenção" lista={objetivosDieta} lang={lang} onAbrir={() => setAbriendo('objetivo')} />
+        <CajaSelector label={t('projetos:c.objective')} valor={objetivo} placeholder={t('projetos:die.maintenancePh')} lista={objetivosDieta} lang={lang} onAbrir={() => setAbriendo('objetivo')} />
         {!dieta && (
           <div>
-            <label className="block text-white text-rt-13 font-semibold mb-2">Refeição</label>
+            <label className="block text-white text-rt-13 font-semibold mb-2">{t('projetos:die.meal')}</label>
             <button onClick={() => setAbriendo('comidas')} className="w-full h-[52px] px-4 rounded-[12px] bg-[#252525] flex items-center gap-2">
               <PlusCircle size={20} className={comidas.length ? 'text-brand' : 'text-grey-500'} />
-              <span className={'flex-1 text-left text-rt-14 ' + (comidas.length ? 'text-brand' : 'text-grey-500')}>{comidas.length ? 'Adicionar mais refeições' : 'Selecionar refeições'}</span>
+              <span className={'flex-1 text-left text-rt-14 ' + (comidas.length ? 'text-brand' : 'text-grey-500')}>{comidas.length ? t('projetos:die.addMore') : t('projetos:die.selectMeals')}</span>
               <ChevronRight size={18} className="text-grey-500" />
             </button>
             {comidas.length > 0 && (
               <div className="mt-3 rounded-[12px] bg-[#252525] border border-[#333333] p-3">
                 <div className="flex justify-between mb-2">
-                  <span className="text-grey-400 text-rt-12">{comidas.length} refeições selecionadas</span>
-                  <button onClick={() => setComidas([])} className="text-[#EF5350] text-rt-12 font-semibold">Limpar</button>
+                  <span className="text-grey-400 text-rt-12">{t('projetos:die.nMealsSelected', { n: comidas.length })}</span>
+                  <button onClick={() => setComidas([])} className="text-[#EF5350] text-rt-12 font-semibold">{t('projetos:c.clear')}</button>
                 </div>
                 <ul className="flex flex-col gap-2">
                   {comidas.map((c) => (
@@ -366,7 +367,7 @@ function DietSheet({ dieta, alumno, posicion, onClose, onCreada, onEditada }: {
                       </span>
                       <span className="flex-1 text-white text-rt-13">{c.name}</span>
                       <span className="flex items-center gap-1 text-rt-11 px-2 py-0.5 rounded-[6px] bg-[#333333] text-white"><Clock size={11} />{c.time}</span>
-                      <button onClick={() => setComidas((p) => p.filter((x) => x.meal_type !== c.meal_type))} aria-label="Remover refeição"><X size={16} className="text-[#EF5350]" /></button>
+                      <button onClick={() => setComidas((p) => p.filter((x) => x.meal_type !== c.meal_type))} aria-label={t('projetos:die.removeMeal')}><X size={16} className="text-[#EF5350]" /></button>
                     </li>
                   ))}
                 </ul>
@@ -377,7 +378,7 @@ function DietSheet({ dieta, alumno, posicion, onClose, onCreada, onEditada }: {
       </div>
       <div className="mt-8">
         <button onClick={() => void guardar()} disabled={guardando} className="w-full h-[54px] rounded-[27px] bg-gradient-to-b from-[#91C145] to-[#5A8F2F] text-white text-rt-16 font-bold shadow-[0_6px_16px_rgba(124,179,66,0.3)] disabled:opacity-60">
-          {guardando ? 'Salvando…' : dieta ? 'Salvar Dieta' : 'Criar Dieta'}
+          {guardando ? t('projetos:c.saving') : dieta ? t('projetos:die.save') : t('projetos:die.create')}
         </button>
       </div>
       {abriendo === 'objetivo' && <HojaRadio lista={objetivosDieta} valor={objetivo} lang={lang} onElegir={(id) => { setObjetivo(id); setAbriendo(null) }} onCerrar={() => setAbriendo(null)} />}
@@ -395,6 +396,7 @@ function DietSheet({ dieta, alumno, posicion, onClose, onCreada, onEditada }: {
 const COLORES = ['#7CB342', '#42A5F5', '#AB47BC', '#FF7043', '#26A69A']
 
 function ClonarDieta({ dieta, onCerrar, onResultado }: { dieta: Dieta; onCerrar: () => void; onResultado: (a: Aviso) => void }) {
+  const { t } = useTranslation()
   const { profile } = useAuth()
   const [alumnos, setAlumnos] = useState<{ id: string; full_name: string | null; email: string | null; link_status: string }[] | null>(null)
   const [busca, setBusca] = useState('')
@@ -426,8 +428,8 @@ function ClonarDieta({ dieta, onCerrar, onResultado }: { dieta: Dieta; onCerrar:
     }
     const fallos = marcados.length - ok
     onResultado(fallos === 0
-      ? { kind: 'success', message: ok === 1 ? `Dieta clonada para ${nombres[0]}` : `Dieta clonada para ${ok} alunos` }
-      : ok > 0 ? { kind: 'error', message: `Clonada para ${ok} aluno(s). ${fallos} erro(s).` } : { kind: 'error', message: 'Erro ao clonar a dieta.' })
+      ? { kind: 'success', message: ok === 1 ? t('projetos:die.clonedOne', { name: nombres[0] }) : t('projetos:die.clonedMany', { n: ok }) }
+      : ok > 0 ? { kind: 'error', message: t('projetos:die.clonedPartial', { ok, fail: fallos }) } : { kind: 'error', message: t('projetos:die.cloneError') })
   }
 
   return (
@@ -435,24 +437,24 @@ function ClonarDieta({ dieta, onCerrar, onResultado }: { dieta: Dieta; onCerrar:
       <div className="max-w-app w-full mx-auto flex flex-col flex-1 min-h-0 pt-[calc(env(safe-area-inset-top)+24px)]">
         <div className="px-5 flex items-start gap-3">
           <div className="flex-1">
-            <h1 className="text-white text-rt-20 font-bold">Clonar Dieta</h1>
-            <p className="text-grey-500 text-rt-13">Selecione os alunos para receber "{dieta.name}"</p>
+            <h1 className="text-white text-rt-20 font-bold">{t('projetos:die.cloneTitle')}</h1>
+            <p className="text-grey-500 text-rt-13">{t('projetos:die.cloneSub', { name: dieta.name })}</p>
           </div>
-          <button onClick={onCerrar} aria-label="Fechar" className="w-9 h-9 rounded-full bg-[#333333] flex items-center justify-center"><X size={20} className="text-white" /></button>
+          <button onClick={onCerrar} aria-label={t('projetos:c.close')} className="w-9 h-9 rounded-full bg-[#333333] flex items-center justify-center"><X size={20} className="text-white" /></button>
         </div>
         <div className="relative mx-5 mt-4">
           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-grey-500" />
-          <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar aluno..." className="w-full h-[50px] pl-10 pr-3 rounded-[12px] bg-[#2D2D2D] text-white text-rt-14 outline-none" />
+          <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder={t('projetos:die.searchStudent')} className="w-full h-[50px] pl-10 pr-3 rounded-[12px] bg-[#2D2D2D] text-white text-rt-14 outline-none" />
         </div>
         <div className="flex items-center px-5 mt-3">
-          {marcados.length > 0 && <span className="px-3 py-1 rounded-btn-pill bg-brand/20 text-brand text-rt-12 font-semibold">{marcados.length} selecionado(s)</span>}
-          <button onClick={() => setMarcados(todos ? [] : lista.map((a) => a.id))} className="ml-auto text-brand text-rt-13 font-semibold">{todos ? 'Desselecionar todos' : 'Selecionar todos'}</button>
+          {marcados.length > 0 && <span className="px-3 py-1 rounded-btn-pill bg-brand/20 text-brand text-rt-12 font-semibold">{t('projetos:die.nSelected', { n: marcados.length })}</span>}
+          <button onClick={() => setMarcados(todos ? [] : lista.map((a) => a.id))} className="ml-auto text-brand text-rt-13 font-semibold">{todos ? t('projetos:die.deselectAll') : t('projetos:die.selectAll')}</button>
         </div>
         <div className="flex-1 overflow-y-auto px-5 pt-3 pb-4">
           {alumnos === null ? (
             <div className="py-10 flex justify-center"><span className="w-8 h-8 rounded-full border-2 border-brand/30 border-t-brand animate-spin" /></div>
           ) : lista.length === 0 ? (
-            <p className="text-center text-white/60 text-rt-13 py-10">Nenhum aluno encontrado.</p>
+            <p className="text-center text-white/60 text-rt-13 py-10">{t('projetos:die.noStudents')}</p>
           ) : (
             <ul className="flex flex-col gap-3">
               {lista.map((a, i) => {
@@ -483,7 +485,7 @@ function ClonarDieta({ dieta, onCerrar, onResultado }: { dieta: Dieta; onCerrar:
         <div className="px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+16px)] border-t border-grey-800">
           <button disabled={marcados.length === 0 || enviando} onClick={() => void clonar()}
             className={'w-full h-[54px] rounded-[12px] text-white text-rt-15 font-bold ' + (marcados.length ? 'bg-gradient-to-b from-[#91C145] to-[#5A8F2F]' : 'bg-grey-700')}>
-            {enviando ? 'Clonando…' : marcados.length ? `Clonar Dieta para ${marcados.length} aluno(s)` : 'Selecione ao menos 1 aluno'}
+            {enviando ? t('projetos:die.cloning') : marcados.length ? t('projetos:die.cloneFor', { n: marcados.length }) : t('projetos:die.pickStudent')}
           </button>
         </div>
       </div>
@@ -500,7 +502,7 @@ function AdicionarDieta({ alumno, onCerrar, onCrear, onListo, onError }: {
   onError: (m: string) => void
 }) {
   const { profile } = useAuth()
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [modelos, setModelos] = useState<Dieta[] | null>(null)
   const [elegida, setElegida] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
@@ -518,7 +520,7 @@ function AdicionarDieta({ alumno, onCerrar, onCrear, onListo, onError }: {
       onListo(await asignarDieta({ dieta: d, alumnoId: alumno.id, profesorId: profile.id, profesorNombre: profile.full_name ?? null }))
     } catch (e) {
       setEnviando(false)
-      onError('Erro ao adicionar dieta: ' + (e as Error).message)
+      onError(t('projetos:die.addError', { msg: (e as Error).message }))
     }
   }
 
@@ -527,22 +529,22 @@ function AdicionarDieta({ alumno, onCerrar, onCrear, onListo, onError }: {
       <div className="max-w-app w-full mx-auto flex flex-col flex-1 min-h-0 pt-[calc(env(safe-area-inset-top)+24px)]">
         <div className="px-5 flex items-start gap-3">
           <div className="flex-1">
-            <h1 className="text-white text-rt-20 font-bold">Adicionar Dieta</h1>
-            <p className="text-grey-500 text-rt-13">Selecione ou crie uma dieta para {alumno.nombre}</p>
+            <h1 className="text-white text-rt-20 font-bold">{t('projetos:die.addDiet')}</h1>
+            <p className="text-grey-500 text-rt-13">{t('projetos:die.addSub', { name: alumno.nombre })}</p>
           </div>
-          <button onClick={onCerrar} aria-label="Fechar" className="w-9 h-9 rounded-full bg-[#333333] flex items-center justify-center"><X size={20} className="text-white" /></button>
+          <button onClick={onCerrar} aria-label={t('projetos:c.close')} className="w-9 h-9 rounded-full bg-[#333333] flex items-center justify-center"><X size={20} className="text-white" /></button>
         </div>
         <div className="px-5 mt-5">
           <button onClick={onCrear} className="w-full h-12 rounded-[12px] bg-gradient-to-b from-[#91C145] to-[#5A8F2F] text-white text-rt-15 font-semibold flex items-center justify-center gap-2">
-            <Plus size={20} /> Criar Nova Dieta
+            <Plus size={20} /> {t('projetos:die.createDiet')}
           </button>
-          <div className="flex items-center gap-3 my-5 text-grey-500 text-rt-12"><span className="flex-1 h-px bg-grey-700" />ou selecione uma existente<span className="flex-1 h-px bg-grey-700" /></div>
+          <div className="flex items-center gap-3 my-5 text-grey-500 text-rt-12"><span className="flex-1 h-px bg-grey-700" />{t('projetos:die.orExisting')}<span className="flex-1 h-px bg-grey-700" /></div>
         </div>
         <div className="flex-1 overflow-y-auto px-5 pb-4">
           {modelos === null ? (
             <div className="py-10 flex justify-center"><span className="w-8 h-8 rounded-full border-2 border-brand/30 border-t-brand animate-spin" /></div>
           ) : modelos.length === 0 ? (
-            <p className="text-center text-white/60 text-rt-13 py-8">Nenhuma dieta em Meus Projetos.</p>
+            <p className="text-center text-white/60 text-rt-13 py-8">{t('projetos:die.noTemplates')}</p>
           ) : (
             <ul className="flex flex-col gap-3">
               {modelos.map((d) => {
@@ -554,7 +556,7 @@ function AdicionarDieta({ alumno, onCerrar, onCrear, onListo, onError }: {
                       <span className="w-12 h-12 rounded-[10px] bg-[#1E1E1E] flex items-center justify-center shrink-0"><UtensilsCrossed size={20} className="text-grey-400" /></span>
                       <span className="flex-1 min-w-0">
                         <span className="block text-white text-rt-15 font-semibold truncate">{d.name}</span>
-                        <span className="block text-grey-500 text-rt-12">{d.meals.length} refeições · {Math.round(m.kcal)} kcal{d.goal ? ` · ${etiquetaDe(objetivosDieta, d.goal, i18n.language)}` : ''}</span>
+                        <span className="block text-grey-500 text-rt-12">{t('projetos:die.mealsKcal', { n: d.meals.length, kcal: Math.round(m.kcal) })}{d.goal ? ` · ${etiquetaDe(objetivosDieta, d.goal, i18n.language)}` : ''}</span>
                       </span>
                       <span className={'w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ' + (on ? 'bg-brand border-brand' : 'border-grey-500')}>{on && <Check size={14} className="text-white" />}</span>
                     </button>
@@ -567,7 +569,7 @@ function AdicionarDieta({ alumno, onCerrar, onCrear, onListo, onError }: {
         <div className="px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+16px)] border-t border-grey-800">
           <button disabled={!elegida || enviando} onClick={() => void agregar()}
             className={'w-full h-[54px] rounded-[12px] text-rt-15 font-bold ' + (elegida ? 'bg-gradient-to-b from-[#91C145] to-[#5A8F2F] text-white' : 'bg-grey-700 text-white/60')}>
-            {enviando ? 'Adicionando…' : 'Adicionar Dieta Selecionada'}
+            {enviando ? t('projetos:die.adding') : t('projetos:die.addSelected')}
           </button>
         </div>
       </div>
@@ -577,6 +579,7 @@ function AdicionarDieta({ alumno, onCerrar, onCrear, onListo, onError }: {
 
 /** Botón de la gota: el profesor define la meta diaria de agua del alumno. */
 function MetaHidratacao({ alumno, onAviso }: { alumno: AlumnoCtx; onAviso: (a: Aviso) => void }) {
+  const { t } = useTranslation()
   const [abierto, setAbierto] = useState(false)
   const [actual, setActual] = useState<number | null>(null)
   const [valor, setValor] = useState('')
@@ -590,7 +593,7 @@ function MetaHidratacao({ alumno, onAviso }: { alumno: AlumnoCtx; onAviso: (a: A
 
   function pedir() {
     const ml = Number(valor.replace(/\D/g, ''))
-    if (!ml || ml < 500 || ml > 10000) { setError('Entre 500 e 10.000 ml'); return }
+    if (!ml || ml < 500 || ml > 10000) { setError(t('projetos:die.hydRange')); return }
     setError(null)
     setConfirmando(ml)
   }
@@ -602,7 +605,7 @@ function MetaHidratacao({ alumno, onAviso }: { alumno: AlumnoCtx; onAviso: (a: A
     setActual(ml)
     setAbierto(false)
     setValor('')
-    onAviso({ kind: 'success', message: `Meta de hidratação atualizada para ${ml}ml` })
+    onAviso({ kind: 'success', message: t('projetos:die.hydUpdated', { ml }) })
   }
 
   return (
@@ -611,8 +614,8 @@ function MetaHidratacao({ alumno, onAviso }: { alumno: AlumnoCtx; onAviso: (a: A
         {abierto && (
           <div className="mr-[-28px] pr-9 pl-4 h-14 rounded-l-full bg-white flex items-center gap-2 shadow-lg">
             <div className="flex flex-col">
-              <span className="text-[#1565C0] text-rt-11 font-semibold">Meta de Hidratação</span>
-              {error ? <span className="text-danger text-[10px]">{error}</span> : <span className="text-grey-500 text-[10px]">Atual: {actual ?? '…'} ml</span>}
+              <span className="text-[#1565C0] text-rt-11 font-semibold">{t('projetos:die.hydTitle')}</span>
+              {error ? <span className="text-danger text-[10px]">{error}</span> : <span className="text-grey-500 text-[10px]">{t('projetos:die.hydCurrent', { ml: actual ?? '…' })}</span>}
             </div>
             <input
               autoFocus
@@ -624,14 +627,14 @@ function MetaHidratacao({ alumno, onAviso }: { alumno: AlumnoCtx; onAviso: (a: A
               className="w-[70px] h-9 px-2 rounded-[8px] border border-[#90CAF9] text-black text-rt-14 outline-none"
             />
             <span className="text-grey-500 text-rt-12">ml</span>
-            <button onClick={pedir} aria-label="Confirmar meta" className="w-9 h-9 rounded-full bg-[#1E88E5] flex items-center justify-center">
+            <button onClick={pedir} aria-label={t('projetos:die.hydConfirm')} className="w-9 h-9 rounded-full bg-[#1E88E5] flex items-center justify-center">
               <Check size={18} className="text-white" />
             </button>
           </div>
         )}
         <button
           onClick={() => { setAbierto((v) => !v); setError(null) }}
-          aria-label="Meta de hidratação"
+          aria-label={t('projetos:die.hydButton')}
           className="relative w-14 h-14 rounded-full bg-white border-2 border-grey-300 flex items-center justify-center shadow-lg"
         >
           {abierto ? <X size={22} className="text-grey-600" /> : <Droplet size={26} className="text-[#1E88E5] fill-[#1E88E5]" />}
@@ -639,9 +642,9 @@ function MetaHidratacao({ alumno, onAviso }: { alumno: AlumnoCtx; onAviso: (a: A
       </div>
       {confirmando !== null && (
         <ConfirmDialog
-          message="Alterar Meta de Hidratação"
-          detail={`A meta diária de ${alumno.nombre} passa de ${actual ?? 2500}ml para ${confirmando}ml.`}
-          confirmLabel="Confirmar"
+          message={t('projetos:die.hydChangeTitle')}
+          detail={t('projetos:die.hydChangeDetail', { name: alumno.nombre, from: actual ?? 2500, to: confirmando })}
+          confirmLabel={t('projetos:die.confirm')}
           onConfirm={() => void guardar(confirmando)}
           onCancel={() => setConfirmando(null)}
         />

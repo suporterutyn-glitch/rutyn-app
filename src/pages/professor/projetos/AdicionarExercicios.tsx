@@ -31,7 +31,7 @@ export function AdicionarExercicios({ yaEnRutina, onCerrar, onAgregar }: {
   onAgregar: (ejercicios: EjercicioCatalogo[]) => Promise<void>
 }) {
   const { profile } = useAuth()
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const lang = i18n.language
   const [items, setItems] = useState<EjercicioCatalogo[] | null>(null)
   const [pestana, setPestana] = useState<'todos' | 'favoritos' | 'meus'>('todos')
@@ -85,27 +85,27 @@ export function AdicionarExercicios({ yaEnRutina, onCerrar, onAgregar }: {
     <div className="fixed inset-0 z-40 bg-[#1E1E1E] flex flex-col">
       <div className="max-w-app w-full mx-auto flex flex-col flex-1 min-h-0 pt-[calc(env(safe-area-inset-top)+24px)]">
         <div className="px-5 flex items-center justify-between">
-          <h1 className="text-white text-rt-20 font-bold">Adicionar Exercícios</h1>
-          <button onClick={onCerrar} aria-label="Fechar" className="w-9 h-9 rounded-full bg-[#333333] flex items-center justify-center">
+          <h1 className="text-white text-rt-20 font-bold">{t('projetos:pick.title')}</h1>
+          <button onClick={onCerrar} aria-label={t('projetos:c.close')} className="w-9 h-9 rounded-full bg-[#333333] flex items-center justify-center">
             <X size={20} className="text-white" />
           </button>
         </div>
 
         <div className="flex gap-2 px-5 mt-4 overflow-x-auto no-scrollbar">
-          {([['todos', 'Todos'], ['favoritos', 'Favoritos'], ['meus', 'Meus Exercícios']] as const).map(([id, t]) => (
+          {([['todos', t('projetos:c.all')], ['favoritos', t('projetos:c.favorites')], ['meus', t('projetos:pick.myExercises')]] as const).map(([id, txt]) => (
             <button
               key={id}
               onClick={() => setPestana(id)}
               className={'shrink-0 px-5 h-10 rounded-btn-pill border text-rt-13 font-semibold ' +
                 (pestana === id ? 'bg-brand border-brand text-white' : 'bg-[#2D2D2D] border-[#616161] text-white/80')}
             >
-              {t}
+              {txt}
             </button>
           ))}
         </div>
 
         <div className="flex gap-2 px-5 mt-4">
-          <button onClick={() => setCreando(true)} aria-label="Novo exercício" className="w-12 h-12 rounded-[12px] bg-brand flex items-center justify-center shrink-0">
+          <button onClick={() => setCreando(true)} aria-label={t('projetos:pick.newExercise')} className="w-12 h-12 rounded-[12px] bg-brand flex items-center justify-center shrink-0">
             <Plus size={24} className="text-white" />
           </button>
           <div className="relative flex-1">
@@ -113,11 +113,11 @@ export function AdicionarExercicios({ yaEnRutina, onCerrar, onAgregar }: {
             <input
               value={texto}
               onChange={(e) => setTexto(e.target.value)}
-              placeholder="Buscar exercícios..."
+              placeholder={t('projetos:pick.searchPh')}
               className="w-full h-12 pl-10 pr-9 rounded-[12px] bg-[#252525] border border-[#333333] text-white text-rt-14 outline-none focus:border-brand"
             />
             {texto && (
-              <button onClick={() => setTexto('')} aria-label="Limpar busca" className="absolute right-3 top-1/2 -translate-y-1/2 text-grey-500">
+              <button onClick={() => setTexto('')} aria-label={t('projetos:c.clearSearch')} className="absolute right-3 top-1/2 -translate-y-1/2 text-grey-500">
                 <X size={16} />
               </button>
             )}
@@ -125,13 +125,13 @@ export function AdicionarExercicios({ yaEnRutina, onCerrar, onAgregar }: {
         </div>
 
         <div className="flex items-center gap-2 px-5 mt-3">
-          <Filtro etiqueta="Grupo Muscular" valor={grupo && etiquetaDe(gruposMusculares, grupo, lang)} onClick={() => setAbriendo('grupo')} />
-          <Filtro etiqueta="Categorias" valor={categoria && etiquetaDe(categoriasExercicio, categoria, lang)} onClick={() => setAbriendo('categoria')} />
+          <Filtro etiqueta={t('projetos:ex.muscleGroup')} valor={grupo && etiquetaDe(gruposMusculares, grupo, lang)} onClick={() => setAbriendo('grupo')} />
+          <Filtro etiqueta={t('projetos:pick.categories')} valor={categoria && etiquetaDe(categoriasExercicio, categoria, lang)} onClick={() => setAbriendo('categoria')} />
           <button
             onClick={() => { setGrupo(''); setCategoria(''); setTexto(''); setBusca('') }}
             className="shrink-0 text-[#EF5350] text-rt-14 font-semibold px-1"
           >
-            Limpar
+            {t('projetos:c.clear')}
           </button>
         </div>
 
@@ -141,7 +141,7 @@ export function AdicionarExercicios({ yaEnRutina, onCerrar, onAgregar }: {
           ) : lista.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-12">
               <Dumbbell size={48} className="text-[#616161]" />
-              <span className="text-white/60 text-rt-13">Nenhum exercício encontrado</span>
+              <span className="text-white/60 text-rt-13">{t('projetos:pick.notFound')}</span>
             </div>
           ) : (
             <ul className="flex flex-col gap-2.5">
@@ -170,7 +170,7 @@ export function AdicionarExercicios({ yaEnRutina, onCerrar, onAgregar }: {
                     <div className="flex-1 min-w-0">
                       <div className="text-white text-rt-13 font-semibold leading-snug line-clamp-2">{nombreEjercicio(e, lang)}</div>
                       {bloqueado ? (
-                        <div className="text-[#EF9A9A] text-rt-10 mt-1">Já adicionado</div>
+                        <div className="text-[#EF9A9A] text-rt-10 mt-1">{t('projetos:pick.alreadyAdded')}</div>
                       ) : (
                         <div className="flex gap-1 mt-1 overflow-x-auto no-scrollbar">
                           {tags.map((t) => <span key={t} className="shrink-0 text-rt-9 px-2 py-0.5 rounded-[10px] border border-[#616161] text-[#BDBDBD]">{t}</span>)}
@@ -178,12 +178,12 @@ export function AdicionarExercicios({ yaEnRutina, onCerrar, onAgregar }: {
                       )}
                     </div>
                     {!bloqueado && e.trainer_id === profile?.id && (
-                      <button onClick={(ev) => { ev.stopPropagation(); setEditando(e) }} aria-label="Editar exercício" className="w-[30px] h-[30px] rounded-[6px] bg-[#333333] flex items-center justify-center shrink-0">
+                      <button onClick={(ev) => { ev.stopPropagation(); setEditando(e) }} aria-label={t('projetos:ex.edit')} className="w-[30px] h-[30px] rounded-[6px] bg-[#333333] flex items-center justify-center shrink-0">
                         <Pencil size={16} className="text-brand" />
                       </button>
                     )}
                     {!bloqueado && (
-                      <button onClick={(ev) => { ev.stopPropagation(); void alternar(e.id) }} aria-label="Favorito" className="shrink-0 p-0.5">
+                      <button onClick={(ev) => { ev.stopPropagation(); void alternar(e.id) }} aria-label={t('projetos:c.favorite')} className="shrink-0 p-0.5">
                         <Star size={22} className={esFavorito(e.id) ? 'text-brand fill-brand' : 'text-brand'} />
                       </button>
                     )}
@@ -201,7 +201,7 @@ export function AdicionarExercicios({ yaEnRutina, onCerrar, onAgregar }: {
               onClick={() => void agregar()}
               className="w-full h-[54px] rounded-[27px] bg-gradient-to-b from-[#91C145] to-[#5A8F2F] text-white text-rt-16 font-bold"
             >
-              {agregando ? 'Adicionando…' : `Adicionar ${n} ${n === 1 ? 'exercício' : 'exercícios'}`}
+              {agregando ? t('projetos:pick.adding') : t('projetos:pick.addN', { count: n })}
             </button>
           </div>
         )}

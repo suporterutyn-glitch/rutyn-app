@@ -20,7 +20,7 @@ import {
 type Confirmacion = { titulo: string; detalle: string; accion: () => Promise<void> }
 
 export function EditorDietaInline({ dieta, onRecargar }: { dieta: Dieta; onRecargar: () => Promise<void> }) {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const lang = i18n.language
   const comidas = ordenarComidas(dieta.meals)
   const [abiertas, setAbiertas] = useState<string[]>([])
@@ -34,7 +34,7 @@ export function EditorDietaInline({ dieta, onRecargar }: { dieta: Dieta; onRecar
 
   async function hacer(fn: () => Promise<{ error: { message: string } | null } | void>) {
     const r = await fn()
-    if (r && r.error) { setError('Erro ao atualizar dieta: ' + r.error.message); return }
+    if (r && r.error) { setError(t('projetos:ed.updateError', { msg: r.error.message })); return }
     await tocarDieta(dieta.id)
     await onRecargar()
   }
@@ -73,11 +73,11 @@ export function EditorDietaInline({ dieta, onRecargar }: { dieta: Dieta; onRecar
     <div className="border-t border-[#333333] pt-2 pb-3">
       <div className="flex items-center justify-between px-3 mb-2">
         <span className={'text-rt-10 italic ' + (dieta.last_edited_by === 'student' ? 'text-[#FFD54F]' : 'text-grey-500')}>
-          Editado por: {dieta.last_edited_by === 'student' ? 'Aluno' : 'Professor'}
+          {t('projetos:ed.editedBy', { who: dieta.last_edited_by === 'student' ? t('projetos:ed.student') : t('projetos:ed.teacher') })}
         </span>
         {comidas.length > 0 && (
           <button onClick={() => setAbiertas(todas ? [] : comidas.map((c) => c.id))} className="text-brand text-rt-11 font-semibold">
-            {todas ? 'Fechar todos' : 'Expandir todos'}
+            {todas ? t('projetos:ed.closeAll') : t('projetos:ed.expandAll')}
           </button>
         )}
       </div>
@@ -85,7 +85,7 @@ export function EditorDietaInline({ dieta, onRecargar }: { dieta: Dieta; onRecar
       {comidas.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-6">
           <UtensilsCrossed size={40} className="text-grey-600" />
-          <span className="text-grey-500 text-rt-13">Nenhuma refeição adicionada</span>
+          <span className="text-grey-500 text-rt-13">{t('projetos:ed.noMeals')}</span>
         </div>
       ) : (
         <ul className="flex flex-col gap-2 px-3">
@@ -98,20 +98,20 @@ export function EditorDietaInline({ dieta, onRecargar }: { dieta: Dieta; onRecar
               onAlternar={() => setAbiertas((p) => (p.includes(c.id) ? p.filter((x) => x !== c.id) : [...p, c.id]))}
               onHora={(h) => void hacer(async () => supabase.from('meals').update({ time_of_day: h }).eq('id', c.id))}
               onBorrar={() => setConfirmar({
-                titulo: 'Excluir Refeição',
-                detalle: `Excluir "${nombreComida(c, lang)}" e todos os seus alimentos?`,
+                titulo: t('projetos:ed.deleteMeal'),
+                detalle: t('projetos:ed.deleteMealDetail', { name: nombreComida(c, lang) }),
                 accion: () => hacer(async () => supabase.from('meals').delete().eq('id', c.id)),
               })}
               onAgregar={() => setAgregandoEn(c)}
               onCantidad={setCantidadDe}
               onBorrarAlimento={(a) => setConfirmar({
-                titulo: 'Excluir Alimento',
-                detalle: `Remover "${nombreAlimento(a, lang)}" desta refeição?`,
+                titulo: t('projetos:ed.deleteFood'),
+                detalle: t('projetos:ed.deleteFoodDetail', { name: nombreAlimento(a, lang) }),
                 accion: () => hacer(async () => supabase.from('meal_foods').delete().eq('id', a.id)),
               })}
               onBorrarReceta={(r) => setConfirmar({
-                titulo: 'Remover Receita',
-                detalle: `Deseja remover a receita "${r.name}" desta refeição?`,
+                titulo: t('projetos:ed.removeRecipe'),
+                detalle: t('projetos:ed.removeRecipeDetail', { name: r.name }),
                 accion: () => hacer(async () => supabase.from('meal_recipes').delete().eq('id', r.id)),
               })}
               onPreparo={setPreparo}
@@ -129,7 +129,7 @@ export function EditorDietaInline({ dieta, onRecargar }: { dieta: Dieta; onRecar
 
       <div className="px-3 mt-3">
         <button onClick={() => setEligiendoComidas(true)} className="w-full h-11 rounded-[10px] bg-brand/15 border border-brand text-brand text-rt-13 font-semibold flex items-center justify-center gap-1.5">
-          <Plus size={18} /> Selecionar refeições
+          <Plus size={18} /> {t('projetos:ed.selectMeals')}
         </button>
       </div>
 
@@ -153,7 +153,7 @@ export function EditorDietaInline({ dieta, onRecargar }: { dieta: Dieta; onRecar
           titulo={nombreAlimento(cantidadDe, lang)}
           unidad={cantidadDe.unit}
           inicial={Number(cantidadDe.quantity)}
-          boton="Salvar"
+          boton={t('projetos:ed.save')}
           onCerrar={() => setCantidadDe(null)}
           onListo={(q) => { const a = cantidadDe; setCantidadDe(null); void hacer(async () => supabase.from('meal_foods').update({ quantity: q }).eq('id', a.id)) }}
         />
@@ -163,7 +163,7 @@ export function EditorDietaInline({ dieta, onRecargar }: { dieta: Dieta; onRecar
         <ConfirmDialog
           message={confirmar.titulo}
           detail={confirmar.detalle}
-          confirmLabel="Excluir"
+          confirmLabel={t('projetos:ed.delete')}
           tone="danger"
           onConfirm={() => { const c = confirmar; setConfirmar(null); void c.accion() }}
           onCancel={() => setConfirmar(null)}
@@ -198,6 +198,7 @@ function TarjetaComida({ c, lang, abierta, onAlternar, onHora, onBorrar, onAgreg
   onPreparo: (r: RecetaComida) => void
   onReordenar: (orden: string[]) => void
 }) {
+  const { t } = useTranslation()
   const m = macrosComida(c)
   const sueltos = c.meal_foods.filter((a) => !a.meal_recipe_id).sort((a, b) => a.position - b.position)
   const [orden, setOrden] = useState(sueltos.map((a) => a.id))
@@ -216,19 +217,19 @@ function TarjetaComida({ c, lang, abierta, onAlternar, onHora, onBorrar, onAgreg
         <label className="shrink-0 h-8 px-2 rounded-[8px] bg-[#1E1E1E] border border-brand/30 flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
           <Clock size={14} className="text-brand" />
           <input type="time" value={(c.time_of_day ?? '12:00').slice(0, 5)} onChange={(e) => e.target.value && onHora(e.target.value)}
-            className="bg-transparent text-white text-rt-12 font-semibold outline-none w-[44px] [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:hidden" aria-label="Horário" />
+            className="bg-transparent text-white text-rt-12 font-semibold outline-none w-[44px] [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:hidden" aria-label={t('projetos:ed.time')} />
         </label>
         <button onClick={onAlternar} className="flex-1 min-w-0 flex items-center gap-2 text-left">
           <span className="text-white text-rt-14 font-semibold truncate">{nombreComida(c, lang)}</span>
           {!abierta && hay && <span className="shrink-0 text-rt-10 px-2 py-0.5 rounded-[8px] bg-[#1E1E1E] text-grey-400">{Math.round(m.kcal)} kcal</span>}
         </button>
-        <button onClick={onBorrar} aria-label="Excluir refeição" className="w-8 h-8 rounded-[8px] bg-danger/10 flex items-center justify-center shrink-0"><Trash2 size={17} className="text-[#EF5350]" /></button>
-        <button onClick={onAlternar} aria-label={abierta ? 'Recolher' : 'Expandir'} className="shrink-0 text-white">{abierta ? <ChevronUp size={20} /> : <ChevronDown size={20} />}</button>
+        <button onClick={onBorrar} aria-label={t('projetos:ed.deleteMealAria')} className="w-8 h-8 rounded-[8px] bg-danger/10 flex items-center justify-center shrink-0"><Trash2 size={17} className="text-[#EF5350]" /></button>
+        <button onClick={onAlternar} aria-label={abierta ? t('projetos:ed.collapse') : t('projetos:ed.expand')} className="shrink-0 text-white">{abierta ? <ChevronUp size={20} /> : <ChevronDown size={20} />}</button>
       </div>
 
       {abierta && (
         <div className="px-3 pb-3 flex flex-col gap-2">
-          {hay ? <ResumenMacros m={m} /> : <p className="text-grey-500 text-rt-12 text-center py-2">Nenhum alimento adicionado</p>}
+          {hay ? <ResumenMacros m={m} /> : <p className="text-grey-500 text-rt-12 text-center py-2">{t('projetos:ed.noFoods')}</p>}
 
           {c.meal_recipes.slice().sort((a, b) => a.position - b.position).map((r) => {
             const ings = c.meal_foods.filter((a) => a.meal_recipe_id === r.id).sort((a, b) => a.position - b.position)
@@ -239,7 +240,7 @@ function TarjetaComida({ c, lang, abierta, onAlternar, onHora, onBorrar, onAgreg
                   <BookOpen size={16} className="text-brand shrink-0" />
                   <button onClick={() => onPreparo(r)} className="flex-1 min-w-0 text-left text-white text-rt-13 font-semibold truncate underline decoration-brand/40">{r.name}</button>
                   <span className="text-rt-10 px-2 py-0.5 rounded-[8px] bg-[#252525] text-grey-400 shrink-0">{Math.round(kcal)} kcal</span>
-                  <button onClick={() => onBorrarReceta(r)} aria-label="Remover receita" className="shrink-0 p-1"><Trash2 size={15} className="text-[#EF5350]" /></button>
+                  <button onClick={() => onBorrarReceta(r)} aria-label={t('projetos:ed.removeRecipeAria')} className="shrink-0 p-1"><Trash2 size={15} className="text-[#EF5350]" /></button>
                 </div>
                 <ul className="mt-1.5 pl-6 flex flex-col gap-0.5">
                   {ings.map((a) => (
@@ -266,7 +267,7 @@ function TarjetaComida({ c, lang, abierta, onAlternar, onHora, onBorrar, onAgreg
                     (arrastre.arrastrando === a!.id ? 'border-brand shadow-[0_4px_12px_rgba(124,179,66,0.3)] opacity-80 ' : 'border-[#333333] ') +
                     (arrastre.encima === a!.id && arrastre.arrastrando !== a!.id ? 'border-dashed border-brand' : '')}
                 >
-                  <button onPointerDown={arrastre.alBajar(a!.id)} aria-label="Arrastar para reordenar" className="touch-none cursor-grab shrink-0"><GripVertical size={18} className="text-grey-600" /></button>
+                  <button onPointerDown={arrastre.alBajar(a!.id)} aria-label={t('projetos:ed.drag')} className="touch-none cursor-grab shrink-0"><GripVertical size={18} className="text-grey-600" /></button>
                   <div className="flex-1 min-w-0">
                     <div className="text-white text-rt-13 font-semibold truncate">{nombreAlimento(a!, lang)}</div>
                     <div className="text-grey-400 text-rt-10">{Math.round(mm.kcal)} kcal | P: {mm.p.toFixed(1)}g | C: {mm.c.toFixed(1)}g | G: {mm.g.toFixed(1)}g</div>
@@ -274,14 +275,14 @@ function TarjetaComida({ c, lang, abierta, onAlternar, onHora, onBorrar, onAgreg
                   <button onClick={() => onCantidad(a!)} className="shrink-0 px-2 py-1 rounded-[8px] bg-[#252525] border border-[#444444] text-white text-rt-12 font-semibold">
                     {Number(a!.quantity)}{abreviaturaUnidad(a!.unit)}
                   </button>
-                  <button onClick={() => onBorrarAlimento(a!)} aria-label="Excluir alimento" className="shrink-0 p-1"><Trash2 size={16} className="text-[#EF5350]" /></button>
+                  <button onClick={() => onBorrarAlimento(a!)} aria-label={t('projetos:ed.deleteFoodAria')} className="shrink-0 p-1"><Trash2 size={16} className="text-[#EF5350]" /></button>
                 </li>
               )
             })}
           </ul>
 
           <button onClick={onAgregar} className="w-full h-10 rounded-[8px] bg-brand/15 border border-brand text-brand text-rt-12 font-semibold flex items-center justify-center gap-1.5">
-            <Plus size={16} /> Adicionar alimento
+            <Plus size={16} /> {t('projetos:ed.addFood')}
           </button>
         </div>
       )}
@@ -290,11 +291,12 @@ function TarjetaComida({ c, lang, abierta, onAlternar, onHora, onBorrar, onAgreg
 }
 
 function Conmutador({ modo, onModo }: { modo: 'alimentos' | 'receitas'; onModo: (m: 'alimentos' | 'receitas') => void }) {
+  const { t } = useTranslation()
   return (
     <div className="mx-5 mt-4 h-10 p-1 rounded-[12px] bg-[#252525] border border-[#333333] flex">
       {(['alimentos', 'receitas'] as const).map((m) => (
         <button key={m} onClick={() => onModo(m)} className={'flex-1 rounded-[9px] text-rt-13 ' + (modo === m ? 'bg-brand text-white font-semibold' : 'text-grey-400')}>
-          {m === 'alimentos' ? 'Alimentos' : 'Receitas'}
+          {m === 'alimentos' ? t('projetos:ed.foods') : t('projetos:ed.recipes')}
         </button>
       ))}
     </div>
@@ -322,6 +324,7 @@ function ElegirReceta({ yaEstan, onCerrar, onElegir, conmutador }: {
   onElegir: (r: Receita) => void
   conmutador: React.ReactNode
 }) {
+  const { t } = useTranslation()
   const { profile } = useAuth()
   const [items, setItems] = useState<Receita[] | null>(null)
   const [busca, setBusca] = useState('')
@@ -334,20 +337,20 @@ function ElegirReceta({ yaEstan, onCerrar, onElegir, conmutador }: {
     <div className="fixed inset-0 z-40 bg-[#1E1E1E] flex flex-col">
       <div className="max-w-app w-full mx-auto flex flex-col flex-1 min-h-0 pt-[calc(env(safe-area-inset-top)+24px)]">
         <div className="px-5 flex items-center justify-between">
-          <h1 className="text-white text-rt-20 font-bold">Adicionar Alimentos</h1>
-          <button onClick={onCerrar} aria-label="Fechar" className="w-9 h-9 rounded-full bg-[#333333] flex items-center justify-center"><X size={20} className="text-white" /></button>
+          <h1 className="text-white text-rt-20 font-bold">{t('projetos:ed.addFoods')}</h1>
+          <button onClick={onCerrar} aria-label={t('projetos:ed.close')} className="w-9 h-9 rounded-full bg-[#333333] flex items-center justify-center"><X size={20} className="text-white" /></button>
         </div>
         {conmutador}
         <div className="relative mx-5 mt-4">
           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-grey-500" />
-          <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar receitas..."
+          <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder={t('projetos:ed.searchRecipes')}
             className="w-full h-12 pl-10 pr-3 rounded-[12px] bg-[#252525] border border-[#333333] text-white text-rt-14 outline-none focus:border-brand" />
         </div>
         <div className="flex-1 overflow-y-auto px-5 pt-3 pb-6">
           {items === null ? (
             <div className="py-10 flex justify-center"><span className="w-8 h-8 rounded-full border-2 border-brand/30 border-t-brand animate-spin" /></div>
           ) : lista.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 py-12"><BookOpen size={48} className="text-[#616161]" /><span className="text-white/60 text-rt-13">Nenhuma receita encontrada</span></div>
+            <div className="flex flex-col items-center gap-2 py-12"><BookOpen size={48} className="text-[#616161]" /><span className="text-white/60 text-rt-13">{t('projetos:ed.noRecipes')}</span></div>
           ) : (
             <ul className="flex flex-col gap-2.5">
               {lista.map((r) => {
@@ -360,7 +363,7 @@ function ElegirReceta({ yaEstan, onCerrar, onElegir, conmutador }: {
                         <span className="w-9 h-9 rounded-[8px] bg-brand/15 flex items-center justify-center shrink-0"><BookOpen size={18} className="text-brand" /></span>
                         <span className="flex-1 min-w-0">
                           <span className="block text-white text-rt-14 font-semibold truncate">{r.name}</span>
-                          <span className={'block text-rt-11 ' + (bloq ? 'text-[#EF9A9A]' : 'text-grey-500')}>{bloq ? 'Já adicionada' : `${r.recipe_ingredients.length} ingredientes`}</span>
+                          <span className={'block text-rt-11 ' + (bloq ? 'text-[#EF9A9A]' : 'text-grey-500')}>{bloq ? t('projetos:ed.alreadyAdded') : t('projetos:ed.nIngredients', { n: r.recipe_ingredients.length })}</span>
                         </span>
                         {bloq ? <Ban size={18} className="text-grey-500" /> : <ChevronRight size={18} className="text-grey-500" />}
                       </div>
@@ -383,6 +386,7 @@ function ElegirReceta({ yaEstan, onCerrar, onElegir, conmutador }: {
 }
 
 export function ModoDePreparo({ r, onCerrar }: { r: Pick<RecetaComida, 'name' | 'steps' | 'tips' | 'cover_url'>; onCerrar: () => void }) {
+  const { t } = useTranslation()
   const pasos = r.steps.filter((s) => s.trim())
   return (
     <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/60" onClick={onCerrar}>
@@ -391,8 +395,8 @@ export function ModoDePreparo({ r, onCerrar }: { r: Pick<RecetaComida, 'name' | 
         <div className="flex-1 overflow-y-auto p-5">
           <h2 className="text-white text-rt-18 font-bold text-center">{r.name}</h2>
           {r.cover_url && <img src={r.cover_url} alt="" className="w-full h-[200px] object-cover rounded-[12px] mt-4" />}
-          <h3 className="text-white/70 text-rt-15 font-semibold mt-5 mb-3">Modo de Preparo</h3>
-          {pasos.length === 0 ? <p className="text-grey-500 text-rt-13">Sem etapas cadastradas.</p> : (
+          <h3 className="text-white/70 text-rt-15 font-semibold mt-5 mb-3">{t('projetos:ed.howTo')}</h3>
+          {pasos.length === 0 ? <p className="text-grey-500 text-rt-13">{t('projetos:ed.noSteps')}</p> : (
             <ol className="flex flex-col gap-3">
               {pasos.map((p, i) => (
                 <li key={i} className="flex gap-3">
@@ -404,13 +408,13 @@ export function ModoDePreparo({ r, onCerrar }: { r: Pick<RecetaComida, 'name' | 
           )}
           {r.tips && (
             <div className="rounded-[12px] bg-[#3E3519] p-3.5 mt-5">
-              <div className="flex items-center gap-1.5 text-[#FFD54F] text-rt-13 font-semibold"><Lightbulb size={16} /> Dicas</div>
+              <div className="flex items-center gap-1.5 text-[#FFD54F] text-rt-13 font-semibold"><Lightbulb size={16} /> {t('projetos:ed.tips')}</div>
               <p className="text-[#FFF8E1] text-rt-13 mt-1">{r.tips}</p>
             </div>
           )}
         </div>
         <div className="p-5 pt-0 pb-[calc(env(safe-area-inset-bottom)+16px)]">
-          <button onClick={onCerrar} className="w-full h-12 rounded-[12px] bg-[#2A2A2A] text-white text-rt-14">Fechar</button>
+          <button onClick={onCerrar} className="w-full h-12 rounded-[12px] bg-[#2A2A2A] text-white text-rt-14">{t('projetos:ed.close')}</button>
         </div>
       </div>
     </div>

@@ -54,7 +54,7 @@ export function porcionDe(f: Food) {
 }
 
 export function FoodsTab({ query, filtro }: { query: string; filtro: Filtro }) {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const lang = i18n.language
   const { profile } = useAuth()
   const [items, setItems] = useState<Food[]>([])
@@ -70,7 +70,7 @@ export function FoodsTab({ query, filtro }: { query: string; filtro: Filtro }) {
   async function load() {
     setLoading(true)
     const { data, error } = await supabase.from('foods').select('*').order('name')
-    if (error) setAviso({ kind: 'error', message: 'Erro ao carregar alimentos: ' + error.message })
+    if (error) setAviso({ kind: 'error', message: t('projetos:al.loadError', { msg: error.message }) })
     setItems((data as Food[]) ?? [])
     setLoading(false)
   }
@@ -92,7 +92,7 @@ export function FoodsTab({ query, filtro }: { query: string; filtro: Filtro }) {
   async function pedirBorrado() {
     const propios = items.filter((f) => seleccion.includes(f.id) && f.trainer_id === profile?.id)
     if (propios.length === 0) {
-      setAviso({ kind: 'error', message: 'Os alimentos do catálogo do app não podem ser excluídos. Selecione alimentos criados por você.' })
+      setAviso({ kind: 'error', message: t('projetos:al.cantDeleteApp') })
       return
     }
     const { data } = await supabase
@@ -127,8 +127,8 @@ export function FoodsTab({ query, filtro }: { query: string; filtro: Filtro }) {
     setSeleccion([])
     setAviso({
       kind: 'success',
-      message: (forzado ? `${ids.length} alimento(s) excluído(s) e removido(s) das dietas.` : `${ids.length} alimento(s) excluído(s) com sucesso.`)
-        + (ignorados > 0 ? ` ${ignorados} do catálogo do app foram mantidos.` : ''),
+      message: (forzado ? t('projetos:al.deletedForced', { n: ids.length }) : t('projetos:al.deletedOk', { n: ids.length }))
+        + (ignorados > 0 ? t('projetos:al.kept', { n: ignorados }) : ''),
     })
     await load()
   }
@@ -137,10 +137,10 @@ export function FoodsTab({ query, filtro }: { query: string; filtro: Filtro }) {
     <div className="pb-24">
       {enSeleccion && (
         <div className="sticky top-0 z-10 -mx-4 px-4 py-2 mb-3 bg-surface-app/95 backdrop-blur flex items-center gap-2">
-          <button onClick={() => setCombinando(true)} className="px-5 py-2.5 rounded-[20px] bg-brand text-white text-rt-13 font-semibold">Combinar</button>
-          <button onClick={() => void pedirBorrado()} className="px-5 py-2.5 rounded-[20px] bg-[#D32F2F] text-white text-rt-13 font-semibold">Excluir</button>
+          <button onClick={() => setCombinando(true)} className="px-5 py-2.5 rounded-[20px] bg-brand text-white text-rt-13 font-semibold">{t('projetos:c.combine')}</button>
+          <button onClick={() => void pedirBorrado()} className="px-5 py-2.5 rounded-[20px] bg-[#D32F2F] text-white text-rt-13 font-semibold">{t('projetos:c.delete')}</button>
           <button onClick={() => setSeleccion(todosMarcados ? [] : filtered.map((f) => f.id))} className="ml-auto text-rt-13 text-grey-400">
-            {todosMarcados ? 'Desselecionar tudo' : 'Selecionar tudo'}
+            {todosMarcados ? t('projetos:c.deselectAll') : t('projetos:c.selectAll')}
           </button>
         </div>
       )}
@@ -149,12 +149,12 @@ export function FoodsTab({ query, filtro }: { query: string; filtro: Filtro }) {
         <div className="py-10 flex justify-center"><span className="w-8 h-8 rounded-full border-2 border-brand/30 border-t-brand animate-spin" /></div>
       ) : filtered.length === 0 ? (
         query.trim()
-          ? <EmptyState icon={UtensilsCrossed} title="Nenhum alimento encontrado" body="Tente buscar com outro termo" />
+          ? <EmptyState icon={UtensilsCrossed} title={t('projetos:al.notFound')} body={t('projetos:al.tryOther')} />
           : filtro === 'favoritos'
-            ? <EmptyState icon={UtensilsCrossed} title="Nenhum alimento favoritado" body="Favorite alimentos para vê-los aqui" />
+            ? <EmptyState icon={UtensilsCrossed} title={t('projetos:al.noFav')} body={t('projetos:al.noFavBody')} />
             : filtro === 'minhas'
-              ? <EmptyState icon={UtensilsCrossed} title="Nenhum alimento criado" body="Crie seu primeiro alimento personalizado" />
-              : <EmptyState icon={UtensilsCrossed} title="Nenhum alimento cadastrado" body="Crie seu primeiro alimento personalizado" />
+              ? <EmptyState icon={UtensilsCrossed} title={t('projetos:al.noOwn')} body={t('projetos:al.createFirst')} />
+              : <EmptyState icon={UtensilsCrossed} title={t('projetos:al.none')} body={t('projetos:al.createFirst')} />
       ) : (
         <ul className="flex flex-col gap-3">
           {filtered.map((f) => (
@@ -179,7 +179,7 @@ export function FoodsTab({ query, filtro }: { query: string; filtro: Filtro }) {
           className="w-full h-12 rounded-[12px] bg-[#2D2D2D] border border-[#616161] text-white text-rt-14 font-semibold flex items-center justify-center gap-2"
           onClick={() => setShowNew(true)}
         >
-          <Plus size={18} /> Criar novo Alimento
+          <Plus size={18} /> {t('projetos:al.createNew')}
         </button>
       </FixedBottomActions>
 
@@ -195,18 +195,18 @@ export function FoodsTab({ query, filtro }: { query: string; filtro: Filtro }) {
       )}
       {borrando && (borrando.enUso.length === 0 ? (
         <ConfirmDialog
-          message="Excluir alimento(s)"
-          detail={`Excluir ${borrando.propios.length} alimento(s)? Esta ação não pode ser desfeita.`}
-          confirmLabel="Excluir"
+          message={t('projetos:al.deleteTitle')}
+          detail={t('projetos:al.deleteDetail', { n: borrando.propios.length })}
+          confirmLabel={t('projetos:c.delete')}
           tone="danger"
           onConfirm={() => void borrar()}
           onCancel={() => setBorrando(null)}
         />
       ) : (
         <ConfirmDialog
-          message="Alimentos em uso"
-          detail="Se excluir, eles serão removidos dessas dietas."
-          confirmLabel="Excluir mesmo assim"
+          message={t('projetos:al.inUse')}
+          detail={t('projetos:al.inUseDetail')}
+          confirmLabel={t('projetos:al.deleteAnyway')}
           tone="danger"
           onConfirm={() => void borrar()}
           onCancel={() => setBorrando(null)}
@@ -215,7 +215,7 @@ export function FoodsTab({ query, filtro }: { query: string; filtro: Filtro }) {
             {borrando.enUso.map(({ food, dietas }) => (
               <li key={food.id}>
                 <div className="text-white text-rt-13 font-semibold">{nombreEnIdioma(food, lang)}</div>
-                <div className="text-white/60 text-rt-11">Usado em {dietas.length} dieta(s)</div>
+                <div className="text-white/60 text-rt-11">{t('projetos:al.usedIn', { n: dietas.length })}</div>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {dietas.slice(0, 3).map((d) => <span key={d} className="text-rt-10 px-2 py-0.5 rounded-[8px] bg-[#333333] text-white/80">{d}</span>)}
                 </div>
@@ -241,12 +241,13 @@ export function IconoCategoria({ categoria, tamano = 60 }: { categoria: string |
 }
 
 export function MiniMacros({ kcal, p, c, g }: { kcal: number; p: number; c: number; g: number }) {
+  const { t } = useTranslation()
   return (
     <span className="flex flex-wrap gap-x-2 text-rt-10 font-semibold">
       <span className="text-[#64B5F6]">{Math.round(kcal)} kcal</span>
-      <span className="text-[#E57373]">{p.toFixed(1)}g P</span>
-      <span className="text-[#FFD54F]">{c.toFixed(1)}g C</span>
-      <span className="text-[#81C784]">{g.toFixed(1)}g G</span>
+      <span className="text-[#E57373]">{p.toFixed(1)}g {t('projetos:al.pAbbr')}</span>
+      <span className="text-[#FFD54F]">{c.toFixed(1)}g {t('projetos:al.cAbbr')}</span>
+      <span className="text-[#81C784]">{g.toFixed(1)}g {t('projetos:al.fAbbr')}</span>
     </span>
   )
 }
@@ -262,6 +263,7 @@ function TarjetaAlimento({ f, lang, propio, favorito, seleccionado, enSeleccion,
   onFavorito: () => void
   onEditar: () => void
 }) {
+  const { t } = useTranslation()
   const timer = useRef<number | null>(null)
   const largo = useRef(false)
   function bajar() {
@@ -285,7 +287,7 @@ function TarjetaAlimento({ f, lang, propio, favorito, seleccionado, enSeleccion,
       <button
         type="button"
         onClick={(ev) => { ev.stopPropagation(); onMarcar() }}
-        aria-label={seleccionado ? 'Desmarcar' : 'Marcar'}
+        aria-label={seleccionado ? t('projetos:c.unmark') : t('projetos:c.mark')}
         className={'w-[22px] h-[22px] rounded-[4px] border-[1.5px] flex items-center justify-center shrink-0 text-rt-12 ' +
           (seleccionado ? 'bg-brand border-brand text-white' : 'border-grey-500')}
       >
@@ -305,11 +307,11 @@ function TarjetaAlimento({ f, lang, propio, favorito, seleccionado, enSeleccion,
         </div>
       </div>
       <div className="flex flex-col items-center gap-2 shrink-0">
-        <button type="button" onClick={(ev) => { ev.stopPropagation(); onFavorito() }} aria-label="Favorito" className="p-0.5">
+        <button type="button" onClick={(ev) => { ev.stopPropagation(); onFavorito() }} aria-label={t('projetos:c.favorite')} className="p-0.5">
           <Star size={24} className={favorito ? 'text-[#FFC107] fill-[#FFC107]' : 'text-grey-500'} />
         </button>
         {propio && (
-          <button type="button" onClick={(ev) => { ev.stopPropagation(); onEditar() }} aria-label="Editar alimento" className="p-0.5">
+          <button type="button" onClick={(ev) => { ev.stopPropagation(); onEditar() }} aria-label={t('projetos:al.edit')} className="p-0.5">
             <Pencil size={22} className="text-brand" />
           </button>
         )}
@@ -332,7 +334,7 @@ export function FoodSheet({ alimento, onClose, onSaved }: {
   onSaved: (f: Food) => void
 }) {
   const { user } = useAuth()
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const lang = i18n.language
   const cad = (n: number | null | undefined) => (n == null ? '' : String(Number(n)))
   const [nombre, setNombre] = useState(alimento?.name_pt ?? alimento?.name ?? '')
@@ -350,11 +352,11 @@ export function FoodSheet({ alimento, onClose, onSaved }: {
 
   async function guardar() {
     const e: typeof errores = {}
-    if (!nombre.trim()) e.nombre = 'Nome é obrigatório'
+    if (!nombre.trim()) e.nombre = t('projetos:al.nameReq')
     const q = aNumero(porcion)
-    if (!porcion.trim()) e.porcion = 'Porção é obrigatória'
-    else if (!(q > 0)) e.porcion = 'Valor inválido'
-    if (!categoria) e.banner = 'Selecione uma categoria'
+    if (!porcion.trim()) e.porcion = t('projetos:al.portionReq')
+    else if (!(q > 0)) e.porcion = t('projetos:al.invalid')
+    if (!categoria) e.banner = t('projetos:al.pickCategory')
     setErrores(e)
     if (Object.keys(e).length > 0 || !user?.id) return
 
@@ -376,7 +378,7 @@ export function FoodSheet({ alimento, onClose, onSaved }: {
       ? await supabase.from('foods').update(campos).eq('id', alimento.id).select('*').single()
       : await supabase.from('foods').insert({ trainer_id: user.id, ...campos }).select('*').single()
     setGuardando(false)
-    if (error) { setErrores({ banner: 'Erro ao salvar: ' + error.message }); return }
+    if (error) { setErrores({ banner: t('projetos:al.saveError', { msg: error.message }) }); return }
     onSaved(data as Food)
   }
 
@@ -385,40 +387,40 @@ export function FoodSheet({ alimento, onClose, onSaved }: {
     (err ? 'border-danger' : 'border-[#333333] focus:border-brand')
 
   return (
-    <FullScreenSheet title={alimento ? 'Editar Alimento' : 'Novo Alimento'} onClose={onClose}>
+    <FullScreenSheet title={alimento ? t('projetos:al.editTitle') : t('projetos:al.newTitle')} onClose={onClose}>
       {errores.banner && (
         <div className="mb-5 rounded-[12px] bg-danger/15 border border-danger/40 px-4 py-3 text-[#EF9A9A] text-rt-13">{errores.banner}</div>
       )}
       <div className="flex flex-col gap-5">
         <div>
-          <label className="block text-white text-rt-13 font-semibold mb-2">Nome do Alimento</label>
-          <input className={claseCampo(errores.nombre)} value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ex: Frango Grelhado" />
+          <label className="block text-white text-rt-13 font-semibold mb-2">{t('projetos:al.name')}</label>
+          <input className={claseCampo(errores.nombre)} value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder={t('projetos:al.namePh')} />
           {errores.nombre && <div className="text-danger text-rt-11 mt-1">{errores.nombre}</div>}
         </div>
         <div>
-          <label className="block text-white text-rt-13 font-semibold mb-2">Nome em espanhol (opcional)</label>
-          <input className={claseCampo()} value={nombreEs} onChange={(e) => setNombreEs(e.target.value)} placeholder="Ex: Pollo a la plancha" />
+          <label className="block text-white text-rt-13 font-semibold mb-2">{t('projetos:al.nameEs')}</label>
+          <input className={claseCampo()} value={nombreEs} onChange={(e) => setNombreEs(e.target.value)} placeholder={t('projetos:al.nameEsPh')} />
         </div>
-        <CajaSelector label="Categoria" valor={categoria} placeholder="Selecione uma categoria" lista={categoriasAlimento} lang={lang} onAbrir={() => setAbriendo('categoria')} />
-        <CajaSelector label="Unidade" valor={unidad} placeholder="g (Gramas)" lista={unidadesAlimento} lang={lang} onAbrir={() => setAbriendo('unidad')} />
+        <CajaSelector label={t('projetos:al.category')} valor={categoria} placeholder={t('projetos:al.pickCategory')} lista={categoriasAlimento} lang={lang} onAbrir={() => setAbriendo('categoria')} />
+        <CajaSelector label={t('projetos:al.unit')} valor={unidad} placeholder={t('projetos:al.unitPh')} lista={unidadesAlimento} lang={lang} onAbrir={() => setAbriendo('unidad')} />
         <div>
-          <label className="block text-white text-rt-13 font-semibold mb-2">Porção</label>
-          <input inputMode="decimal" className={claseCampo(errores.porcion)} value={porcion} onChange={(e) => setPorcion(numero(e.target.value))} placeholder="Ex: 100" />
+          <label className="block text-white text-rt-13 font-semibold mb-2">{t('projetos:al.portion')}</label>
+          <input inputMode="decimal" className={claseCampo(errores.porcion)} value={porcion} onChange={(e) => setPorcion(numero(e.target.value))} placeholder={t('projetos:al.portionPh')} />
           {errores.porcion && <div className="text-danger text-rt-11 mt-1">{errores.porcion}</div>}
         </div>
         <div className="grid grid-cols-2 gap-3">
-          {([['Calorias (kcal)', kcal, setKcal], ['Proteínas (g)', prot, setProt], ['Carboidratos (g)', carb, setCarb], ['Gorduras (g)', gord, setGord]] as const).map(([l, v, set]) => (
+          {([[t('projetos:al.kcalLabel'), kcal, setKcal], [t('projetos:al.protLabel'), prot, setProt], [t('projetos:al.carbLabel'), carb, setCarb], [t('projetos:al.fatLabel'), gord, setGord]] as const).map(([l, v, set]) => (
             <div key={l}>
               <label className="block text-white text-rt-13 font-semibold mb-2">{l}</label>
               <input inputMode="decimal" className={claseCampo()} value={v} onChange={(e) => set(numero(e.target.value))} placeholder="0" />
             </div>
           ))}
         </div>
-        <p className="text-white/50 text-rt-11">Os macros valem para a porção informada; nas dietas são calculados proporcionalmente à quantidade.</p>
+        <p className="text-white/50 text-rt-11">{t('projetos:al.macrosNote')}</p>
       </div>
       <div className="mt-8">
         <button className="btn-save" disabled={guardando} onClick={() => void guardar()}>
-          {guardando ? 'Salvando…' : alimento ? 'Salvar Alimento' : 'Criar Alimento'}
+          {guardando ? t('projetos:c.saving') : alimento ? t('projetos:al.save') : t('projetos:al.create')}
         </button>
       </div>
       {abriendo === 'categoria' && (

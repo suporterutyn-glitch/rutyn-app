@@ -52,7 +52,7 @@ export function RoutineCard({
   progreso?: string
   oculta?: boolean
 }) {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [dx, setDx] = useState(0)
   const [abierto, setAbierto] = useState(false)
   const inicio = useRef<{ x: number; y: number } | null>(null)
@@ -103,10 +103,10 @@ export function RoutineCard({
     <div className="relative overflow-hidden rounded-card">
       {/* Acciones detrás del card */}
       <div className="absolute inset-y-0 right-0 flex" style={{ width: ANCHO_ACCIONES }}>
-        <AccionSwipe label="CLONAR" className="bg-grey-700" onClick={() => { cerrar(); onClonar() }} />
-        <AccionSwipe label="DUPLICAR" className="bg-grey-600" onClick={() => { cerrar(); onDuplicar() }} />
-        <AccionSwipe label="EDITAR" className="bg-grey-500" onClick={() => { cerrar(); onEditar() }} />
-        <AccionSwipe label={deAlumno ? 'REMOVER' : 'EXCLUIR'} className="bg-[#D32F2F]" onClick={() => { cerrar(); onExcluir() }} />
+        <AccionSwipe label={t('projetos:rot.clone')} className="bg-grey-700" onClick={() => { cerrar(); onClonar() }} />
+        <AccionSwipe label={t('projetos:rot.duplicate')} className="bg-grey-600" onClick={() => { cerrar(); onDuplicar() }} />
+        <AccionSwipe label={t('projetos:rot.edit')} className="bg-grey-500" onClick={() => { cerrar(); onEditar() }} />
+        <AccionSwipe label={deAlumno ? t('projetos:rot.remove') : t('projetos:rot.delete')} className="bg-[#D32F2F]" onClick={() => { cerrar(); onExcluir() }} />
       </div>
 
       <div
@@ -120,7 +120,7 @@ export function RoutineCard({
         <button
           type="button"
           onClick={onToggleSeleccion}
-          aria-label={seleccionada ? 'Desmarcar' : 'Marcar'}
+          aria-label={seleccionada ? t('projetos:c.unmark') : t('projetos:c.mark')}
           className={
             'w-7 h-7 rounded-[6px] border-2 shrink-0 flex items-center justify-center ' +
             (seleccionada ? 'bg-brand border-brand text-white' : 'border-grey-600')
@@ -137,17 +137,17 @@ export function RoutineCard({
                 <span key={c} className="text-rt-10 px-2 py-0.5 rounded-tag bg-surface-raised text-white/70">{c}</span>
               ))}
               {progreso && <span className="text-[9px] font-bold px-2 py-0.5 rounded-tag bg-brand/20 text-brand">{progreso}</span>}
-              {oculta && <EyeOff size={14} className="text-grey-500" aria-label="Oculta para o aluno" />}
+              {oculta && <EyeOff size={14} className="text-grey-500" aria-label={t('projetos:rot.hidden')} />}
             </div>
           )}
         </button>
 
         {deAlumno ? (
-          <button type="button" onClick={onFavorito} aria-label="Salvar como modelo em Meus Projetos" title="Salvar como modelo" className="shrink-0 p-1">
+          <button type="button" onClick={onFavorito} aria-label={t('projetos:rot.saveAsTemplateLong')} title={t('projetos:rot.saveAsTemplate')} className="shrink-0 p-1">
             <BookmarkPlus size={21} className="text-brand" />
           </button>
         ) : (
-          <button type="button" onClick={onFavorito} aria-label="Favorito" className="shrink-0 p-1">
+          <button type="button" onClick={onFavorito} aria-label={t('projetos:c.favorite')} className="shrink-0 p-1">
             <Star size={22} className={rotina.is_favorite ? 'text-brand fill-brand' : 'text-brand'} />
           </button>
         )}
@@ -156,7 +156,7 @@ export function RoutineCard({
         <button
           type="button"
           onClick={alternarAcciones}
-          aria-label={abierto ? 'Fechar ações' : 'Abrir ações'}
+          aria-label={abierto ? t('projetos:rot.closeActions') : t('projetos:rot.openActions')}
           className="shrink-0 p-1"
         >
           <MoreVertical size={18} className={abierto ? 'text-brand' : 'text-grey-500'} />
@@ -164,7 +164,7 @@ export function RoutineCard({
         <button
           type="button"
           onClick={onExpandir}
-          aria-label={expandida ? 'Recolher rotina' : 'Expandir rotina'}
+          aria-label={expandida ? t('projetos:rot.collapse') : t('projetos:rot.expand')}
           className="shrink-0 p-1"
         >
           <ChevronLeft size={20} className={'transition-transform ' + (expandida ? '-rotate-90 text-brand' : 'text-grey-500')} />

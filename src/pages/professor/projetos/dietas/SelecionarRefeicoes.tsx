@@ -14,7 +14,7 @@ export function SelecionarRefeicoes({ bloqueados, onCerrar, onElegir }: {
   onCerrar: () => void
   onElegir: (r: RefeicaoElegida[]) => void
 }) {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const lang = i18n.language
   const [pestana, setPestana] = useState<'app' | 'propias'>('app')
   const [propias, setPropias] = useState<Personalizada[]>([])
@@ -86,13 +86,13 @@ export function SelecionarRefeicoes({ bloqueados, onCerrar, onElegir }: {
         <div className="p-4 pb-2">
           <div className="w-10 h-1 rounded-full bg-grey-600 mx-auto mb-3" />
           <div className="flex items-center">
-            <h2 className="flex-1 text-center text-white text-rt-18 font-bold pl-9">Selecionar Refeições</h2>
-            <button onClick={onCerrar} aria-label="Fechar" className="w-9 h-9 rounded-[12px] bg-[#333333] flex items-center justify-center"><X size={18} className="text-grey-400" /></button>
+            <h2 className="flex-1 text-center text-white text-rt-18 font-bold pl-9">{t('projetos:sr.title')}</h2>
+            <button onClick={onCerrar} aria-label={t('projetos:sr.close')} className="w-9 h-9 rounded-[12px] bg-[#333333] flex items-center justify-center"><X size={18} className="text-grey-400" /></button>
           </div>
           <div className="mt-4 p-1 rounded-[12px] bg-[#252525] flex">
-            {([['app', 'Do App', UtensilsCrossed], ['propias', `Personalizadas (${propias.length})`, PlusCircle]] as const).map(([id, t, I]) => (
+            {([['app', t('projetos:sr.fromApp'), UtensilsCrossed], ['propias', t('projetos:sr.custom', { n: propias.length }), PlusCircle]] as const).map(([id, txt, I]) => (
               <button key={id} onClick={() => setPestana(id)} className={'flex-1 h-9 rounded-[10px] flex items-center justify-center gap-1.5 text-rt-13 ' + (pestana === id ? 'bg-brand text-white font-semibold' : 'text-grey-500')}>
-                <I size={15} />{t}
+                <I size={15} />{txt}
               </button>
             ))}
           </div>
@@ -103,18 +103,18 @@ export function SelecionarRefeicoes({ bloqueados, onCerrar, onElegir }: {
           {pestana === 'propias' && (
             <>
               <div className="rounded-[12px] bg-[#252525] border border-brand/30 p-3 mb-3">
-                <div className="flex items-center gap-2 text-white text-rt-13 font-semibold mb-2"><PlusCircle size={18} className="text-brand" /> Criar Nova Refeição</div>
-                <input value={nuevoNombre} onChange={(e) => setNuevoNombre(e.target.value)} placeholder="Nome da refeição (ex: Lanche Pré-Jogo)"
+                <div className="flex items-center gap-2 text-white text-rt-13 font-semibold mb-2"><PlusCircle size={18} className="text-brand" /> {t('projetos:sr.createNew')}</div>
+                <input value={nuevoNombre} onChange={(e) => setNuevoNombre(e.target.value)} placeholder={t('projetos:sr.namePh')}
                   className="w-full h-11 px-3 rounded-[10px] bg-[#1E1E1E] border border-[#333333] text-white text-rt-13 outline-none focus:border-brand" />
                 <div className="flex gap-2 mt-2">
                   <label className="flex-1 h-10 px-3 rounded-[10px] bg-[#1E1E1E] border border-[#333333] flex items-center gap-2">
                     <Clock size={16} className="text-brand" />
                     <input type="time" value={nuevaHora} onChange={(e) => setNuevaHora(e.target.value)} className="bg-transparent text-white text-rt-13 outline-none flex-1 [color-scheme:dark]" />
                   </label>
-                  <button onClick={() => void crear()} disabled={!nuevoNombre.trim()} className="px-5 h-10 rounded-[10px] bg-gradient-to-b from-[#91C145] to-[#5A8F2F] text-white text-rt-13 font-bold disabled:opacity-40">Criar</button>
+                  <button onClick={() => void crear()} disabled={!nuevoNombre.trim()} className="px-5 h-10 rounded-[10px] bg-gradient-to-b from-[#91C145] to-[#5A8F2F] text-white text-rt-13 font-bold disabled:opacity-40">{t('projetos:sr.create')}</button>
                 </div>
               </div>
-              {propias.length > 0 && <div className="text-grey-500 text-rt-11 text-center my-2">Suas Refeições</div>}
+              {propias.length > 0 && <div className="text-grey-500 text-rt-11 text-center my-2">{t('projetos:sr.yours')}</div>}
             </>
           )}
           <ul className="flex flex-col gap-2">
@@ -133,11 +133,11 @@ export function SelecionarRefeicoes({ bloqueados, onCerrar, onElegir }: {
                     className="w-[76px] h-10 px-1 rounded-[8px] bg-[#1E1E1E] border border-[#444444] text-white text-rt-12 text-center outline-none [color-scheme:dark]" />
                   {f.propia && !bloq && (
                     <>
-                      <button onClick={() => setEditando(f.propia)} aria-label="Editar refeição" className="w-9 h-9 rounded-[8px] bg-[#333333] flex items-center justify-center"><Pencil size={15} className="text-white" /></button>
-                      <button onClick={() => setBorrando(f.propia)} aria-label="Excluir refeição" className="w-9 h-9 rounded-[8px] bg-danger/10 flex items-center justify-center"><Trash2 size={15} className="text-[#EF5350]" /></button>
+                      <button onClick={() => setEditando(f.propia)} aria-label={t('projetos:sr.edit')} className="w-9 h-9 rounded-[8px] bg-[#333333] flex items-center justify-center"><Pencil size={15} className="text-white" /></button>
+                      <button onClick={() => setBorrando(f.propia)} aria-label={t('projetos:sr.delete')} className="w-9 h-9 rounded-[8px] bg-danger/10 flex items-center justify-center"><Trash2 size={15} className="text-[#EF5350]" /></button>
                     </>
                   )}
-                  <button onClick={() => alternar(f.tipo)} aria-label={on ? 'Desmarcar' : 'Marcar'}
+                  <button onClick={() => alternar(f.tipo)} aria-label={on ? t('projetos:sr.unmark') : t('projetos:sr.mark')}
                     className={'w-7 h-7 rounded-[6px] border-2 flex items-center justify-center shrink-0 ' + (bloq ? 'bg-[#333333] border-[#333333]' : on ? 'bg-brand border-brand' : 'border-grey-500')}>
                     {bloq ? <Ban size={14} className="text-grey-500" /> : on && <Check size={15} className="text-white" />}
                   </button>
@@ -150,7 +150,7 @@ export function SelecionarRefeicoes({ bloqueados, onCerrar, onElegir }: {
         <div className="p-4 pb-[calc(env(safe-area-inset-bottom)+16px)]">
           <button disabled={n === 0} onClick={confirmar}
             className={'w-full h-[52px] rounded-[12px] text-rt-15 font-bold ' + (n ? 'bg-gradient-to-b from-[#91C145] to-[#5A8F2F] text-white' : 'bg-[#333333] text-grey-500')}>
-            {n === 0 ? 'Selecione refeições para adicionar' : `Adicionar ${n} ${n === 1 ? 'Refeição' : 'Refeições'}`}
+            {n === 0 ? t('projetos:sr.pick') : t('projetos:sr.addN', { count: n })}
           </button>
         </div>
       </div>
@@ -158,9 +158,9 @@ export function SelecionarRefeicoes({ bloqueados, onCerrar, onElegir }: {
       {editando && <EditarPersonalizada p={editando} onCancelar={() => setEditando(null)} onGuardar={(p) => void guardarEdicion(p)} />}
       {borrando && (
         <ConfirmDialog
-          message="Excluir Refeição"
-          detail={`Excluir "${borrando.name}"? Ela também será removida das dietas que a usam, com seus alimentos.`}
-          confirmLabel="Excluir"
+          message={t('projetos:sr.deleteTitle')}
+          detail={t('projetos:sr.deleteDetail', { name: borrando.name })}
+          confirmLabel={t('projetos:sr.deleteBtn')}
           tone="danger"
           onConfirm={() => void borrar(borrando)}
           onCancel={() => setBorrando(null)}
@@ -171,19 +171,20 @@ export function SelecionarRefeicoes({ bloqueados, onCerrar, onElegir }: {
 }
 
 function EditarPersonalizada({ p, onCancelar, onGuardar }: { p: Personalizada; onCancelar: () => void; onGuardar: (p: Personalizada) => void }) {
+  const { t } = useTranslation()
   const [nombre, setNombre] = useState(p.name)
   const [hora, setHora] = useState(p.default_time)
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 px-8" onClick={(e) => { e.stopPropagation(); onCancelar() }}>
       <div className="w-full max-w-[340px] rounded-[16px] bg-[#1E1E1E] border border-grey-700 p-5" onClick={(e) => e.stopPropagation()}>
-        <h3 className="text-white text-rt-16 font-bold mb-4">Editar Refeição</h3>
-        <label className="block text-white text-rt-12 font-semibold mb-1.5">Nome</label>
+        <h3 className="text-white text-rt-16 font-bold mb-4">{t('projetos:sr.editTitle')}</h3>
+        <label className="block text-white text-rt-12 font-semibold mb-1.5">{t('projetos:sr.name')}</label>
         <input value={nombre} onChange={(e) => setNombre(e.target.value)} className="w-full h-11 px-3 rounded-[10px] bg-[#252525] border border-[#333333] text-white text-rt-14 outline-none focus:border-brand" />
-        <label className="block text-white text-rt-12 font-semibold mb-1.5 mt-3">Horário padrão</label>
+        <label className="block text-white text-rt-12 font-semibold mb-1.5 mt-3">{t('projetos:sr.defaultTime')}</label>
         <input type="time" value={hora} onChange={(e) => setHora(e.target.value)} className="w-full h-11 px-3 rounded-[10px] bg-[#252525] border border-[#333333] text-white text-rt-14 outline-none [color-scheme:dark]" />
         <div className="flex gap-2 mt-5">
-          <button onClick={onCancelar} className="flex-1 h-11 rounded-[22px] border border-grey-700 text-white/80 text-rt-14">Cancelar</button>
-          <button onClick={() => onGuardar({ ...p, name: nombre.trim() || p.name, default_time: hora })} className="flex-1 h-11 rounded-[22px] bg-brand text-white text-rt-14 font-semibold">Salvar</button>
+          <button onClick={onCancelar} className="flex-1 h-11 rounded-[22px] border border-grey-700 text-white/80 text-rt-14">{t('projetos:sr.cancel')}</button>
+          <button onClick={() => onGuardar({ ...p, name: nombre.trim() || p.name, default_time: hora })} className="flex-1 h-11 rounded-[22px] bg-brand text-white text-rt-14 font-semibold">{t('projetos:sr.save')}</button>
         </div>
       </div>
     </div>
