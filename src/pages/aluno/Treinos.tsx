@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Dumbbell, CheckCircle2, Play, Bell } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { objetivosTreino, etiquetaDe } from '@/lib/catalogos'
+import { objetivosTreino, gruposMusculares, etiquetaDe } from '@/lib/catalogos'
+import { MiniaturaMedia, type Media } from '@/components/MediaExercicio'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
@@ -17,6 +18,7 @@ type SR = {
   estimated_workouts: number
   completed_workouts: number
   is_hidden: boolean
+  data: { exercises?: (Media & { muscle_group?: string | null })[] } | null
 }
 
 function isVisible(r: SR): boolean {
@@ -40,7 +42,7 @@ export function TreinosPage() {
     void (async () => {
       const { data } = await supabase
         .from('student_routines')
-        .select('id,name,objective,starts_on,ends_on,estimated_workouts,completed_workouts,is_hidden')
+        .select('id,name,objective,starts_on,ends_on,estimated_workouts,completed_workouts,is_hidden,data')
         .eq('student_id', profile.id)
         .order('created_at', { ascending: false })
       setItems(((data as SR[]) ?? []).filter(isVisible))
@@ -142,19 +144,25 @@ export function TreinosPage() {
                     (done || atual ? 'border-brand' : '')
                   }
                 >
-                  <div className="w-16 h-16 rounded-[12px] bg-surface-input flex items-center justify-center shrink-0">
-                    {done ? <CheckCircle2 size={26} className="text-brand" /> : <Dumbbell size={24} className="text-brand" />}
-                  </div>
+                  <MiniaturaMedia media={r.data?.exercises?.[0] ?? {}} tamano={64} />
 
                   <div className="flex-1 min-w-0">
                     <div className="text-white text-rt-15 font-bold leading-tight">{r.name}</div>
-                    {r.objective && (
-                      <div className="mt-1.5">
+                    {/* Como en el diseño: los grupos musculares que trabaja el treino. */}
+                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                      {Array.from(new Set((r.data?.exercises ?? []).map((e) => e.muscle_group).filter(Boolean) as string[]))
+                        .slice(0, 4)
+                        .map((g) => (
+                          <span key={g} className="text-rt-11 px-2.5 py-1 rounded-btn-pill border border-grey-700 text-white/70">
+                            {etiquetaDe(gruposMusculares, g, i18n.language) || g}
+                          </span>
+                        ))}
+                      {!(r.data?.exercises ?? []).some((e) => e.muscle_group) && r.objective && (
                         <span className="text-rt-11 px-2.5 py-1 rounded-btn-pill border border-grey-700 text-white/70">
                           {etiquetaDe(objetivosTreino, r.objective, i18n.language)}
                         </span>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
 
                   {atual && (

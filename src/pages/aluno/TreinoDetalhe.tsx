@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Dumbbell, TrendingUp } from 'lucide-react'
+import { ArrowLeft, TrendingUp } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { DragSlider } from '@/components/DragSlider'
-import { BannerMedia } from '@/components/MediaExercicio'
+import { BannerMedia, MiniaturaMedia } from '@/components/MediaExercicio'
 import { useTranslation } from 'react-i18next'
-import { objetivosTreino, etiquetaDe } from '@/lib/catalogos'
+import { objetivosTreino, gruposMusculares, etiquetaDe } from '@/lib/catalogos'
 
 type SR = {
   id: string
@@ -89,15 +89,11 @@ export function TreinoDetalhePage() {
             return (
               <li key={i} className="card-dark p-3">
                 <div className="flex items-start gap-3">
-                <div className="w-16 h-16 rounded-[12px] bg-surface-input flex items-center justify-center overflow-hidden shrink-0">
-                  {e.thumbnail_url
-                    ? <img src={e.thumbnail_url} alt="" className="w-full h-full object-cover" />
-                    : <Dumbbell size={24} className="text-brand" />}
-                </div>
+                <MiniaturaMedia media={e} tamano={64} />
                 <div className="flex-1 min-w-0">
                   <div className="text-white text-rt-15 font-semibold leading-tight">{e.name}</div>
                   <div className="flex flex-wrap gap-1.5 mt-2">
-                    {e.muscle_group && <Chip>{e.muscle_group}</Chip>}
+                    {e.muscle_group && <Chip>{etiquetaDe(gruposMusculares, e.muscle_group, i18n.language) || e.muscle_group}</Chip>}
                     <Chip>{cantidad} {cantidad === 1 ? 'Série' : 'Séries'}</Chip>
                     {cargas.length > 0 && (
                       <Chip><span className="font-bold">KG</span> - {cargas.join('/')}</Chip>

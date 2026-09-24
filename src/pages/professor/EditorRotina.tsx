@@ -8,11 +8,12 @@ import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { FilaSerie } from '@/components/professor/SeriesParametros'
 import { normalizarParams } from '@/lib/parametros'
 import { useArrastreLista, moverEnLista } from '@/lib/reordenar'
-import { objetivosTreino, etiquetaDe } from '@/lib/catalogos'
-import { BannerMedia, useMediaDeExercicios, type Media } from '@/components/MediaExercicio'
+import { objetivosTreino, gruposMusculares, etiquetaDe } from '@/lib/catalogos'
+import { BannerMedia, MiniaturaMedia, useMediaDeExercicios, type Media } from '@/components/MediaExercicio'
+import { AdicionarExercicios, type EjercicioCatalogo } from './projetos/AdicionarExercicios'
 import { useTranslation } from 'react-i18next'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
-import { nombreEjercicio, COLUMNAS_NOMBRE, type ConTraducciones } from '@/lib/nombreEjercicio'
+import { nombreEjercicio } from '@/lib/nombreEjercicio'
 
 type Routine = { id: string; name: string; objective: string | null }
 type Ex = {
@@ -26,7 +27,6 @@ type Ex = {
   series?: Serie[]
 }
 type Serie = { id?: string; routine_exercise_id?: string; position: number; params: Record<string, string>; notes?: string | null }
-type Catalog = { id: string; name: string } & ConTraducciones
 
 export function EditorRotinaPage() {
   const { id } = useParams<{ id: string }>()
@@ -91,7 +91,7 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
 
   function chipsDe(re: Ex): string[] {
     const info = re.exercise_id ? catalogo[re.exercise_id] : null
-    return [info?.muscle_group ?? ''].filter(Boolean) as string[]
+    return info?.muscle_group ? [etiquetaDe(gruposMusculares, info.muscle_group, i18n.language) || info.muscle_group] : []
   }
 
   /**
@@ -142,25 +142,24 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
 
   useEffect(() => { void load() }, [id])
 
-  async function addExercise(cat: Catalog) {
+  async function addExercises(cats: EjercicioCatalogo[]) {
     if (!id) return
-    // El snapshot congela el nombre en el idioma en que lo eligió el profesor.
-    const nombre = nombreEjercicio(cat, i18n.language)
-    const pos = exs.length
-    const { data } = await supabase.from('routine_exercises').insert({
-      routine_id: id,
-      exercise_id: cat.id,
-      exercise_name_snapshot: nombre,
-      position: pos,
-      group_type: 'single',
-    }).select('*').single()
-    if (!data) return
-    // Cria 3 séries default
-    await supabase.from('series').insert(Array.from({ length: 3 }, (_, i) => ({
-      routine_exercise_id: data.id,
-      position: i,
-      params: { reps: '10', load: '', rest: '90s' },
-    })))
+    for (let i = 0; i < cats.length; i++) {
+      // El snapshot congela el nombre en el idioma en que lo eligió el profesor.
+      const { data, error } = await supabase.from('routine_exercises').insert({
+        routine_id: id,
+        exercise_id: cats[i].id,
+        exercise_name_snapshot: nombreEjercicio(cats[i], i18n.language),
+        position: exs.length + i,
+        group_type: 'single',
+      }).select('*').single()
+      if (error || !data) { setErrorGuardado(error?.message ?? 'Erro ao adicionar exercício'); break }
+      await supabase.from('series').insert(Array.from({ length: 3 }, (_, n) => ({
+        routine_exercise_id: data.id,
+        position: n,
+        params: { reps: '10', load: '', rest: '90s' },
+      })))
+    }
     setPickerOpen(false)
     await load()
   }
@@ -369,7 +368,7 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
         ? 'flex gap-2 mt-3'
         : 'fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-app px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+96px)] flex gap-2 bg-surface-app/95 backdrop-blur'}>
         <button onClick={() => setPickerOpen(true)} className="flex-1 h-12 rounded-btn-pill bg-brand text-white text-rt-14 font-semibold flex items-center justify-center gap-2">
-          <Plus size={18} /> Exercício
+          <Plus size={18} /> Adicionar Exercício
         </button>
         {profile && exs.length > 0 && (
           <button onClick={() => setAssignOpen(true)} className="flex-1 h-12 rounded-btn-pill bg-charge text-white text-rt-14 font-semibold flex items-center justify-center gap-2">
@@ -389,7 +388,13 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
         />
       )}
 
-      {pickerOpen && <ExercisePicker onClose={() => setPickerOpen(false)} onPick={addExercise} />}
+      {pickerOpen && (
+        <AdicionarExercicios
+          yaEnRutina={exs.map((e) => e.exercise_id).filter(Boolean) as string[]}
+          onCerrar={() => setPickerOpen(false)}
+          onAgregar={addExercises}
+        />
+      )}
       {errorGuardado && (
         <FeedbackDialog kind="error" message={errorGuardado} onClose={() => setErrorGuardado(null)} />
       )}
@@ -405,40 +410,6 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
         />
       )}
     </div>
-  )
-}
-
-function ExercisePicker({ onClose, onPick }: { onClose: () => void; onPick: (c: Catalog) => void }) {
-  const { i18n } = useTranslation()
-  const [items, setItems] = useState<Catalog[]>([])
-  const [q, setQ] = useState('')
-  useEffect(() => {
-    void (async () => {
-      const { data } = await supabase.from('exercises').select(`id,${COLUMNAS_NOMBRE}`).order('name').limit(200)
-      setItems((data as Catalog[]) ?? [])
-    })()
-  }, [])
-  const filtered = items.filter((x) => nombreEjercicio(x, i18n.language).toLowerCase().includes(q.toLowerCase()))
-  return (
-    <FullScreenSheet title="Escolher exercício" onClose={onClose}>
-      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar…" className="input-dark mb-4" />
-      {items.length === 0 ? (
-        <div className="text-white/60 text-rt-13">
-          Você ainda não tem exercícios. Adicione em Meus Projetos → Exercícios.
-        </div>
-      ) : (
-        <ul className="flex flex-col gap-2">
-          {filtered.map((x) => (
-            <li key={x.id}>
-              <button onClick={() => onPick(x)} className="w-full card-dark p-3 flex items-center gap-3 text-left">
-                <Dumbbell size={18} className="text-brand" />
-                <span className="text-white text-rt-13 font-semibold">{nombreEjercicio(x, i18n.language)}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </FullScreenSheet>
   )
 }
 
@@ -705,11 +676,7 @@ function TarjetaExercicio({
         >
           {seleccionado && '✓'}
         </button>
-        <div className="w-12 h-12 rounded-[8px] bg-surface-input overflow-hidden shrink-0 flex items-center justify-center">
-          {media.thumbnail_url
-            ? <img src={media.thumbnail_url} alt="" className="w-full h-full object-cover" />
-            : <Dumbbell size={18} className="text-brand" />}
-        </div>
+        <MiniaturaMedia media={media} tamano={48} />
         <div className="flex-1 min-w-0">
           <div className="text-white text-rt-14 font-semibold truncate">
             {re.exercise_name_snapshot ?? 'Exercício'}

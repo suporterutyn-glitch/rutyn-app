@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Play, VideoOff, X } from 'lucide-react'
+import { Dumbbell, Play, VideoOff, X } from 'lucide-react'
 
 export type Media = {
   media_type?: string | null
@@ -14,13 +14,75 @@ function idDeYoutube(url: string): string | null {
   return m ? m[1] : null
 }
 
-function tipoDe(m: Media): 'video' | 'gif' | 'youtube' | null {
+export function tipoDe(m: Media): 'video' | 'gif' | 'youtube' | null {
   if (!m.video_url) return null
   if (m.media_type === 'video' || m.media_type === 'gif' || m.media_type === 'youtube') return m.media_type
   // Datos viejos sin media_type: se deduce de la propia URL.
   if (idDeYoutube(m.video_url)) return 'youtube'
   if (/\.gif($|\?)/i.test(m.video_url)) return 'gif'
   return 'video'
+}
+
+function portadaDe(m: Media): string | null {
+  if (m.thumbnail_url) return m.thumbnail_url
+  if (tipoDe(m) === 'youtube' && m.video_url) return `https://img.youtube.com/vi/${idDeYoutube(m.video_url)}/hqdefault.jpg`
+  return null
+}
+
+/** Carga el medio recién cuando entra en pantalla: la lista tiene cientos de videos. */
+function useVisible<T extends Element>() {
+  const ref = useRef<T>(null)
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { setVisible(true); io.disconnect() }
+    }, { rootMargin: '300px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+  return { ref, visible }
+}
+
+/** Sin portada, el cuadro del propio video hace de miniatura (el catálogo MuscleWiki no trae imágenes). */
+function CuadroDeMedio({ media, visible }: { media: Media; visible: boolean }) {
+  const tipo = tipoDe(media)
+  const portada = portadaDe(media)
+  if (portada) return <img src={portada} alt="" loading="lazy" className="w-full h-full object-cover" />
+  if (!visible || !media.video_url) return null
+  if (tipo === 'gif') return <img src={media.video_url} alt="" className="w-full h-full object-cover" />
+  if (tipo === 'video') {
+    return (
+      <video
+        src={`${media.video_url}#t=0.8`}
+        muted
+        playsInline
+        preload="metadata"
+        className="w-full h-full object-cover pointer-events-none"
+      />
+    )
+  }
+  return null
+}
+
+export function MiniaturaMedia({ media, tamano = 60 }: { media: Media; tamano?: number }) {
+  const { ref, visible } = useVisible<HTMLDivElement>()
+  const hay = Boolean(portadaDe(media) || media.video_url)
+  return (
+    <div
+      ref={ref}
+      style={{ width: tamano, height: tamano }}
+      className="relative rounded-[10px] bg-[#333333] overflow-hidden shrink-0 flex items-center justify-center"
+    >
+      {hay ? <CuadroDeMedio media={media} visible={visible} /> : <Dumbbell size={Math.round(tamano * 0.45)} className="text-grey-500" />}
+      {hay && tipoDe(media) !== 'gif' && (
+        <span className="absolute bottom-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center">
+          <Play size={11} className="text-white" fill="white" />
+        </span>
+      )}
+    </div>
+  )
 }
 
 const SELLO: Record<string, { texto: string; clase: string }> = {
@@ -35,9 +97,8 @@ const SELLO: Record<string, { texto: string; clase: string }> = {
  */
 export function BannerMedia({ media, alto = 160 }: { media: Media; alto?: number }) {
   const [abierto, setAbierto] = useState(false)
+  const { ref, visible } = useVisible<HTMLButtonElement>()
   const tipo = tipoDe(media)
-  const portada = media.thumbnail_url
-    || (tipo === 'youtube' && media.video_url ? `https://img.youtube.com/vi/${idDeYoutube(media.video_url)}/hqdefault.jpg` : null)
 
   if (!tipo) {
     return (
@@ -57,13 +118,12 @@ export function BannerMedia({ media, alto = 160 }: { media: Media; alto?: number
     <>
       <button
         type="button"
+        ref={ref}
         onClick={() => setAbierto(true)}
         className="relative w-full rounded-[12px] bg-surface-input border border-surface-line overflow-hidden block"
         style={{ height: alto }}
       >
-        {portada
-          ? <img src={portada} alt="" className="w-full h-full object-cover" />
-          : <span className="absolute inset-0 flex items-center justify-center text-grey-500 text-rt-12">Toque para reproduzir</span>}
+        <CuadroDeMedio media={media} visible={visible} />
         <span className="absolute inset-0 flex items-center justify-center">
           <span className="w-14 h-14 rounded-full bg-black/60 border-2 border-white/30 flex items-center justify-center">
             <Play size={30} className="text-white" fill="white" />
@@ -74,16 +134,14 @@ export function BannerMedia({ media, alto = 160 }: { media: Media; alto?: number
         </span>
       </button>
 
-      {abierto && <Reproductor media={media} tipo={tipo} onCerrar={() => setAbierto(false)} />}
+      {abierto && <ReproductorMedia media={media} onCerrar={() => setAbierto(false)} />}
     </>
   )
 }
 
-function Reproductor({ media, tipo, onCerrar }: {
-  media: Media
-  tipo: 'video' | 'gif' | 'youtube'
-  onCerrar: () => void
-}) {
+/** Player a pantalla completa: video, GIF o YouTube según el medio. */
+export function ReproductorMedia({ media, onCerrar }: { media: Media; onCerrar: () => void }) {
+  const tipo = tipoDe(media)
   const url = media.video_url ?? ''
   return (
     <div className="fixed inset-0 z-[80] bg-black flex items-center justify-center" onClick={onCerrar}>
@@ -100,7 +158,7 @@ function Reproductor({ media, tipo, onCerrar }: {
           </div>
         )}
         {tipo === 'video' && (
-          <video src={url} controls autoPlay playsInline className="w-full max-h-[80dvh] rounded-[12px]" />
+          <video src={url} controls autoPlay loop muted playsInline className="w-full max-h-[80dvh] rounded-[12px]" />
         )}
         {tipo === 'gif' && (
           <img src={url} alt="" className="w-full max-h-[80dvh] object-contain rounded-[12px]" />
