@@ -3,7 +3,7 @@ import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { supabase } from '@/lib/supabase'
+import { supabase, errorDeLinkRecuperacion } from '@/lib/supabase'
 
 export function RedefinirSenhaPage() {
   const { t } = useTranslation()
@@ -17,25 +17,9 @@ export function RedefinirSenhaPage() {
   const [done, setDone] = useState(false)
 
   useEffect(() => {
-    // Supabase detectSessionInUrl processa o hash automaticamente
-    // e dispara PASSWORD_RECOVERY. Aguardamos a sessão ficar disponível.
-    let retries = 0
-    const maxRetries = 10
-    const checkSession = async () => {
-      const { data } = await supabase.auth.getSession()
-      if (data.session) {
-        setReady(true)
-        return
-      }
-      // Em mobile, o hash pode levar tempo para processar.
-      // Retentar até 10 vezes com delay.
-      if (retries < maxRetries) {
-        retries++
-        setTimeout(checkSession, 500)
-      }
-    }
-    void checkSession()
-
+    if (errorDeLinkRecuperacion) return
+    // getSession espera a que supabase procese el token del link.
+    void supabase.auth.getSession().then(({ data }) => { if (data.session) setReady(true) })
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') setReady(true)
     })
@@ -66,7 +50,18 @@ export function RedefinirSenhaPage() {
           <h1 className="text-white text-rt-22 font-bold">Redefinir senha</h1>
 
           {!ready ? (
-            <p className="text-white/80 text-rt-13">Abra o link enviado ao seu e-mail para redefinir a senha.</p>
+            <div className="flex flex-col gap-4">
+              <p className="text-white/80 text-rt-13">
+                {errorDeLinkRecuperacion === 'otp_expired'
+                  ? 'Este link expirou ou já foi usado. Peça um novo na tela de login.'
+                  : errorDeLinkRecuperacion
+                    ? 'Este link não é válido. Peça um novo na tela de login.'
+                    : 'Abra o link enviado ao seu e-mail para redefinir a senha.'}
+              </p>
+              {errorDeLinkRecuperacion && (
+                <button onClick={() => nav('/login', { replace: true })} className="btn-save">Voltar ao login</button>
+              )}
+            </div>
           ) : done ? (
             <div className="card-dark p-4 flex items-center gap-3 border-brand/40">
               <div className="w-10 h-10 rounded-full bg-brand/20 flex items-center justify-center text-brand text-xl">✓</div>
