@@ -44,7 +44,7 @@ export function ProfessorHome() {
   const currency = COUNTRY_CURRENCY[profile?.country ?? 'BR'] ?? 'BRL'
   const plan = profile?.plan ?? 'free'
   const planLimit = PLAN_LIMITS[plan] ?? 2
-  const firstName = profile?.full_name?.split(' ')[0] ?? 'Professor'
+  const firstName = profile?.full_name?.split(' ')[0] ?? t('prof:home.teacher')
 
   useEffect(() => {
     if (!profile?.id) return
@@ -83,11 +83,8 @@ export function ProfessorHome() {
   }, [allAppointments, selectedDate])
 
   const datesWithEvents = useMemo(() => {
-    const dates = new Set<number>()
-    allAppointments.forEach((appt) => {
-      const d = new Date(appt.starts_at)
-      dates.add(d.getDate())
-    })
+    const dates = new Set<string>()
+    allAppointments.forEach((appt) => dates.add(new Date(appt.starts_at).toDateString()))
     return dates
   }, [allAppointments])
 
@@ -104,14 +101,14 @@ export function ProfessorHome() {
           <button
             onClick={() => nav('/professor/configuracoes')}
             className="w-10 h-10 rounded-full bg-surface-raised flex items-center justify-center"
-            aria-label="Configurações"
+            aria-label={t('prof:home.settings')}
           >
             <Settings size={20} className="text-white" />
           </button>
           <button
             onClick={() => nav('/professor/notificacoes')}
             className="w-10 h-10 rounded-full bg-surface-raised flex items-center justify-center relative"
-            aria-label="Notificações"
+            aria-label={t('prof:home.notifications')}
           >
             <Bell size={20} className="text-white" />
             {unread > 0 && (
@@ -213,14 +210,14 @@ export function ProfessorHome() {
           <div className="flex gap-2">
             <button
               className="w-[30px] h-[30px] rounded-md bg-surface-raised flex items-center justify-center"
-              aria-label="Notificar alunos"
+              aria-label={t('prof:home.notifyStudents')}
               onClick={() => nav('/professor/notificar')}
             >
               <Send size={16} className="text-brand" strokeWidth={2.2} />
             </button>
             <button
               className="w-[30px] h-[30px] rounded-md bg-brand flex items-center justify-center"
-              aria-label="Adicionar compromisso"
+              aria-label={t('prof:home.addAppointment')}
               onClick={() => nav('/professor/compromisso/novo')}
             >
               <Plus size={18} className="text-white" strokeWidth={2.4} />
@@ -256,7 +253,7 @@ export function ProfessorHome() {
                         // TODO: delete appointment
                       }}
                       className="opacity-0 group-hover:opacity-100 transition p-1"
-                      aria-label="Excluir compromisso"
+                      aria-label={t('prof:home.deleteAppointment')}
                     >
                       <X size={18} className="text-white/60" />
                     </button>
@@ -269,7 +266,7 @@ export function ProfessorHome() {
                 onClick={() => setShowMoreAppointments(!showMoreAppointments)}
                 className="w-full text-center text-brand text-rt-13 font-semibold py-2 mt-2"
               >
-                {showMoreAppointments ? 'Ver menos...' : 'Ver mais...'}
+                {showMoreAppointments ? t('prof:home.seeLess') : t('prof:home.seeMore')}
               </button>
             )}
           </>

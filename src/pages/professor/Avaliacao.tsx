@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, ClipboardCheck, Camera, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -23,14 +24,15 @@ type A = {
 }
 
 const SECTIONS = [
-  { key: 'basic', label: 'Dados básicos' },
-  { key: 'composition', label: 'Composição' },
-  { key: 'perimetry', label: 'Perimetria' },
-  { key: 'strength', label: 'Força (1RM)' },
-  { key: 'photos', label: 'Fotos' },
+  { key: 'basic', label: 'avaliacao:basic' },
+  { key: 'composition', label: 'avaliacao:composition' },
+  { key: 'perimetry', label: 'avaliacao:perimetry' },
+  { key: 'strength', label: 'avaliacao:strength' },
+  { key: 'photos', label: 'avaliacao:photos' },
 ]
 
 export function AvaliacaoProfessorPage() {
+  const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const nav = useNavigate()
   const { profile } = useAuth()
@@ -111,74 +113,74 @@ export function AvaliacaoProfessorPage() {
         </button>
         <div className="flex items-center gap-2">
           <ClipboardCheck size={20} className="text-brand-assess" />
-          <h1 className="text-white text-rt-20 font-bold">Avaliação Física</h1>
+          <h1 className="text-white text-rt-20 font-bold">{t('avaliacao:title')}</h1>
         </div>
       </div>
 
-      <Card title="Dados básicos">
+      <Card title={t('avaliacao:basic')}>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Peso (kg)"><input inputMode="decimal" className="input-dark" value={a.weight_kg ?? ''} onChange={(e) => set('weight_kg', e.target.value)} /></Field>
-          <Field label="Altura (cm)"><input inputMode="decimal" className="input-dark" value={a.height_cm ?? ''} onChange={(e) => set('height_cm', e.target.value)} /></Field>
-          <Field label="Idade"><input inputMode="numeric" className="input-dark" value={a.age ?? ''} onChange={(e) => set('age', e.target.value)} /></Field>
-          <Field label="FC repouso"><input inputMode="numeric" className="input-dark" value={a.resting_hr ?? ''} onChange={(e) => set('resting_hr', e.target.value)} /></Field>
+          <Field label={t('avaliacao:weightKg')}><input inputMode="decimal" className="input-dark" value={a.weight_kg ?? ''} onChange={(e) => set('weight_kg', e.target.value)} /></Field>
+          <Field label={t('avaliacao:heightCm')}><input inputMode="decimal" className="input-dark" value={a.height_cm ?? ''} onChange={(e) => set('height_cm', e.target.value)} /></Field>
+          <Field label={t('avaliacao:age')}><input inputMode="numeric" className="input-dark" value={a.age ?? ''} onChange={(e) => set('age', e.target.value)} /></Field>
+          <Field label={t('avaliacao:restingHr')}><input inputMode="numeric" className="input-dark" value={a.resting_hr ?? ''} onChange={(e) => set('resting_hr', e.target.value)} /></Field>
         </div>
         {imc && imcInfo && (
           <div className="mt-4 flex items-center justify-between">
             <div>
-              <div className="text-white/60 text-rt-11 uppercase font-semibold tracking-wide">IMC</div>
+              <div className="text-white/60 text-rt-11 uppercase font-semibold tracking-wide">{t('avaliacao:imc')}</div>
               <div className="text-white text-rt-22 font-bold">{imc.toFixed(1)}</div>
             </div>
-            <span style={{ background: imcInfo.color }} className="px-3 py-1 rounded-btn-pill text-white text-rt-12 font-bold">{imcInfo.label}</span>
+            <span style={{ background: imcInfo.color }} className="px-3 py-1 rounded-btn-pill text-white text-rt-12 font-bold">{t(imcInfo.label)}</span>
           </div>
         )}
-        {hrmax && <div className="text-white/60 text-rt-11 mt-2">FC máxima: <strong className="text-white">{hrmax} bpm</strong></div>}
+        {hrmax && <div className="text-white/60 text-rt-11 mt-2">{t('avaliacao:maxHr')} <strong className="text-white">{hrmax} bpm</strong></div>}
       </Card>
 
-      <Card title="Composição">
+      <Card title={t('avaliacao:composition')}>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="% Gordura"><input inputMode="decimal" className="input-dark" value={a.body_fat_pct ?? ''} onChange={(e) => set('body_fat_pct', e.target.value)} /></Field>
-          <Field label="Massa magra (kg)"><input inputMode="decimal" className="input-dark" value={a.lean_mass_kg ?? ''} onChange={(e) => set('lean_mass_kg', e.target.value)} placeholder={lm ? `~${lm}` : ''} /></Field>
+          <Field label={t('avaliacao:fatPct')}><input inputMode="decimal" className="input-dark" value={a.body_fat_pct ?? ''} onChange={(e) => set('body_fat_pct', e.target.value)} /></Field>
+          <Field label={t('avaliacao:leanKg')}><input inputMode="decimal" className="input-dark" value={a.lean_mass_kg ?? ''} onChange={(e) => set('lean_mass_kg', e.target.value)} placeholder={lm ? `~${lm}` : ''} /></Field>
         </div>
       </Card>
 
-      <Card title="Perimetria (cm)">
+      <Card title={t('avaliacao:perimetryCm')}>
         <div className="grid grid-cols-2 gap-3">
-          <Peri label="Pescoço" v={a.neck} set={(v) => set('neck', v)} />
-          <Peri label="Ombros" v={a.shoulders} set={(v) => set('shoulders', v)} />
-          <Peri label="Tórax" v={a.chest} set={(v) => set('chest', v)} />
-          <Peri label="Cintura" v={a.waist} set={(v) => set('waist', v)} />
-          <Peri label="Abdômen" v={a.abdomen} set={(v) => set('abdomen', v)} />
-          <Peri label="Quadril" v={a.hips} set={(v) => set('hips', v)} />
+          <Peri label={t('avaliacao:neck')} v={a.neck} set={(v) => set('neck', v)} />
+          <Peri label={t('avaliacao:shoulders')} v={a.shoulders} set={(v) => set('shoulders', v)} />
+          <Peri label={t('avaliacao:chest')} v={a.chest} set={(v) => set('chest', v)} />
+          <Peri label={t('avaliacao:waist')} v={a.waist} set={(v) => set('waist', v)} />
+          <Peri label={t('avaliacao:abdomen')} v={a.abdomen} set={(v) => set('abdomen', v)} />
+          <Peri label={t('avaliacao:hips')} v={a.hips} set={(v) => set('hips', v)} />
         </div>
-        <div className="mt-3 text-white/60 text-rt-11 font-semibold uppercase tracking-wide">Braços</div>
+        <div className="mt-3 text-white/60 text-rt-11 font-semibold uppercase tracking-wide">{t('avaliacao:arms')}</div>
         <div className="grid grid-cols-2 gap-3 mt-2">
-          <Peri label="Bíceps E" v={a.biceps_l} set={(v) => set('biceps_l', v)} />
-          <Peri label="Bíceps D" v={a.biceps_r} set={(v) => set('biceps_r', v)} />
-          <Peri label="Antebraço E" v={a.forearm_l} set={(v) => set('forearm_l', v)} />
-          <Peri label="Antebraço D" v={a.forearm_r} set={(v) => set('forearm_r', v)} />
+          <Peri label={t('avaliacao:bicepsL')} v={a.biceps_l} set={(v) => set('biceps_l', v)} />
+          <Peri label={t('avaliacao:bicepsR')} v={a.biceps_r} set={(v) => set('biceps_r', v)} />
+          <Peri label={t('avaliacao:forearmL')} v={a.forearm_l} set={(v) => set('forearm_l', v)} />
+          <Peri label={t('avaliacao:forearmR')} v={a.forearm_r} set={(v) => set('forearm_r', v)} />
         </div>
-        <div className="mt-3 text-white/60 text-rt-11 font-semibold uppercase tracking-wide">Pernas</div>
+        <div className="mt-3 text-white/60 text-rt-11 font-semibold uppercase tracking-wide">{t('avaliacao:legs')}</div>
         <div className="grid grid-cols-2 gap-3 mt-2">
-          <Peri label="Coxa E" v={a.thigh_l} set={(v) => set('thigh_l', v)} />
-          <Peri label="Coxa D" v={a.thigh_r} set={(v) => set('thigh_r', v)} />
-          <Peri label="Panturrilha E" v={a.calf_l} set={(v) => set('calf_l', v)} />
-          <Peri label="Panturrilha D" v={a.calf_r} set={(v) => set('calf_r', v)} />
+          <Peri label={t('avaliacao:thighL')} v={a.thigh_l} set={(v) => set('thigh_l', v)} />
+          <Peri label={t('avaliacao:thighR')} v={a.thigh_r} set={(v) => set('thigh_r', v)} />
+          <Peri label={t('avaliacao:calfL')} v={a.calf_l} set={(v) => set('calf_l', v)} />
+          <Peri label={t('avaliacao:calfR')} v={a.calf_r} set={(v) => set('calf_r', v)} />
         </div>
       </Card>
 
-      <Card title="Força (1RM kg)">
+      <Card title={t('avaliacao:strengthKg')}>
         <div className="grid grid-cols-3 gap-2">
-          <Field label="Supino"><input inputMode="decimal" className="input-dark" value={a.bench_1rm ?? ''} onChange={(e) => set('bench_1rm', e.target.value)} /></Field>
-          <Field label="Agachamento"><input inputMode="decimal" className="input-dark" value={a.squat_1rm ?? ''} onChange={(e) => set('squat_1rm', e.target.value)} /></Field>
-          <Field label="Terra"><input inputMode="decimal" className="input-dark" value={a.deadlift_1rm ?? ''} onChange={(e) => set('deadlift_1rm', e.target.value)} /></Field>
+          <Field label={t('avaliacao:bench')}><input inputMode="decimal" className="input-dark" value={a.bench_1rm ?? ''} onChange={(e) => set('bench_1rm', e.target.value)} /></Field>
+          <Field label={t('avaliacao:squat')}><input inputMode="decimal" className="input-dark" value={a.squat_1rm ?? ''} onChange={(e) => set('squat_1rm', e.target.value)} /></Field>
+          <Field label={t('avaliacao:deadlift')}><input inputMode="decimal" className="input-dark" value={a.deadlift_1rm ?? ''} onChange={(e) => set('deadlift_1rm', e.target.value)} /></Field>
         </div>
         <OneRMCalculator />
       </Card>
 
       {a.id && (
-        <Card title="Fotos comparativas">
+        <Card title={t('avaliacao:comparePhotos')}>
           <label className="btn-outline-white h-11 rounded-btn-pill cursor-pointer flex items-center justify-center gap-2">
-            <Camera size={18} /> Adicionar foto
+            <Camera size={18} /> {t('avaliacao:addPhoto')}
             <input type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && uploadPhoto(e.target.files[0])} />
           </label>
           {photos.length > 0 && (
@@ -196,7 +198,7 @@ export function AvaliacaoProfessorPage() {
         </Card>
       )}
 
-      <Card title="Visível para o aluno">
+      <Card title={t('avaliacao:visible')}>
         <div className="flex flex-wrap gap-2">
           {SECTIONS.map((s) => {
             const on = a.student_visible_sections?.includes(s.key)
@@ -204,13 +206,13 @@ export function AvaliacaoProfessorPage() {
               <button key={s.key} type="button" onClick={() => toggleSection(s.key)} className={
                 'px-3 h-8 rounded-card border text-rt-12 font-semibold ' +
                 (on ? 'bg-brand-assess border-brand-assess text-white' : 'bg-transparent border-grey-700 text-grey-400')
-              }>{s.label}</button>
+              }>{t(s.label)}</button>
             )
           })}
         </div>
       </Card>
 
-      <button className="btn-save" disabled={saving} onClick={save}>{saving ? 'Salvando…' : saved ? 'Salvo ✓' : 'Salvar avaliação'}</button>
+      <button className="btn-save" disabled={saving} onClick={save}>{saving ? t('avaliacao:saving') : saved ? t('avaliacao:saved') : t('avaliacao:save')}</button>
     </div>
   )
 }
@@ -229,15 +231,16 @@ function Peri({ label, v, set }: { label: string; v: number | null | undefined; 
 }
 
 function OneRMCalculator() {
+  const { t } = useTranslation()
   const [w, setW] = useState('')
   const [r, setR] = useState('')
   const rm = estimate1RM(Number(w), Number(r))
   return (
     <div className="mt-3 pt-3 border-t border-surface-line-strong">
-      <div className="text-white/60 text-rt-11 uppercase font-semibold tracking-wide mb-2">Estimar 1RM (Epley)</div>
+      <div className="text-white/60 text-rt-11 uppercase font-semibold tracking-wide mb-2">{t('avaliacao:estimate1rm')}</div>
       <div className="grid grid-cols-3 gap-2 items-end">
-        <Field label="Carga"><input inputMode="decimal" className="input-dark" value={w} onChange={(e) => setW(e.target.value)} /></Field>
-        <Field label="Reps"><input inputMode="numeric" className="input-dark" value={r} onChange={(e) => setR(e.target.value)} /></Field>
+        <Field label={t('avaliacao:load')}><input inputMode="decimal" className="input-dark" value={w} onChange={(e) => setW(e.target.value)} /></Field>
+        <Field label={t('avaliacao:reps')}><input inputMode="numeric" className="input-dark" value={r} onChange={(e) => setR(e.target.value)} /></Field>
         <div>
           <div className="text-white/60 text-rt-11 uppercase font-semibold">≈ 1RM</div>
           <div className="text-brand text-rt-22 font-bold h-[52px] flex items-center">{rm ?? '—'}</div>

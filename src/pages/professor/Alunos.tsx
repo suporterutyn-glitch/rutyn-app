@@ -160,7 +160,7 @@ export function AlunosPage() {
             'w-[42px] h-[42px] rounded-full flex items-center justify-center ' +
             (canAdd ? 'bg-brand' : 'bg-grey-600')
           }
-          aria-label="Adicionar aluno"
+          aria-label={t('prof:alunos.addStudent')}
         >
           <UserPlus size={20} className="text-white" />
         </button>
@@ -173,7 +173,7 @@ export function AlunosPage() {
             className="w-full h-[42px] pl-11 pr-10 rounded-[20px] bg-black/30 border border-brand/30 text-white text-rt-13 placeholder:text-grey-600 outline-none focus:border-brand"
           />
           {query && (
-            <button onClick={() => setQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-grey-500" aria-label="Limpar">
+            <button onClick={() => setQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-grey-500" aria-label={t('prof:alunos.clear')}>
               <X size={18} />
             </button>
           )}
@@ -307,7 +307,7 @@ function NewStudentSheet({ profile, onClose, onCreated }: { profile: any; onClos
       const { data, error } = await supabase.functions.invoke('create-student', {
         body: { email: email.trim(), full_name: name.trim(), teacher_id: profile?.id },
       })
-      if (error) { setSaving(false); setError(error.message || 'Erro ao criar aluno'); return }
+      if (error) { setSaving(false); setError(error.message || t('prof:alunos.createError')); return }
       if (data?.error) { setSaving(false); setError(data.error); return }
 
       const studentId = data?.student_id

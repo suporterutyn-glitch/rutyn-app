@@ -1,0 +1,40 @@
+import { textos } from './textos'
+
+export default textos({
+  pt: {
+    title: 'Avaliação Física', mine: 'Minha Avaliação', loading: 'Carregando…', none: 'Sem avaliação ainda', noneBody: 'Seu professor ainda não fez sua primeira avaliação física.',
+    lastUpdate: 'Última atualização: {{date}}', basic: 'Dados básicos', composition: 'Composição', bodyComposition: 'Composição corporal', perimetry: 'Perimetria', perimetryCm: 'Perimetria (cm)',
+    strength: 'Força (1RM)', strengthKg: 'Força (1RM kg)', photos: 'Fotos', comparePhotos: 'Fotos comparativas', addPhoto: 'Adicionar foto', visible: 'Visível para o aluno',
+    weight: 'Peso', weightKg: 'Peso (kg)', height: 'Altura', heightCm: 'Altura (cm)', age: 'Idade', ageYears: '{{n}} anos', restingHr: 'FC repouso', imc: 'IMC',
+    maxHr: 'FC máxima:', maxHrEst: 'FC máxima estimada:', fatPct: '% Gordura', fat: 'Gordura', leanKg: 'Massa magra (kg)', lean: 'Massa magra',
+    neck: 'Pescoço', shoulders: 'Ombros', chest: 'Tórax', waist: 'Cintura', abdomen: 'Abdômen', hips: 'Quadril', arms: 'Braços', bicepsL: 'Bíceps E', bicepsR: 'Bíceps D',
+    forearmL: 'Antebraço E', forearmR: 'Antebraço D', legs: 'Pernas', thighL: 'Coxa E', thighR: 'Coxa D', calfL: 'Panturrilha E', calfR: 'Panturrilha D',
+    bench: 'Supino', squat: 'Agachamento', deadlift: 'Terra', saving: 'Salvando…', saved: 'Salvo ✓', save: 'Salvar avaliação', estimate1rm: 'Estimar 1RM (Epley)',
+    load: 'Carga', reps: 'Reps', whr: 'Cintura/Quadril', risk: 'Risco {{level}}', low: 'Baixo', moderate: 'Moderado', high: 'Alto',
+    under: 'Abaixo do peso', normal: 'Peso normal', over: 'Sobrepeso', ob1: 'Obesidade I', ob2: 'Obesidade II', ob3: 'Obesidade III',
+  },
+  es: {
+    title: 'Evaluación Física', mine: 'Mi Evaluación', loading: 'Cargando…', none: 'Todavía no hay evaluación', noneBody: 'Tu profesor todavía no hizo tu primera evaluación física.',
+    lastUpdate: 'Última actualización: {{date}}', basic: 'Datos básicos', composition: 'Composición', bodyComposition: 'Composición corporal', perimetry: 'Perimetría', perimetryCm: 'Perimetría (cm)',
+    strength: 'Fuerza (1RM)', strengthKg: 'Fuerza (1RM kg)', photos: 'Fotos', comparePhotos: 'Fotos comparativas', addPhoto: 'Agregar foto', visible: 'Visible para el alumno',
+    weight: 'Peso', weightKg: 'Peso (kg)', height: 'Altura', heightCm: 'Altura (cm)', age: 'Edad', ageYears: '{{n}} años', restingHr: 'FC en reposo', imc: 'IMC',
+    maxHr: 'FC máxima:', maxHrEst: 'FC máxima estimada:', fatPct: '% Grasa', fat: 'Grasa', leanKg: 'Masa magra (kg)', lean: 'Masa magra',
+    neck: 'Cuello', shoulders: 'Hombros', chest: 'Tórax', waist: 'Cintura', abdomen: 'Abdomen', hips: 'Cadera', arms: 'Brazos', bicepsL: 'Bíceps I', bicepsR: 'Bíceps D',
+    forearmL: 'Antebrazo I', forearmR: 'Antebrazo D', legs: 'Piernas', thighL: 'Muslo I', thighR: 'Muslo D', calfL: 'Pantorrilla I', calfR: 'Pantorrilla D',
+    bench: 'Press de banca', squat: 'Sentadilla', deadlift: 'Peso muerto', saving: 'Guardando…', saved: 'Guardado ✓', save: 'Guardar evaluación', estimate1rm: 'Estimar 1RM (Epley)',
+    load: 'Carga', reps: 'Reps', whr: 'Cintura/Cadera', risk: 'Riesgo {{level}}', low: 'Bajo', moderate: 'Moderado', high: 'Alto',
+    under: 'Bajo peso', normal: 'Peso normal', over: 'Sobrepeso', ob1: 'Obesidad I', ob2: 'Obesidad II', ob3: 'Obesidad III',
+  },
+  en: {
+    title: 'Physical Assessment', mine: 'My Assessment', loading: 'Loading…', none: 'No assessment yet', noneBody: "Your trainer hasn't done your first physical assessment yet.",
+    lastUpdate: 'Last updated: {{date}}', basic: 'Basic data', composition: 'Composition', bodyComposition: 'Body composition', perimetry: 'Circumferences', perimetryCm: 'Circumferences (cm)',
+    strength: 'Strength (1RM)', strengthKg: 'Strength (1RM kg)', photos: 'Photos', comparePhotos: 'Comparison photos', addPhoto: 'Add photo', visible: 'Visible to student',
+    weight: 'Weight', weightKg: 'Weight (kg)', height: 'Height', heightCm: 'Height (cm)', age: 'Age', ageYears: '{{n}} years', restingHr: 'Resting HR', imc: 'BMI',
+    maxHr: 'Max HR:', maxHrEst: 'Estimated max HR:', fatPct: '% Body fat', fat: 'Body fat', leanKg: 'Lean mass (kg)', lean: 'Lean mass',
+    neck: 'Neck', shoulders: 'Shoulders', chest: 'Chest', waist: 'Waist', abdomen: 'Abdomen', hips: 'Hips', arms: 'Arms', bicepsL: 'Biceps L', bicepsR: 'Biceps R',
+    forearmL: 'Forearm L', forearmR: 'Forearm R', legs: 'Legs', thighL: 'Thigh L', thighR: 'Thigh R', calfL: 'Calf L', calfR: 'Calf R',
+    bench: 'Bench press', squat: 'Squat', deadlift: 'Deadlift', saving: 'Saving…', saved: 'Saved ✓', save: 'Save assessment', estimate1rm: 'Estimate 1RM (Epley)',
+    load: 'Load', reps: 'Reps', whr: 'Waist/Hips', risk: '{{level}} risk', low: 'Low', moderate: 'Moderate', high: 'High',
+    under: 'Underweight', normal: 'Normal weight', over: 'Overweight', ob1: 'Obesity I', ob2: 'Obesity II', ob3: 'Obesity III',
+  },
+})

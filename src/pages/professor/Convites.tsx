@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Check, MessageSquare, User as UserIcon, RefreshCw } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -23,6 +24,7 @@ type Invite = {
 }
 
 export function ConvitesPage() {
+  const { t } = useTranslation()
   const nav = useNavigate()
   const { profile, refresh } = useAuth()
   const [invites, setInvites] = useState<Invite[]>([])
@@ -93,13 +95,13 @@ export function ConvitesPage() {
         <button onClick={() => nav(-1)} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-white text-rt-20 font-bold">Convites Recebidos</h1>
+        <h1 className="text-white text-rt-20 font-bold">{t('financeiro:conv.title')}</h1>
       </div>
 
       {loading ? (
-        <div className="text-white/60 text-rt-13 py-8 text-center">Carregando…</div>
+        <div className="text-white/60 text-rt-13 py-8 text-center">{t('financeiro:c.loading')}</div>
       ) : invites.length === 0 ? (
-        <EmptyState icon={MessageSquare} title="Nenhum convite" body="Você não tem convites pendentes." />
+        <EmptyState icon={MessageSquare} title={t('financeiro:conv.none')} body={t('financeiro:conv.noneBody')} />
       ) : (
         <ul className="flex flex-col gap-3">
           {invites.map((inv) => (
@@ -109,13 +111,13 @@ export function ConvitesPage() {
                   {inv.profiles?.avatar_url ? <img src={inv.profiles.avatar_url} alt="" className="w-full h-full object-cover" /> : <UserIcon size={22} className="text-grey-500" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-white text-rt-14 font-bold truncate">{inv.profiles?.full_name ?? inv.profiles?.email ?? 'Aluno'}</div>
-                  {inv.status === 'countered' && <div className="text-warning text-rt-11">Contraproposta enviada</div>}
+                  <div className="text-white text-rt-14 font-bold truncate">{inv.profiles?.full_name ?? inv.profiles?.email ?? t('financeiro:c.student')}</div>
+                  {inv.status === 'countered' && <div className="text-warning text-rt-11">{t('financeiro:conv.counterSent')}</div>}
                 </div>
               </div>
 
               <div className="text-white text-rt-13 mb-2">
-                <strong>{formatMoney(Number(inv.amount ?? 0), currency)}</strong> · {inv.format === 'monthly' ? 'Mensal' : 'Por hora'} · {inv.frequency}x/sem · {inv.model}
+                <strong>{formatMoney(Number(inv.amount ?? 0), currency)}</strong> · {inv.format === 'monthly' ? t('financeiro:c.monthly') : t('financeiro:c.hourly')} · {t('financeiro:conv.perWeekShort', { n: inv.frequency })} · {inv.model}
               </div>
               {inv.objectives && inv.objectives.length > 0 && (
                 <div className="flex flex-wrap gap-1 mb-3">
@@ -124,12 +126,12 @@ export function ConvitesPage() {
               )}
 
               <div className="flex gap-2 flex-wrap">
-                <button onClick={() => reject(inv)} className="flex-1 h-10 rounded-btn-pill bg-danger-wine text-white text-rt-13 font-semibold min-w-[80px]">Recusar</button>
+                <button onClick={() => reject(inv)} className="flex-1 h-10 rounded-btn-pill bg-danger-wine text-white text-rt-13 font-semibold min-w-[80px]">{t('financeiro:conv.reject')}</button>
                 <button onClick={() => setCounterOf(inv)} className="flex-1 h-10 rounded-btn-pill border-[1.5px] border-warning text-warning text-rt-13 font-semibold min-w-[110px] flex items-center justify-center gap-1">
-                  <RefreshCw size={14} /> Contrapor
+                  <RefreshCw size={14} /> {t('financeiro:conv.counter')}
                 </button>
                 <button onClick={() => accept(inv)} className="flex-1 h-10 rounded-btn-pill bg-brand text-white text-rt-13 font-semibold min-w-[90px] flex items-center justify-center gap-1">
-                  <Check size={16} /> Aceitar
+                  <Check size={16} /> {t('financeiro:conv.accept')}
                 </button>
               </div>
             </li>
@@ -144,7 +146,7 @@ export function ConvitesPage() {
       {limiteAvisado && (
         <FeedbackDialog
           kind="error"
-          message="Limite de alunos atingido. Faça upgrade do plano."
+          message={t('financeiro:conv.limit')}
           onClose={() => { setLimiteAvisado(false); nav('/professor/assinatura') }}
         />
       )}
@@ -164,6 +166,7 @@ export function ConvitesPage() {
 function CounterSheet({ invite, currency, onClose, onSent }: {
   invite: Invite; currency: string; onClose: () => void; onSent: () => void
 }) {
+  const { t } = useTranslation()
   const { profile } = useAuth()
   const [amount, setAmount] = useState(String(invite.amount ?? ''))
   const [format, setFormat] = useState<'monthly' | 'hourly'>((invite.format as any) ?? 'monthly')
@@ -188,25 +191,25 @@ function CounterSheet({ invite, currency, onClose, onSent }: {
   }
 
   return (
-    <FullScreenSheet title="Contraproposta" onClose={onClose}>
+    <FullScreenSheet title={t('financeiro:conv.counterTitle')} onClose={onClose}>
       <div className="flex flex-col gap-6">
         <div className="card-dark p-3 text-white/70 text-rt-12">
-          Proposta do aluno: <strong className="text-white">{formatMoney(Number(invite.amount ?? 0), currency)}</strong> · {invite.frequency}x/sem
+          {t('financeiro:conv.studentProposal')} <strong className="text-white">{formatMoney(Number(invite.amount ?? 0), currency)}</strong> · {t('financeiro:conv.perWeekShort', { n: invite.frequency })}
         </div>
-        <Field label="Formato">
+        <Field label={t('financeiro:c.format')}>
           <div className="flex gap-2">
             {(['monthly', 'hourly'] as const).map((f) => (
               <button key={f} type="button" onClick={() => setFormat(f)} className={
                 'flex-1 h-10 rounded-btn-pill border text-rt-12 font-semibold ' +
                 (format === f ? 'bg-brand border-brand text-white' : 'bg-transparent border-grey-700 text-grey-400')
-              }>{f === 'monthly' ? 'Mensal' : 'Por hora'}</button>
+              }>{f === 'monthly' ? t('financeiro:c.monthly') : t('financeiro:c.hourly')}</button>
             ))}
           </div>
         </Field>
-        <Field label={`Novo valor (${currency})`}>
+        <Field label={t('financeiro:c.newValue', { cur: currency })}>
           <input inputMode="decimal" className="input-dark" value={amount} onChange={(e) => setAmount(e.target.value)} />
         </Field>
-        <Field label="Frequência semanal">
+        <Field label={t('financeiro:conv.weeklyFreq')}>
           <div className="flex gap-2">
             {[1, 2, 3, 4, 5, 6, 7].map((n) => (
               <button key={n} type="button" onClick={() => setFreq(n)} className={
@@ -219,7 +222,7 @@ function CounterSheet({ invite, currency, onClose, onSent }: {
       </div>
       <div className="mt-8">
         <button onClick={send} disabled={saving || !amount} className="btn-save">
-          {saving ? 'Enviando…' : 'Enviar contraproposta'}
+          {saving ? t('financeiro:c.sending') : t('financeiro:conv.sendCounter')}
         </button>
       </div>
     </FullScreenSheet>

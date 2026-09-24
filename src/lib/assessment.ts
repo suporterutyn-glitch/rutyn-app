@@ -6,13 +6,14 @@ export function bmi(weightKg?: number | null, heightCm?: number | null) {
   return weightKg / (h * h)
 }
 
+/** label es una clave de traducción. */
 export function bmiClass(imc: number) {
-  if (imc < 18.5) return { label: 'Abaixo do peso', color: '#42A5F5' }
-  if (imc < 25) return { label: 'Peso normal', color: '#7CB342' }
-  if (imc < 30) return { label: 'Sobrepeso', color: '#E6A23C' }
-  if (imc < 35) return { label: 'Obesidade I', color: '#FF7043' }
-  if (imc < 40) return { label: 'Obesidade II', color: '#F44336' }
-  return { label: 'Obesidade III', color: '#B71C1C' }
+  if (imc < 18.5) return { label: 'avaliacao:under', color: '#42A5F5' }
+  if (imc < 25) return { label: 'avaliacao:normal', color: '#7CB342' }
+  if (imc < 30) return { label: 'avaliacao:over', color: '#E6A23C' }
+  if (imc < 35) return { label: 'avaliacao:ob1', color: '#FF7043' }
+  if (imc < 40) return { label: 'avaliacao:ob2', color: '#F44336' }
+  return { label: 'avaliacao:ob3', color: '#B71C1C' }
 }
 
 // FC máxima estimada — Tanaka (2001)
@@ -38,13 +39,13 @@ export function estimate1RM(weightKg?: number | null, reps?: number | null) {
 export function whr(waist?: number | null, hips?: number | null, isMale = true) {
   if (!waist || !hips) return null
   const r = waist / hips
-  let risk = 'Baixo'
+  let risk: 'low' | 'moderate' | 'high' = 'low'
   if (isMale) {
-    if (r >= 1.0) risk = 'Alto'
-    else if (r >= 0.95) risk = 'Moderado'
+    if (r >= 1.0) risk = 'high'
+    else if (r >= 0.95) risk = 'moderate'
   } else {
-    if (r >= 0.85) risk = 'Alto'
-    else if (r >= 0.8) risk = 'Moderado'
+    if (r >= 0.85) risk = 'high'
+    else if (r >= 0.8) risk = 'moderate'
   }
   return { ratio: Math.round(r * 100) / 100, risk }
 }

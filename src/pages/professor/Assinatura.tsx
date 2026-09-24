@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Check } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
@@ -10,13 +11,14 @@ import { FeedbackDialog } from '@/components/FeedbackDialog'
 type Plan = 'free' | 'pro' | 'master' | 'elite'
 
 const FEATURES: Record<Plan, string[]> = {
-  free: ['Até 2 alunos', 'Todas as funções básicas'],
-  pro: ['Até 25 alunos', 'Marketplace ativo', 'Suporte prioritário'],
-  master: ['Até 50 alunos', 'Todos os recursos Pro', 'Perfil em destaque'],
-  elite: ['Até 100 alunos', 'Todos os recursos Master', 'Insights avançados'],
+  free: ['prof:plan.f_basic'],
+  pro: ['prof:plan.f_marketplace', 'prof:plan.f_support'],
+  master: ['prof:plan.f_allPro', 'prof:plan.f_featured'],
+  elite: ['prof:plan.f_allMaster', 'prof:plan.f_insights'],
 }
 
 export function AssinaturaPage() {
+  const { t } = useTranslation()
   const nav = useNavigate()
   const { profile, refresh } = useAuth()
   const currency = currencyOf(profile?.country)
@@ -44,7 +46,7 @@ export function AssinaturaPage() {
     // Planos pagos → Stripe Checkout via Edge Function
     const { data, error } = await supabase.functions.invoke('stripe-create-checkout', { body: { plan: p } })
     if (error || (data as any)?.error) {
-      setErrorCheckout((data as any)?.error ?? error?.message ?? 'Erro ao criar checkout')
+      setErrorCheckout((data as any)?.error ?? error?.message ?? t('prof:plan.checkoutError'))
       return
     }
     const url = (data as any)?.url as string | undefined
@@ -57,10 +59,10 @@ export function AssinaturaPage() {
         <button onClick={() => nav(-1)} className="w-9 h-9 rounded-full bg-black/30 flex items-center justify-center text-white">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-white text-rt-20 font-bold">Plano</h1>
+        <h1 className="text-white text-rt-20 font-bold">{t('prof:plan.title')}</h1>
       </div>
 
-      <div className="text-white text-rt-22 font-bold mb-1">Escolha seu plano</div>
+      <div className="text-white text-rt-22 font-bold mb-1">{t('prof:plan.choose')}</div>
       <div className="text-white/70 text-rt-13 mb-6">Preços na sua moeda ({currency}). Cobrança mensal via provedor.</div>
 
       <div className="flex flex-col gap-3 mb-6">
@@ -71,13 +73,13 @@ export function AssinaturaPage() {
       </div>
 
       <div className="text-white/50 text-rt-11 text-center">
-        Assinatura mensal. Pode cancelar a qualquer momento.
+        {t('prof:plan.monthlyNote')}
       </div>
       {confirmandoFree && (
         <ConfirmDialog
-          message="Cancelar plano pago e voltar para Free?"
-          detail="Você mantém seus alunos até o limite do plano Free."
-          confirmLabel="Voltar para Free"
+          message={t('prof:plan.cancelQ')}
+          detail={t('prof:plan.cancelDetail')}
+          confirmLabel={t('prof:plan.backFree')}
           tone="danger"
           onConfirm={() => void voltarParaFree()}
           onCancel={() => setConfirmandoFree(false)}
@@ -96,6 +98,7 @@ function PlanCard({
 }: {
   plan: Plan; price: number; currency: string; active: boolean; popular?: boolean; onPick: () => void
 }) {
+  const { t } = useTranslation()
   return (
     <div className={
       'rounded-card p-4 border ' +
@@ -105,18 +108,18 @@ function PlanCard({
     }>
       <div className="flex items-center justify-between mb-2">
         <div className="text-white text-rt-18 font-bold">{PLAN_LABEL[plan]}</div>
-        {popular && <span className="text-rt-9 font-bold tracking-[0.5px] px-2 py-0.5 rounded-xs bg-tone-purple-tag text-white">MAIS POPULAR</span>}
-        {active && !popular && <span className="text-rt-9 font-bold px-2 py-0.5 rounded-xs bg-brand text-white">ATUAL</span>}
+        {popular && <span className="text-rt-9 font-bold tracking-[0.5px] px-2 py-0.5 rounded-xs bg-tone-purple-tag text-white">{t('prof:plan.popular')}</span>}
+        {active && !popular && <span className="text-rt-9 font-bold px-2 py-0.5 rounded-xs bg-brand text-white">{t('prof:plan.current')}</span>}
       </div>
       <div className="text-white text-rt-32 font-bold leading-none mb-1">
-        {price === 0 ? 'Grátis' : formatMoney(price, currency)}
+        {price === 0 ? t('prof:plan.free') : formatMoney(price, currency)}
         {price > 0 && <span className="text-rt-13 text-white/70 font-normal"> /mês</span>}
       </div>
-      <div className="text-white/80 text-rt-13 mb-3">Até {PLAN_LIMITS[plan]} alunos</div>
+      <div className="text-white/80 text-rt-13 mb-3">{t('prof:plan.f_upTo', { n: PLAN_LIMITS[plan] })}</div>
       <ul className="flex flex-col gap-1 mb-4">
         {FEATURES[plan].map((f) => (
           <li key={f} className="flex items-center gap-2 text-white/90 text-rt-12">
-            <Check size={14} className="text-brand-light" /> {f}
+            <Check size={14} className="text-brand-light" /> {t(f)}
           </li>
         ))}
       </ul>
@@ -130,7 +133,7 @@ function PlanCard({
            'bg-purchase shadow-glow')
         }
       >
-        {active ? 'Plano atual' : plan === 'free' ? 'Voltar para Free' : 'Assinar'}
+        {active ? t('prof:plan.currentPlan') : plan === 'free' ? t('prof:plan.backFree') : t('prof:plan.subscribe')}
       </button>
     </div>
   )

@@ -1,13 +1,17 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { diasCortos, localeDe } from '@/lib/fechas'
 
 type Props = {
   selectedDate: Date
   onSelectDate: (date: Date) => void
-  datesWithEvents?: Set<number> // day of month
+  /** Fechas con compromisos, como Date.toDateString(). */
+  datesWithEvents?: Set<string>
 }
 
 export function WeekCalendar({ selectedDate, onSelectDate, datesWithEvents = new Set() }: Props) {
+  const { t, i18n } = useTranslation()
   const [currentWeekStart, setCurrentWeekStart] = useState(() => {
     const d = new Date(selectedDate)
     d.setDate(d.getDate() - d.getDay())
@@ -24,7 +28,7 @@ export function WeekCalendar({ selectedDate, onSelectDate, datesWithEvents = new
     return days
   }, [currentWeekStart])
 
-  const monthYear = selectedDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+  const monthYear = selectedDate.toLocaleDateString(localeDe(i18n.language), { month: 'long', year: 'numeric' })
 
   const goPrevWeek = () => {
     const d = new Date(currentWeekStart)
@@ -60,14 +64,14 @@ export function WeekCalendar({ selectedDate, onSelectDate, datesWithEvents = new
           <button
             onClick={goPrevWeek}
             className="w-8 h-8 rounded-md bg-surface-input flex items-center justify-center active:scale-95 transition"
-            aria-label="Semana anterior"
+            aria-label={t('prof:home.prevWeek')}
           >
             <ChevronLeft size={18} className="text-white" />
           </button>
           <button
             onClick={goNextWeek}
             className="w-8 h-8 rounded-md bg-surface-input flex items-center justify-center active:scale-95 transition"
-            aria-label="Próxima semana"
+            aria-label={t('prof:home.nextWeek')}
           >
             <ChevronRight size={18} className="text-white" />
           </button>
@@ -76,8 +80,8 @@ export function WeekCalendar({ selectedDate, onSelectDate, datesWithEvents = new
 
       {/* Week days abbreviations */}
       <div className="flex justify-between mb-3 text-white/60 text-rt-12 font-semibold">
-        {['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'].map((day) => (
-          <div key={day} className="w-8 text-center">
+        {diasCortos(i18n.language).map((day, i) => (
+          <div key={i} className="w-8 text-center">
             {day}
           </div>
         ))}
@@ -89,7 +93,7 @@ export function WeekCalendar({ selectedDate, onSelectDate, datesWithEvents = new
           const dayOfMonth = date.getDate()
           const selected = isSelected(date)
           const today = isToday(date)
-          const hasEvent = datesWithEvents.has(dayOfMonth)
+          const hasEvent = datesWithEvents.has(date.toDateString())
 
           return (
             <button
