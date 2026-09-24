@@ -43,6 +43,7 @@ export function RoutinesTab({ query, filtro }: { query: string; filtro: Filtro }
       .from('routines')
       .select('*')
       .eq('owner_id', profile.id)
+      .is('student_id', null)
       .order('created_at', { ascending: false })
     setItems((data as Routine[]) ?? [])
     setLoading(false)

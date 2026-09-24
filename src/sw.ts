@@ -1,7 +1,17 @@
 /// <reference lib="webworker" />
-import { precacheAndRoute } from 'workbox-precaching'
+import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching'
+import { clientsClaim } from 'workbox-core'
 
 declare const self: ServiceWorkerGlobalScope
+
+// Una versión nueva se activa en cuanto llega: sin esto quedaba esperando a
+// que se cerraran todas las ventanas y el celular seguía con la app vieja.
+self.skipWaiting()
+clientsClaim()
+cleanupOutdatedCaches()
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') void self.skipWaiting()
+})
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 precacheAndRoute((self as any).__WB_MANIFEST || [])
 

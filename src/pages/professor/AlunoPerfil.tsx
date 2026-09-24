@@ -7,6 +7,8 @@ import { currencyOf, formatMoney } from '@/lib/plans'
 import { ConfirmDialog, ConfirmConMotivo } from '@/components/ConfirmDialog'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { ProgressaoCarga } from '@/components/ProgressaoCarga'
+import { RotinasAluno } from './aluno/RotinasAluno'
+import { DietsTab } from './projetos/DietsTab'
 
 type StudentProfile = {
   id: string
@@ -17,8 +19,6 @@ type StudentProfile = {
   avatar_url: string | null
 }
 
-type SR = { id: string; name: string; objective: string | null; completed_workouts: number; estimated_workouts: number; is_hidden: boolean }
-type SD = { id: string; name: string }
 type Charge = { id: string; amount: number; due_date: string; status: string }
 
 const TABS = [
@@ -37,8 +37,6 @@ export function AlunoPerfilPage() {
   const { profile: me } = useAuth()
   const [student, setStudent] = useState<StudentProfile | null>(null)
   const [tab, setTab] = useState<TabKey>('perfil')
-  const [routines, setRoutines] = useState<SR[]>([])
-  const [diets, setDiets] = useState<SD[]>([])
   const [charge, setCharge] = useState<Charge | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmando, setConfirmando] = useState<'suspender' | 'remover' | null>(null)
@@ -48,15 +46,11 @@ export function AlunoPerfilPage() {
 
   async function load() {
     if (!id) return
-    const [{ data: p }, { data: sr }, { data: sd }, { data: c }] = await Promise.all([
+    const [{ data: p }, { data: c }] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', id).single(),
-      supabase.from('student_routines').select('id,name,objective,completed_workouts,estimated_workouts,is_hidden').eq('student_id', id).order('created_at', { ascending: false }),
-      supabase.from('student_diets').select('id,name').eq('student_id', id).order('created_at', { ascending: false }),
       supabase.from('charges').select('id,amount,due_date,status').eq('student_id', id).order('due_date', { ascending: false }).limit(1).maybeSingle(),
     ])
     setStudent((p as StudentProfile) ?? null)
-    setRoutines((sr as SR[]) ?? [])
-    setDiets((sd as SD[]) ?? [])
     setCharge((c as Charge) ?? null)
   }
   useEffect(() => { void load() }, [id])
@@ -190,34 +184,12 @@ export function AlunoPerfilPage() {
         </div>
       )}
 
-      {tab === 'rotinas' && (
-        <div className="flex flex-col gap-2">
-          {routines.length === 0 ? (
-            <div className="card-dark p-4 text-white/60 text-rt-13">Nenhuma rotina atribuída.</div>
-          ) : routines.map((r) => (
-            <div key={r.id} className="card-dark p-3">
-              <div className="flex items-center gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="text-white text-rt-13 font-bold truncate">{r.name}</div>
-                  <div className="text-white/60 text-rt-11">{r.completed_workouts}/{r.estimated_workouts} treinos</div>
-                </div>
-                {r.is_hidden && <span className="text-alert-orange text-rt-9 font-bold px-2 py-0.5 rounded-tag border border-alert-orange">Oculto</span>}
-              </div>
-            </div>
-          ))}
-        </div>
+      {tab === 'rotinas' && id && (
+        <RotinasAluno alumno={{ id, nombre: student?.full_name ?? 'o aluno' }} />
       )}
 
-      {tab === 'dietas' && (
-        <div className="flex flex-col gap-2">
-          {diets.length === 0 ? (
-            <div className="card-dark p-4 text-white/60 text-rt-13">Nenhuma dieta atribuída.</div>
-          ) : diets.map((d) => (
-            <div key={d.id} className="card-dark p-3">
-              <div className="text-white text-rt-13 font-bold">{d.name}</div>
-            </div>
-          ))}
-        </div>
+      {tab === 'dietas' && id && (
+        <DietsTab query="" filtro="todos" alumno={{ id, nombre: student?.full_name ?? 'o aluno' }} />
       )}
 
       {tab === 'desempenho' && (

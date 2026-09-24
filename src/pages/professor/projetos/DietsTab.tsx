@@ -15,11 +15,14 @@ import { FranjaMacros } from './RecipesTab'
 import { sinAcentos } from './FoodsTab'
 import { EditorDietaInline } from './dietas/EditorDietaInline'
 import { SelecionarRefeicoes, type RefeicaoElegida } from './dietas/SelecionarRefeicoes'
-import { SELECT_DIETA, macrosDieta, duplicarDieta, copiaParaAlumno, type Dieta } from './dietas/datos'
+import { SELECT_DIETA, macrosDieta, duplicarDieta, type Dieta } from './dietas/datos'
+import { asignarDieta, crearDietaAlumno, sincronizarDietaAlumno } from '@/lib/asignacion'
 
 type Aviso = { kind: 'error' | 'success'; message: string }
 
-export function DietsTab({ query, filtro }: { query: string; filtro: Filtro }) {
+export type AlumnoCtx = { id: string; nombre: string }
+
+export function DietsTab({ query, filtro, alumno }: { query: string; filtro: Filtro; alumno?: AlumnoCtx }) {
   const { profile } = useAuth()
   const { i18n } = useTranslation()
   const lang = i18n.language
@@ -33,22 +36,26 @@ export function DietsTab({ query, filtro }: { query: string; filtro: Filtro }) {
   const [borrando, setBorrando] = useState<Dieta[] | null>(null)
   const [destacada, setDestacada] = useState<string | null>(null)
   const [aviso, setAviso] = useState<Aviso | null>(null)
+  const [agregando, setAgregando] = useState(false)
   const refs = useRef(new Map<string, HTMLLIElement>())
 
   async function load() {
     if (!profile?.id) return
     setLoading(true)
-    const { data, error } = await supabase.from('diets').select(SELECT_DIETA).eq('owner_id', profile.id)
+    const base = supabase.from('diets').select(SELECT_DIETA).eq('owner_id', profile.id)
+    const { data, error } = await (alumno ? base.eq('student_id', alumno.id) : base.is('student_id', null))
       .order('position', { ascending: true, nullsFirst: false }).order('created_at')
     setErrorCarga(error ? error.message : null)
     setItems((data as Dieta[]) ?? [])
     setLoading(false)
   }
-  useEffect(() => { void load() }, [profile?.id])
+  useEffect(() => { void load() }, [profile?.id, alumno?.id])
 
   async function recargarUna(id: string) {
     const { data } = await supabase.from('diets').select(SELECT_DIETA).eq('id', id).single()
     if (data) setItems((p) => p.map((d) => (d.id === id ? (data as Dieta) : d)))
+    // Dieta del alumno: cada cambio le llega a su app.
+    if (alumno) await sincronizarDietaAlumno(id)
   }
 
   const palabras = sinAcentos(query.trim()).split(/\s+/).filter(Boolean)
@@ -76,7 +83,8 @@ export function DietsTab({ query, filtro }: { query: string; filtro: Filtro }) {
   async function duplicar(d: Dieta) {
     if (!profile?.id) return
     try {
-      await duplicarDieta(d, profile.id, items.length)
+      if (alumno) await asignarDieta({ dieta: { ...d, name: `${d.name} (cópia)` }, alumnoId: alumno.id, profesorId: profile.id, profesorNombre: profile.full_name ?? null })
+      else await duplicarDieta(d, profile.id, items.length)
       setAviso({ kind: 'success', message: 'Dieta duplicada' })
       await load()
     } catch {
@@ -105,6 +113,11 @@ export function DietsTab({ query, filtro }: { query: string; filtro: Filtro }) {
 
   return (
     <div className="pb-24">
+      {alumno && (
+        <button onClick={() => setAgregando(true)} className="w-full h-11 mb-3 rounded-[16px] bg-gradient-to-r from-[#7CB342] to-[#558B2F] text-white text-rt-14 font-semibold flex items-center justify-center gap-2">
+          <Plus size={18} /> Adicionar Dieta
+        </button>
+      )}
       {seleccion.length > 0 && (
         <div className="sticky top-0 z-10 -mx-4 px-4 py-2 mb-3 bg-surface-app/95 backdrop-blur flex items-center gap-2">
           <button onClick={() => setBorrando(items.filter((d) => seleccion.includes(d.id)))} className="px-5 py-2.5 rounded-[20px] bg-[#D32F2F] text-white text-rt-13 font-semibold">Excluir</button>
@@ -125,7 +138,9 @@ export function DietsTab({ query, filtro }: { query: string; filtro: Filtro }) {
           ? <EmptyState icon={UtensilsCrossed} title="Nenhuma dieta encontrada" body="Tente buscar por outro termo" />
           : filtro === 'favoritos'
             ? <EmptyState icon={UtensilsCrossed} title="Nenhuma dieta favorita" body="Favorite dietas para vê-las aqui" />
-            : <EmptyState icon={UtensilsCrossed} title="Nenhuma dieta cadastrada" body="Crie sua primeira dieta" />
+            : alumno
+              ? <EmptyState icon={UtensilsCrossed} title="Nenhuma dieta atribuída" body={`Adicione uma dieta para ${alumno.nombre}`} />
+              : <EmptyState icon={UtensilsCrossed} title="Nenhuma dieta cadastrada" body="Crie sua primeira dieta" />
       ) : (
         <ul className="flex flex-col gap-3">
           {filtered.map((d) => (
@@ -143,6 +158,7 @@ export function DietsTab({ query, filtro }: { query: string; filtro: Filtro }) {
               <FranjaMacros m={macrosDieta(d)} />
               <CabeceraDieta
                 d={d}
+                deAlumno={Boolean(alumno)}
                 lang={lang}
                 expandida={expandidas.includes(d.id)}
                 seleccionada={seleccion.includes(d.id)}
@@ -161,15 +177,27 @@ export function DietsTab({ query, filtro }: { query: string; filtro: Filtro }) {
         </ul>
       )}
 
-      <FixedBottomActions>
-        <button className="w-full h-12 rounded-[12px] bg-[#2D2D2D] border border-[#616161] text-white text-rt-14 font-semibold flex items-center justify-center gap-2" onClick={() => setFormulario('nueva')}>
-          <Plus size={18} /> Criar nova Dieta
-        </button>
-      </FixedBottomActions>
+      {!alumno && (
+        <FixedBottomActions>
+          <button className="w-full h-12 rounded-[12px] bg-[#2D2D2D] border border-[#616161] text-white text-rt-14 font-semibold flex items-center justify-center gap-2" onClick={() => setFormulario('nueva')}>
+            <Plus size={18} /> Criar nova Dieta
+          </button>
+        </FixedBottomActions>
+      )}
+      {agregando && alumno && (
+        <AdicionarDieta
+          alumno={alumno}
+          onCerrar={() => setAgregando(false)}
+          onCrear={() => { setAgregando(false); setFormulario('nueva') }}
+          onListo={(id) => { setAgregando(false); void creada(id) }}
+          onError={(m) => setAviso({ kind: 'error', message: m })}
+        />
+      )}
 
       {formulario && (
         <DietSheet
           dieta={formulario === 'nueva' ? undefined : formulario}
+          alumno={alumno}
           posicion={items.length}
           onClose={() => setFormulario(null)}
           onCreada={(id) => void creada(id)}
@@ -179,9 +207,9 @@ export function DietsTab({ query, filtro }: { query: string; filtro: Filtro }) {
       {clonando && <ClonarDieta dieta={clonando} onCerrar={() => setClonando(null)} onResultado={(a) => { setClonando(null); setAviso(a) }} />}
       {borrando && (
         <ConfirmDialog
-          message={borrando.length === 1 ? 'Excluir dieta' : 'Excluir dietas'}
+          message={alumno ? (borrando.length === 1 ? 'Remover dieta' : 'Remover dietas') : borrando.length === 1 ? 'Excluir dieta' : 'Excluir dietas'}
           detail={borrando.length === 1 ? `Tem certeza que deseja excluir "${borrando[0].name}"?` : `Tem certeza que deseja excluir ${borrando.length} dieta(s)?`}
-          confirmLabel="Excluir"
+          confirmLabel={alumno ? 'Remover' : 'Excluir'}
           tone="danger"
           onConfirm={() => void borrar()}
           onCancel={() => setBorrando(null)}
@@ -192,8 +220,9 @@ export function DietsTab({ query, filtro }: { query: string; filtro: Filtro }) {
   )
 }
 
-function CabeceraDieta({ d, lang, expandida, seleccionada, onGrip, onExpandir, onMarcar, onFavorito, onClonar, onDuplicar, onEditar, onExcluir }: {
+function CabeceraDieta({ d, deAlumno, lang, expandida, seleccionada, onGrip, onExpandir, onMarcar, onFavorito, onClonar, onDuplicar, onEditar, onExcluir }: {
   d: Dieta
+  deAlumno: boolean
   lang: string
   expandida: boolean
   seleccionada: boolean
@@ -210,7 +239,7 @@ function CabeceraDieta({ d, lang, expandida, seleccionada, onGrip, onExpandir, o
   return (
     <div className="relative overflow-hidden border-t border-[#333333]">
       <div className="absolute inset-y-0 right-0 flex w-[280px]">
-        {([['CLONAR', '#424242', onClonar], ['DUPLICAR', '#616161', onDuplicar], ['EDITAR', '#757575', onEditar], ['EXCLUIR', '#B71C1C', onExcluir]] as const).map(([t, c, fn]) => (
+        {([['CLONAR', '#424242', onClonar], ['DUPLICAR', '#616161', onDuplicar], ['EDITAR', '#757575', onEditar], [deAlumno ? 'REMOVER' : 'EXCLUIR', '#B71C1C', onExcluir]] as const).map(([t, c, fn]) => (
           <button key={t} onClick={() => { cerrar(); fn() }} className="flex-1 text-white text-[9px] font-semibold" style={{ background: c }}>{t}</button>
         ))}
       </div>
@@ -228,9 +257,11 @@ function CabeceraDieta({ d, lang, expandida, seleccionada, onGrip, onExpandir, o
           <span className="block text-white text-rt-14 font-bold truncate">{d.name}</span>
           {d.goal && <span className="inline-block mt-1 text-rt-10 px-2 py-0.5 rounded-[10px] bg-[#2D2D2D] text-grey-400">{etiquetaDe(objetivosDieta, d.goal, lang)}</span>}
         </button>
-        <button onClick={onFavorito} aria-label="Favorito" className="shrink-0 p-0.5">
-          <Star size={22} className={d.is_favorite ? 'text-brand fill-brand' : 'text-brand'} />
-        </button>
+        {!deAlumno && (
+          <button onClick={onFavorito} aria-label="Favorito" className="shrink-0 p-0.5">
+            <Star size={22} className={d.is_favorite ? 'text-brand fill-brand' : 'text-brand'} />
+          </button>
+        )}
         <button onClick={() => (abierto ? cerrar() : onExpandir())} aria-label={expandida ? 'Recolher' : 'Expandir'} className="shrink-0">
           <ChevronLeft size={20} className={'text-grey-500 transition-transform ' + (abierto ? 'rotate-180' : expandida ? '-rotate-90' : '')} />
         </button>
@@ -239,8 +270,9 @@ function CabeceraDieta({ d, lang, expandida, seleccionada, onGrip, onExpandir, o
   )
 }
 
-function DietSheet({ dieta, posicion, onClose, onCreada, onEditada }: {
+function DietSheet({ dieta, alumno, posicion, onClose, onCreada, onEditada }: {
   dieta?: Dieta
+  alumno?: AlumnoCtx
   posicion: number
   onClose: () => void
   onCreada: (id: string) => void
@@ -264,9 +296,26 @@ function DietSheet({ dieta, posicion, onClose, onCreada, onEditada }: {
     // (en el app original, editar borraba los alimentos).
     if (dieta) {
       const { error: e } = await supabase.from('diets').update({ name: nombre.trim(), goal: objetivo }).eq('id', dieta.id)
+      if (!e && alumno) await sincronizarDietaAlumno(dieta.id)
       setGuardando(false)
       if (e) { setError('Erro ao salvar: ' + e.message); return }
       onEditada()
+      return
+    }
+    if (alumno) {
+      try {
+        const id = await crearDietaAlumno({ alumnoId: alumno.id, profesorId: profile.id, nombre: nombre.trim(), goal: objetivo })
+        if (comidas.length > 0) {
+          const { error: e2 } = await supabase.from('meals').insert(comidas.map((c, i) => ({ diet_id: id, name: c.name, time_of_day: c.time, meal_type: c.meal_type, position: i })))
+          if (e2) throw e2
+          await sincronizarDietaAlumno(id)
+        }
+        setGuardando(false)
+        onCreada(id)
+      } catch (e2) {
+        setGuardando(false)
+        setError('Erro ao salvar: ' + (e2 as Error).message)
+      }
       return
     }
     const { data, error: e } = await supabase.from('diets').insert({ owner_id: profile.id, name: nombre.trim(), goal: objetivo, position: posicion }).select('id').single()
@@ -363,16 +412,15 @@ function ClonarDieta({ dieta, onCerrar, onResultado }: { dieta: Dieta; onCerrar:
   async function clonar() {
     if (!profile?.id) return
     setEnviando(true)
-    const copia = copiaParaAlumno(dieta)
     let ok = 0
     const nombres: string[] = []
     for (const id of marcados) {
-      const { error } = await supabase.from('student_diets').insert({ student_id: id, teacher_id: profile.id, source_diet_id: dieta.id, name: dieta.name, data: copia })
-      if (error) continue
+      // Cada alumno recibe su copia editable; asignarDieta también le avisa.
+      try {
+        await asignarDieta({ dieta, alumnoId: id, profesorId: profile.id, profesorNombre: profile.full_name ?? null })
+      } catch { continue }
       ok++
       nombres.push(alumnos?.find((a) => a.id === id)?.full_name ?? '')
-      // El alumno se entera: lo que el profesor le asigna tiene que verse de su lado.
-      await supabase.from('notifications').insert({ user_id: id, type: 'routine', title: 'Nova dieta', body: `${profile.full_name ?? 'Seu professor'} atribuiu a dieta "${dieta.name}".` })
     }
     const fallos = marcados.length - ok
     onResultado(fallos === 0
@@ -434,6 +482,90 @@ function ClonarDieta({ dieta, onCerrar, onResultado }: { dieta: Dieta; onCerrar:
           <button disabled={marcados.length === 0 || enviando} onClick={() => void clonar()}
             className={'w-full h-[54px] rounded-[12px] text-white text-rt-15 font-bold ' + (marcados.length ? 'bg-gradient-to-b from-[#91C145] to-[#5A8F2F]' : 'bg-grey-700')}>
             {enviando ? 'Clonando…' : marcados.length ? `Clonar Dieta para ${marcados.length} aluno(s)` : 'Selecione ao menos 1 aluno'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** 'Adicionar Dieta' en el alumno: crear una nueva o copiar un modelo de Meus Projetos. */
+function AdicionarDieta({ alumno, onCerrar, onCrear, onListo, onError }: {
+  alumno: AlumnoCtx
+  onCerrar: () => void
+  onCrear: () => void
+  onListo: (id: string) => void
+  onError: (m: string) => void
+}) {
+  const { profile } = useAuth()
+  const { i18n } = useTranslation()
+  const [modelos, setModelos] = useState<Dieta[] | null>(null)
+  const [elegida, setElegida] = useState<string | null>(null)
+  const [enviando, setEnviando] = useState(false)
+  useEffect(() => {
+    if (!profile?.id) return
+    void supabase.from('diets').select(SELECT_DIETA).eq('owner_id', profile.id).is('student_id', null)
+      .order('position', { ascending: true, nullsFirst: false }).then(({ data }) => setModelos((data as Dieta[]) ?? []))
+  }, [profile?.id])
+
+  async function agregar() {
+    const d = modelos?.find((x) => x.id === elegida)
+    if (!d || !profile?.id) return
+    setEnviando(true)
+    try {
+      onListo(await asignarDieta({ dieta: d, alumnoId: alumno.id, profesorId: profile.id, profesorNombre: profile.full_name ?? null }))
+    } catch (e) {
+      setEnviando(false)
+      onError('Erro ao adicionar dieta: ' + (e as Error).message)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-40 bg-[#1E1E1E] flex flex-col">
+      <div className="max-w-app w-full mx-auto flex flex-col flex-1 min-h-0 pt-[calc(env(safe-area-inset-top)+24px)]">
+        <div className="px-5 flex items-start gap-3">
+          <div className="flex-1">
+            <h1 className="text-white text-rt-20 font-bold">Adicionar Dieta</h1>
+            <p className="text-grey-500 text-rt-13">Selecione ou crie uma dieta para {alumno.nombre}</p>
+          </div>
+          <button onClick={onCerrar} aria-label="Fechar" className="w-9 h-9 rounded-full bg-[#333333] flex items-center justify-center"><X size={20} className="text-white" /></button>
+        </div>
+        <div className="px-5 mt-5">
+          <button onClick={onCrear} className="w-full h-12 rounded-[12px] bg-gradient-to-b from-[#91C145] to-[#5A8F2F] text-white text-rt-15 font-semibold flex items-center justify-center gap-2">
+            <Plus size={20} /> Criar Nova Dieta
+          </button>
+          <div className="flex items-center gap-3 my-5 text-grey-500 text-rt-12"><span className="flex-1 h-px bg-grey-700" />ou selecione uma existente<span className="flex-1 h-px bg-grey-700" /></div>
+        </div>
+        <div className="flex-1 overflow-y-auto px-5 pb-4">
+          {modelos === null ? (
+            <div className="py-10 flex justify-center"><span className="w-8 h-8 rounded-full border-2 border-brand/30 border-t-brand animate-spin" /></div>
+          ) : modelos.length === 0 ? (
+            <p className="text-center text-white/60 text-rt-13 py-8">Nenhuma dieta em Meus Projetos.</p>
+          ) : (
+            <ul className="flex flex-col gap-3">
+              {modelos.map((d) => {
+                const on = elegida === d.id
+                const m = macrosDieta(d)
+                return (
+                  <li key={d.id}>
+                    <button onClick={() => setElegida(on ? null : d.id)} className={'w-full rounded-[12px] p-4 flex items-center gap-3 text-left border ' + (on ? 'bg-brand/15 border-brand' : 'bg-[#2D2D2D] border-[#3A3A3A]')}>
+                      <span className="w-12 h-12 rounded-[10px] bg-[#1E1E1E] flex items-center justify-center shrink-0"><UtensilsCrossed size={20} className="text-grey-400" /></span>
+                      <span className="flex-1 min-w-0">
+                        <span className="block text-white text-rt-15 font-semibold truncate">{d.name}</span>
+                        <span className="block text-grey-500 text-rt-12">{d.meals.length} refeições · {Math.round(m.kcal)} kcal{d.goal ? ` · ${etiquetaDe(objetivosDieta, d.goal, i18n.language)}` : ''}</span>
+                      </span>
+                      <span className={'w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ' + (on ? 'bg-brand border-brand' : 'border-grey-500')}>{on && <Check size={14} className="text-white" />}</span>
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </div>
+        <div className="px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+16px)] border-t border-grey-800">
+          <button disabled={!elegida || enviando} onClick={() => void agregar()}
+            className={'w-full h-[54px] rounded-[12px] text-rt-15 font-bold ' + (elegida ? 'bg-gradient-to-b from-[#91C145] to-[#5A8F2F] text-white' : 'bg-grey-700 text-white/60')}>
+            {enviando ? 'Adicionando…' : 'Adicionar Dieta Selecionada'}
           </button>
         </div>
       </div>

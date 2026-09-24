@@ -198,7 +198,7 @@ function DietaExistente({ alimentos, onCerrar, onListo, onError }: {
     void (async () => {
       const { data } = await supabase.from('diets')
         .select('id,name,meals(id,name,time_of_day,meal_foods(food_id,meal_recipe_id,position))')
-        .eq('owner_id', profile.id).order('name')
+        .eq('owner_id', profile.id).is('student_id', null).order('name')
       setDietas(((data as Dieta[]) ?? []).map((d) => ({ ...d, meals: d.meals.slice().sort((a, b) => (a.time_of_day ?? '').localeCompare(b.time_of_day ?? '')) })))
     })()
   }, [profile?.id])

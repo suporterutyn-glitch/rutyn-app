@@ -54,6 +54,7 @@ export type Dieta = {
   is_favorite: boolean | null
   position: number | null
   last_edited_by: string | null
+  student_id?: string | null
   created_at: string
   meals: Comida[]
 }

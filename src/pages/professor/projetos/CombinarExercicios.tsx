@@ -176,7 +176,7 @@ function RutinaExistente({ ejercicios, onCerrar, onListo, onError }: {
     void (async () => {
       const { data } = await supabase.from('routines')
         .select('id,name,objective,is_favorite,routine_exercises(exercise_id)')
-        .eq('owner_id', profile.id).order('name')
+        .eq('owner_id', profile.id).is('student_id', null).order('name')
       setRutinas((data as Rutina[]) ?? [])
     })()
   }, [profile?.id])

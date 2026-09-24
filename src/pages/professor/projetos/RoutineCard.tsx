@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { ChevronLeft, Star, MoreVertical } from 'lucide-react'
+import { ChevronLeft, Star, MoreVertical, EyeOff, BookmarkPlus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { dificultades, objetivosTreino, etiquetaDe } from '@/lib/catalogos'
 
@@ -32,6 +32,9 @@ export function RoutineCard({
   onDuplicar,
   onEditar,
   onExcluir,
+  deAlumno = false,
+  progreso,
+  oculta = false,
 }: {
   rotina: RoutineCardData
   seleccionada: boolean
@@ -44,6 +47,10 @@ export function RoutineCard({
   onDuplicar: () => void
   onEditar: () => void
   onExcluir: () => void
+  /** En el perfil del alumno: REMOVER y 'salvar como modelo' en lugar de favorito. */
+  deAlumno?: boolean
+  progreso?: string
+  oculta?: boolean
 }) {
   const { i18n } = useTranslation()
   const [dx, setDx] = useState(0)
@@ -99,7 +106,7 @@ export function RoutineCard({
         <AccionSwipe label="CLONAR" className="bg-grey-700" onClick={() => { cerrar(); onClonar() }} />
         <AccionSwipe label="DUPLICAR" className="bg-grey-600" onClick={() => { cerrar(); onDuplicar() }} />
         <AccionSwipe label="EDITAR" className="bg-grey-500" onClick={() => { cerrar(); onEditar() }} />
-        <AccionSwipe label="EXCLUIR" className="bg-[#D32F2F]" onClick={() => { cerrar(); onExcluir() }} />
+        <AccionSwipe label={deAlumno ? 'REMOVER' : 'EXCLUIR'} className="bg-[#D32F2F]" onClick={() => { cerrar(); onExcluir() }} />
       </div>
 
       <div
@@ -124,18 +131,26 @@ export function RoutineCard({
 
         <button type="button" onClick={() => (abierto ? cerrar() : onExpandir())} className="flex-1 min-w-0 text-left">
           <div className="text-white text-rt-15 font-bold truncate">{rotina.name}</div>
-          {chips.length > 0 && (
-            <div className="flex gap-1.5 mt-1 flex-wrap">
+          {(chips.length > 0 || progreso || oculta) && (
+            <div className="flex gap-1.5 mt-1 flex-wrap items-center">
               {chips.map((c) => (
                 <span key={c} className="text-rt-10 px-2 py-0.5 rounded-tag bg-surface-raised text-white/70">{c}</span>
               ))}
+              {progreso && <span className="text-[9px] font-bold px-2 py-0.5 rounded-tag bg-brand/20 text-brand">{progreso}</span>}
+              {oculta && <EyeOff size={14} className="text-grey-500" aria-label="Oculta para o aluno" />}
             </div>
           )}
         </button>
 
-        <button type="button" onClick={onFavorito} aria-label="Favorito" className="shrink-0 p-1">
-          <Star size={22} className={rotina.is_favorite ? 'text-brand fill-brand' : 'text-brand'} />
-        </button>
+        {deAlumno ? (
+          <button type="button" onClick={onFavorito} aria-label="Salvar como modelo em Meus Projetos" title="Salvar como modelo" className="shrink-0 p-1">
+            <BookmarkPlus size={21} className="text-brand" />
+          </button>
+        ) : (
+          <button type="button" onClick={onFavorito} aria-label="Favorito" className="shrink-0 p-1">
+            <Star size={22} className={rotina.is_favorite ? 'text-brand fill-brand' : 'text-brand'} />
+          </button>
+        )}
         {/* El swipe es el gesto del diseño, pero en la web no se descubre solo:
             los tres puntos abren las mismas acciones con un toque. */}
         <button

@@ -12,10 +12,11 @@ import { objetivosTreino, gruposMusculares, etiquetaDe } from '@/lib/catalogos'
 import { BannerMedia, MiniaturaMedia, useMediaDeExercicios, type Media } from '@/components/MediaExercicio'
 import { AdicionarExercicios, type EjercicioCatalogo } from './projetos/AdicionarExercicios'
 import { useTranslation } from 'react-i18next'
+import { asignarRutina, sincronizarRutinaAlumno } from '@/lib/asignacion'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { nombreEjercicio } from '@/lib/nombreEjercicio'
 
-type Routine = { id: string; name: string; objective: string | null }
+type Routine = { id: string; name: string; objective: string | null; student_id?: string | null }
 type Ex = {
   id?: string
   routine_id: string
@@ -127,7 +128,7 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
     if (!id) return
     setLoading(true)
     const [{ data: r }, { data: re }] = await Promise.all([
-      supabase.from('routines').select('id,name,objective').eq('id', id).single(),
+      supabase.from('routines').select('id,name,objective,student_id').eq('id', id).single(),
       supabase.from('routine_exercises').select('*,series(*)').eq('routine_id', id).order('position'),
     ])
     setRoutine(r as Routine)
@@ -138,6 +139,8 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
     }))
     setExs(list as Ex[])
     setLoading(false)
+    // Rutina de un alumno: cada cambio le llega a su app.
+    if ((r as Routine | null)?.student_id) void sincronizarRutinaAlumno(id)
   }
 
   useEffect(() => { void load() }, [id])
@@ -370,7 +373,7 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
         <button onClick={() => setPickerOpen(true)} className="flex-1 h-12 rounded-btn-pill bg-brand text-white text-rt-14 font-semibold flex items-center justify-center gap-2">
           <Plus size={18} /> Adicionar Exercício
         </button>
-        {profile && exs.length > 0 && (
+        {profile && exs.length > 0 && !routine?.student_id && (
           <button onClick={() => setAssignOpen(true)} className="flex-1 h-12 rounded-btn-pill bg-charge text-white text-rt-14 font-semibold flex items-center justify-center gap-2">
             <Users size={18} /> Atribuir
           </button>
@@ -398,7 +401,7 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
       {errorGuardado && (
         <FeedbackDialog kind="error" message={errorGuardado} onClose={() => setErrorGuardado(null)} />
       )}
-      {assignOpen && routine && <AssignSheet routine={routine} exercises={exs} onClose={() => setAssignOpen(false)} />}
+      {assignOpen && routine && <AssignSheet routine={routine} onClose={() => setAssignOpen(false)} />}
       {borrandoExercicio && (
         <ConfirmDialog
           message="Remover este exercício?"
@@ -413,7 +416,7 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
   )
 }
 
-function AssignSheet({ routine, exercises, onClose }: { routine: Routine; exercises: Ex[]; onClose: () => void }) {
+function AssignSheet({ routine, onClose }: { routine: Routine; onClose: () => void }) {
   const { profile } = useAuth()
   const [students, setStudents] = useState<{ id: string; full_name: string | null; email: string | null }[]>([])
   const [selected, setSelected] = useState<Set<string>>(new Set())
@@ -422,10 +425,7 @@ function AssignSheet({ routine, exercises, onClose }: { routine: Routine; exerci
   const [freq, setFreq] = useState(3)
   const [days, setDays] = useState<number[]>([1, 3, 5])
   const [saving, setSaving] = useState(false)
-  const [musculos, setMusculos] = useState<Record<string, string | null>>({})
-  const [miniaturas, setMiniaturas] = useState<Record<string, string | null>>({})
-  const [videos, setVideos] = useState<Record<string, string | null>>({})
-  const [tiposDeMedio, setTiposDeMedio] = useState<Record<string, string | null>>({})
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!profile?.id) return
@@ -435,27 +435,6 @@ function AssignSheet({ routine, exercises, onClose }: { routine: Routine; exerci
       setStudents((data as any) ?? [])
     })()
   }, [profile?.id])
-
-  // Grupo muscular y miniatura viven en el catálogo, no en la rotina.
-  useEffect(() => {
-    const ids = exercises.map((e) => e.exercise_id).filter(Boolean) as string[]
-    if (ids.length === 0) return
-    void (async () => {
-      const { data } = await supabase.from('exercises').select('id,muscle_group,thumbnail_url,video_url,media_type').in('id', ids)
-      const m: Record<string, string | null> = {}
-      const t: Record<string, string | null> = {}
-      const v: Record<string, string | null> = {}
-      const tm: Record<string, string | null> = {}
-      type Fila = { id: string; muscle_group: string | null; thumbnail_url: string | null; video_url: string | null; media_type: string | null }
-      for (const x of (data as Fila[]) ?? []) {
-        m[x.id] = x.muscle_group
-        t[x.id] = x.thumbnail_url
-        v[x.id] = x.video_url
-        tm[x.id] = x.media_type
-      }
-      setMusculos(m); setMiniaturas(t); setVideos(v); setTiposDeMedio(tm)
-    })()
-  }, [exercises])
 
   function toggle(id: string) {
     const n = new Set(selected)
@@ -480,50 +459,16 @@ function AssignSheet({ routine, exercises, onClose }: { routine: Routine; exerci
   async function assign() {
     if (!profile?.id || selected.size === 0) return
     setSaving(true)
-    // El snapshot es lo único que el alumno ve: si acá no van las series con
-    // sus repeticiones, carga y descanso, el alumno entrena a ciegas.
-    const snapshot = {
-      exercises: exercises.map((e) => ({
-        name: e.exercise_name_snapshot,
-        exercise_id: e.exercise_id,
-        muscle_group: musculos[e.exercise_id ?? ''] ?? null,
-        thumbnail_url: miniaturas[e.exercise_id ?? ''] ?? null,
-        // Sin esto el alumno nunca ve el video del ejercicio.
-        video_url: videos[e.exercise_id ?? ''] ?? null,
-        media_type: tiposDeMedio[e.exercise_id ?? ''] ?? null,
-        group_type: e.group_type,
-        series: (e.series ?? [])
-          .slice()
-          .sort((a, b) => a.position - b.position)
-          .map((sr) => ({
-            // Los tres de siempre, para que la ejecución no dependa del catálogo...
-            reps: normalizarParams(sr.params).repetition ?? '',
-            load: normalizarParams(sr.params).load ?? '',
-            rest: normalizarParams(sr.params).rest ?? '',
-            // ...y todos los demás, que el alumno también tiene que ver.
-            params: normalizarParams(sr.params),
-            notes: sr.notes ?? null,
-          })),
-      })),
+    const periodo = { starts_on: startsOn, ends_on: endsOn, weekdays: days.slice(0, freq), frequency: freq }
+    try {
+      for (const sid of selected) {
+        await asignarRutina({ rutinaId: routine.id, alumnoId: sid, profesorId: profile.id, profesorNombre: profile.full_name ?? null, periodo })
+      }
+    } catch (e) {
+      setSaving(false)
+      setError((e as Error).message)
+      return
     }
-    const est = estimateWorkouts()
-    const dist = distribute(est, selected.size)
-    const arr = Array.from(selected).map((sid, i) => ({
-      student_id: sid,
-      teacher_id: profile.id,
-      source_routine_id: routine.id,
-      name: routine.name,
-      objective: (routine as any).objective ?? null,
-      starts_on: startsOn, ends_on: endsOn, weekdays: days.slice(0, freq), frequency: freq,
-      estimated_workouts: dist[i],
-      data: snapshot,
-    }))
-    await supabase.from('student_routines').insert(arr)
-    // Notifica
-    await supabase.from('notifications').insert(Array.from(selected).map((sid) => ({
-      user_id: sid, type: 'routine', title: 'Nova rotina',
-      body: `${profile.full_name ?? 'Seu professor'} atribuiu a rotina "${routine.name}".`,
-    })))
     setSaving(false)
     onClose()
   }
@@ -585,15 +530,11 @@ function AssignSheet({ routine, exercises, onClose }: { routine: Routine; exerci
           {saving ? 'Atribuindo…' : 'Atribuir'}
         </button>
       </div>
+      {error && <FeedbackDialog kind="error" message={error} onClose={() => setError(null)} />}
     </FullScreenSheet>
   )
 }
 
-function distribute(total: number, n: number): number[] {
-  const base = Math.floor(total / n)
-  const rest = total - base * n
-  return Array.from({ length: n }, (_, i) => base + (i < rest ? 1 : 0))
-}
 
 type Bloque = { tipo: 'single' | 'biset' | 'triset'; exercicios: Ex[] }
 
