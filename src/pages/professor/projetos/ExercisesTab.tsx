@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { coincide, textosEjercicio } from '@/lib/busqueda'
 import { Plus, Dumbbell, Star, Pencil } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
@@ -26,6 +27,7 @@ type Exercise = {
   video_url: string | null
   thumbnail_url: string | null
   description: string | null
+  equipment?: string | null
 } & ConTraducciones
 
 export function ExercisesTab({ query, filtro }: { query: string; filtro: Filtro }) {
@@ -57,7 +59,7 @@ export function ExercisesTab({ query, filtro }: { query: string; filtro: Filtro 
   const filtered = items
     .filter((e) => (filtro === 'favoritos' ? esFavorito(e.id) : true))
     .filter((e) => (filtro === 'minhas' ? e.trainer_id === profile?.id : true))
-    .filter((e) => !q || [e.name_pt, e.name_es, e.name_en, e.name].some((n) => (n ?? '').toLowerCase().includes(q)))
+    .filter((e) => coincide(query, textosEjercicio(e)))
     .sort((x, y) => nombreEjercicio(x, i18n.language).localeCompare(nombreEjercicio(y, i18n.language)))
 
   const enSeleccion = seleccion.length > 0

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { nombreEjercicio } from '@/lib/nombreEjercicio'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, TrendingUp } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -14,6 +15,9 @@ type SR = {
   data: {
     exercises?: Array<{
       name: string
+      name_pt?: string | null
+      name_es?: string | null
+      name_en?: string | null
       muscle_group?: string | null
       thumbnail_url?: string | null
       video_url?: string | null
@@ -91,7 +95,7 @@ export function TreinoDetalhePage() {
                 <div className="flex items-start gap-3">
                 <MiniaturaMedia media={e} tamano={64} />
                 <div className="flex-1 min-w-0">
-                  <div className="text-white text-rt-15 font-semibold leading-tight">{e.name}</div>
+                  <div className="text-white text-rt-15 font-semibold leading-tight">{nombreEjercicio(e, i18n.language)}</div>
                   <div className="flex flex-wrap gap-1.5 mt-2">
                     {e.muscle_group && <Chip>{etiquetaDe(gruposMusculares, e.muscle_group, i18n.language) || e.muscle_group}</Chip>}
                     <Chip>{cantidad} {cantidad === 1 ? 'Série' : 'Séries'}</Chip>

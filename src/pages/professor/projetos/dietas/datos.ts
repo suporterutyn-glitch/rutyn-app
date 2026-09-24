@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { macrosDe, sumarMacros, type Macros } from '@/lib/nutricion'
-import { abreviaturaUnidad } from '@/lib/catalogos'
+import { abreviaturaUnidad, etiquetaDe, tiposRefeicao } from '@/lib/catalogos'
 import { nombreEjercicio as nombreEnIdioma } from '@/lib/nombreEjercicio'
 import type { Food } from '../FoodsTab'
 
@@ -60,6 +60,11 @@ export type Dieta = {
 }
 
 export const SELECT_DIETA = '*,meals(*,meal_foods(*),meal_recipes(*))'
+
+/** Refeição del app: el nombre sale del idioma; personalizada: el que le puso el profesor. */
+export function nombreComida(m: { name: string; meal_type: string | null }, lang: string) {
+  return m.meal_type && !m.meal_type.startsWith('custom:') ? etiquetaDe(tiposRefeicao, m.meal_type, lang) : m.name
+}
 
 export function ordenarComidas(meals: Comida[]) {
   return meals.slice().sort((a, b) => (a.time_of_day ?? '99').localeCompare(b.time_of_day ?? '99'))
@@ -123,12 +128,15 @@ export function copiaParaAlumno(d: Dieta, lang = 'pt') {
     goal: d.goal,
     meals: ordenarComidas(d.meals).map((m) => ({
       name: m.name,
+      meal_type: m.meal_type,
       time: m.time_of_day,
       foods: m.meal_foods.slice().sort((a, b) => a.position - b.position).map((a) => {
         const mm = macrosAlimento(a)
         return {
           name: nombreAlimento(a, lang),
+          name_pt: a.food_name_snapshot,
           name_es: a.name_es,
+          name_en: a.name_en,
           qty: Number(a.quantity),
           unit: abreviaturaUnidad(a.unit).trim(),
           kcal: mm.kcal, p: mm.p, c: mm.c, f: mm.g,

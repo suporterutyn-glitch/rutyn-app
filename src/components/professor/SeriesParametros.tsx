@@ -1,3 +1,4 @@
+import { etiqueta } from '@/lib/catalogos'
 import { useState } from 'react'
 import { Trash2, GripVertical, X } from 'lucide-react'
 import {
@@ -286,7 +287,7 @@ function SheetValor({ parametro, valor, lang, onCerrar, onGuardar, onQuitar }: {
                     (valor === o.id ? 'text-brand font-semibold' : 'text-white')
                   }
                 >
-                  {lang.startsWith('es') ? o.es : o.pt}
+                  {etiqueta(o, lang)}
                 </button>
               </li>
             ))}

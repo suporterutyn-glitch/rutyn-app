@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { coincide, textosReceta } from '@/lib/busqueda'
 import { useTranslation } from 'react-i18next'
 import { Clock, Trash2, ChevronDown, ChevronUp, GripVertical, Plus, UtensilsCrossed, BookOpen, Ban, ChevronRight, Search, X, Lightbulb } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -10,10 +11,9 @@ import { useArrastreLista, moverEnLista } from '@/lib/reordenar'
 import { sumarMacros, type Macros } from '@/lib/nutricion'
 import { AdicionarAlimentos, HojaCantidad, type AlimentoElegido } from '../AdicionarAlimentos'
 import { SELECT_RECEITA, macrosReceita, type Receita } from '../RecipesTab'
-import { sinAcentos } from '../FoodsTab'
 import { SelecionarRefeicoes, type RefeicaoElegida } from './SelecionarRefeicoes'
 import {
-  ordenarComidas, macrosComida, macrosAlimento, nombreAlimento, filaAlimento, tocarDieta,
+  ordenarComidas, nombreComida, macrosComida, macrosAlimento, nombreAlimento, filaAlimento, tocarDieta,
   type Dieta, type Comida, type AlimentoComida, type RecetaComida,
 } from './datos'
 
@@ -99,7 +99,7 @@ export function EditorDietaInline({ dieta, onRecargar }: { dieta: Dieta; onRecar
               onHora={(h) => void hacer(async () => supabase.from('meals').update({ time_of_day: h }).eq('id', c.id))}
               onBorrar={() => setConfirmar({
                 titulo: 'Excluir Refeição',
-                detalle: `Excluir "${c.name}" e todos os seus alimentos?`,
+                detalle: `Excluir "${nombreComida(c, lang)}" e todos os seus alimentos?`,
                 accion: () => hacer(async () => supabase.from('meals').delete().eq('id', c.id)),
               })}
               onAgregar={() => setAgregandoEn(c)}
@@ -219,7 +219,7 @@ function TarjetaComida({ c, lang, abierta, onAlternar, onHora, onBorrar, onAgreg
             className="bg-transparent text-white text-rt-12 font-semibold outline-none w-[44px] [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:hidden" aria-label="Horário" />
         </label>
         <button onClick={onAlternar} className="flex-1 min-w-0 flex items-center gap-2 text-left">
-          <span className="text-white text-rt-14 font-semibold truncate">{c.name}</span>
+          <span className="text-white text-rt-14 font-semibold truncate">{nombreComida(c, lang)}</span>
           {!abierta && hay && <span className="shrink-0 text-rt-10 px-2 py-0.5 rounded-[8px] bg-[#1E1E1E] text-grey-400">{Math.round(m.kcal)} kcal</span>}
         </button>
         <button onClick={onBorrar} aria-label="Excluir refeição" className="w-8 h-8 rounded-[8px] bg-danger/10 flex items-center justify-center shrink-0"><Trash2 size={17} className="text-[#EF5350]" /></button>
@@ -329,8 +329,7 @@ function ElegirReceta({ yaEstan, onCerrar, onElegir, conmutador }: {
     if (!profile?.id) return
     void supabase.from('recipes').select(SELECT_RECEITA).eq('owner_id', profile.id).order('name').then(({ data }) => setItems((data as Receita[]) ?? []))
   }, [profile?.id])
-  const palabras = sinAcentos(busca.trim()).split(/\s+/).filter(Boolean)
-  const lista = (items ?? []).filter((r) => palabras.every((p) => sinAcentos(r.name).includes(p)))
+  const lista = (items ?? []).filter((r) => coincide(busca, textosReceta(r, r.recipe_ingredients.map((i) => i.foods ?? { name: i.food_name_snapshot }))))
   return (
     <div className="fixed inset-0 z-40 bg-[#1E1E1E] flex flex-col">
       <div className="max-w-app w-full mx-auto flex flex-col flex-1 min-h-0 pt-[calc(env(safe-area-inset-top)+24px)]">

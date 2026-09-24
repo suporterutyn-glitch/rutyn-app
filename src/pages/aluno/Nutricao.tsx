@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { nombreEjercicio } from '@/lib/nombreEjercicio'
 import { Salad, MessageCircle, Bell, RefreshCw, ChevronUp, ChevronDown, BookOpen } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -7,12 +8,12 @@ import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { EmptyState } from '@/pages/professor/projetos/RoutinesTab'
-import { objetivosDieta, etiquetaDe } from '@/lib/catalogos'
+import { objetivosDieta, tiposRefeicao, etiquetaDe } from '@/lib/catalogos'
 import { ModoDePreparo } from '@/pages/professor/projetos/dietas/EditorDietaInline'
 
-type Food = { name: string; name_es?: string | null; qty: number; unit: string; kcal: number; p: number; c: number; f: number; recipe?: string | null }
+type Food = { name: string; name_pt?: string | null; name_es?: string | null; name_en?: string | null; qty: number; unit: string; kcal: number; p: number; c: number; f: number; recipe?: string | null }
 type Receta = { name: string; steps: string[]; tips: string | null; cover_url: string | null }
-type Meal = { name: string; time?: string | null; foods: Food[]; recipes?: Receta[] }
+type Meal = { name: string; meal_type?: string | null; time?: string | null; foods: Food[]; recipes?: Receta[] }
 type SD = { id: string; name: string; cycle_start: string; data: { meals?: Meal[]; goal?: string | null } }
 
 export function NutricaoPage() {
@@ -190,7 +191,7 @@ export function NutricaoPage() {
                   <li key={mi} className={'card-dark p-3 ' + (completa ? 'border-brand' : '')}>
                     <div className="flex items-center gap-2">
                       <div className="flex-1 min-w-0">
-                        <div className="text-white text-rt-15 font-bold truncate">{m.name}</div>
+                        <div className="text-white text-rt-15 font-bold truncate">{m.meal_type && !m.meal_type.startsWith('custom:') ? etiquetaDe(tiposRefeicao, m.meal_type, i18n.language) : m.name}</div>
                         {hechos > 0 && !completa && (
                           <div className="text-white/50 text-rt-11">{hechos} de {claves.length}</div>
                         )}
@@ -229,7 +230,7 @@ export function NutricaoPage() {
                             }>
                               <div className="flex-1 min-w-0">
                                 <div className={'text-rt-14 font-semibold ' + (on ? 'text-grey-500 line-through' : 'text-white')}>
-                                  {i18n.language.startsWith('es') && f.name_es ? f.name_es : f.name}
+                                  {nombreEjercicio({ ...f, name_pt: f.name_pt ?? f.name }, i18n.language)}
                                 </div>
                                 {macrosOn && (
                                   <div className="text-rt-11 mt-0.5 flex flex-wrap gap-x-1">

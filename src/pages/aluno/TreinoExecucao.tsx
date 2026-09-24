@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { nombreEjercicio } from '@/lib/nombreEjercicio'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { X, Play, Pause, RotateCcw, TimerOff, TrendingUp, Check, SkipForward, ChevronDown } from 'lucide-react'
@@ -13,7 +14,11 @@ import { useAuth } from '@/lib/auth'
 
 type Serie = { done: boolean; load: string; reps: string; rest: number }
 type Exercise = {
+  /** Clave estable (historial de cargas); para mostrar se usa el nombre del idioma. */
   name: string
+  name_pt?: string | null
+  name_es?: string | null
+  name_en?: string | null
   series: Serie[]
   muscle_group?: string | null
   thumbnail_url?: string | null
@@ -68,6 +73,9 @@ export function TreinoExecucaoPage() {
       type SerieSnap = { reps?: string; load?: string; rest?: string }
       type ExSnap = {
         name: string
+        name_pt?: string | null
+        name_es?: string | null
+        name_en?: string | null
         muscle_group?: string | null
         thumbnail_url?: string | null
         video_url?: string | null
@@ -87,6 +95,9 @@ export function TreinoExecucaoPage() {
       // El alumno arranca con lo que el profesor prescribió, no con valores fijos.
       armadas ??= src.map((e) => ({
         name: e.name,
+        name_pt: e.name_pt ?? null,
+        name_es: e.name_es ?? null,
+        name_en: e.name_en ?? null,
         muscle_group: e.muscle_group ?? null,
         thumbnail_url: e.thumbnail_url ?? null,
         video_url: e.video_url ?? null,
@@ -288,7 +299,7 @@ export function TreinoExecucaoPage() {
                       <span className="text-grey-500 text-rt-11 font-semibold">{ei + 1}/{exercises.length}</span>
                       {grupoTipo && <span className={'text-rt-10 font-bold px-2 py-0.5 rounded-btn-pill ' + (e.group_type === 'biset' ? 'bg-group-biset/20 text-group-biset' : 'bg-group-triset/20 text-group-triset')}>{grupoTipo}</span>}
                     </div>
-                    <div className="text-white text-rt-16 font-bold leading-tight mt-0.5">{e.name}</div>
+                    <div className="text-white text-rt-16 font-bold leading-tight mt-0.5">{nombreEjercicio(e, i18n.language)}</div>
                     {listo && !activo ? (
                       <div className="flex items-center gap-1.5 mt-1.5 text-brand text-rt-12 font-semibold"><Check size={15} /> Completado</div>
                     ) : (
@@ -353,7 +364,7 @@ export function TreinoExecucaoPage() {
           restante={restante}
           total={descanso.total}
           corriendo={corriendo}
-          proximo={siguiente ? `Série ${siguiente.serie + 1} · ${exercises[siguiente.ex].name}` : null}
+          proximo={siguiente ? `Série ${siguiente.serie + 1} · ${nombreEjercicio(exercises[siguiente.ex], i18n.language)}` : null}
           onPausar={pausarOReanudar}
           onAjustar={ajustar}
           onSaltar={cortarDescanso}

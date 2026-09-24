@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { coincide, textosRutina } from '@/lib/busqueda'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Search, X, Dumbbell } from 'lucide-react'
@@ -20,6 +21,7 @@ type Routine = {
   difficulty: string | null
   is_favorite: boolean
   created_at: string
+  routine_exercises?: { exercise_name_snapshot: string | null; exercises: { name_pt: string | null; name_es: string | null; name_en: string | null; muscle_group: string | null; muscle_groups: string[] | null; category: string | null; equipment: string | null } | null }[]
 }
 
 export function RoutinesTab({ query, filtro }: { query: string; filtro: Filtro }) {
@@ -41,7 +43,7 @@ export function RoutinesTab({ query, filtro }: { query: string; filtro: Filtro }
     setLoading(true)
     const { data } = await supabase
       .from('routines')
-      .select('*')
+      .select('*,routine_exercises(exercise_name_snapshot,exercises(name_pt,name_es,name_en,muscle_group,muscle_groups,category,equipment))')
       .eq('owner_id', profile.id)
       .is('student_id', null)
       .order('created_at', { ascending: false })
@@ -53,7 +55,7 @@ export function RoutinesTab({ query, filtro }: { query: string; filtro: Filtro }
 
   const filtered = items
     .filter((r) => (filtro === 'favoritos' ? r.is_favorite : true))
-    .filter((r) => r.name.toLowerCase().includes(query.toLowerCase()))
+    .filter((r) => coincide(query, textosRutina(r, (r.routine_exercises ?? []).map((x) => ({ name: x.exercise_name_snapshot, ...(x.exercises ?? {}) })))))
 
   function toggleSeleccion(id: string) {
     const n = new Set(seleccion)

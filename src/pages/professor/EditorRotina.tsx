@@ -620,7 +620,7 @@ function TarjetaExercicio({
         <MiniaturaMedia media={media} tamano={48} />
         <div className="flex-1 min-w-0">
           <div className="text-white text-rt-14 font-semibold truncate">
-            {re.exercise_name_snapshot ?? 'Exercício'}
+            {nombreEjercicio({ name: re.exercise_name_snapshot ?? 'Exercício', ...(media as { name_pt?: string | null; name_es?: string | null; name_en?: string | null }) }, lang)}
           </div>
           {chips.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-1">

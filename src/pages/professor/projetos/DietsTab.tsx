@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { coincide, textosDieta } from '@/lib/busqueda'
 import { useTranslation } from 'react-i18next'
 import { Droplet, Plus, Star, ChevronLeft, GripVertical, UtensilsCrossed, AlertCircle, X, Search, Check, PlusCircle, ChevronRight, Clock } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -61,7 +62,7 @@ export function DietsTab({ query, filtro, alumno }: { query: string; filtro: Fil
   const palabras = sinAcentos(query.trim()).split(/\s+/).filter(Boolean)
   const filtered = items
     .filter((d) => (filtro === 'favoritos' ? d.is_favorite : true))
-    .filter((d) => palabras.every((p) => sinAcentos(d.name).includes(p)))
+    .filter((d) => coincide(query, textosDieta(d, d.meals, d.meals.flatMap((m) => m.meal_foods.map((a) => ({ name: a.food_name_snapshot, name_pt: a.food_name_snapshot, name_es: a.name_es, name_en: a.name_en, category: a.category }))))))
   const todas = filtered.length > 0 && filtered.every((d) => seleccion.includes(d.id))
 
   // El reordenamiento usa ids, no índices: con búsqueda activa no mueve la dieta equivocada.

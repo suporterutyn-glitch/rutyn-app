@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { coincide, textosEjercicio } from '@/lib/busqueda'
 import { useTranslation } from 'react-i18next'
 import { Plus, Search, X, Ban, Pencil, Star, Check, ChevronDown, Dumbbell } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -20,11 +21,8 @@ export type EjercicioCatalogo = {
   video_url: string | null
   thumbnail_url: string | null
   description: string | null
+  equipment?: string | null
 } & ConTraducciones
-
-function sinAcentos(s: string) {
-  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
-}
 
 /** Modal 'Adicionar Exercícios': selección múltiple del catálogo para anexar a la rutina. */
 export function AdicionarExercicios({ yaEnRutina, onCerrar, onAgregar }: {
@@ -62,16 +60,11 @@ export function AdicionarExercicios({ yaEnRutina, onCerrar, onAgregar }: {
   const ya = useMemo(() => new Set(yaEnRutina), [yaEnRutina])
 
   const lista = useMemo(() => {
-    const palabras = sinAcentos(busca.trim()).split(/\s+/).filter(Boolean)
     return (items ?? [])
       .filter((e) => (pestana === 'favoritos' ? esFavorito(e.id) : pestana === 'meus' ? e.trainer_id === profile?.id : true))
       .filter((e) => !grupo || (e.muscle_groups?.length ? e.muscle_groups : [e.muscle_group]).includes(grupo))
       .filter((e) => !categoria || e.category === categoria)
-      .filter((e) => {
-        if (palabras.length === 0) return true
-        const texto = sinAcentos([e.name_pt, e.name_es, e.name_en, e.name].filter(Boolean).join(' '))
-        return palabras.every((p) => texto.includes(p))
-      })
+      .filter((e) => coincide(busca, textosEjercicio(e)))
       .sort((a, b) => nombreEjercicio(a, lang).localeCompare(nombreEjercicio(b, lang)))
   }, [items, pestana, grupo, categoria, busca, esFavorito, profile?.id, lang])
 

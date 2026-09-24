@@ -27,20 +27,25 @@ export function periodoPorDefecto(): Periodo {
 export async function copiaDeRutina(routineId: string) {
   const { data, error } = await supabase
     .from('routine_exercises')
-    .select('exercise_id,exercise_name_snapshot,position,group_type,group_id,series(position,params,notes),exercises(muscle_group,thumbnail_url,video_url,media_type)')
+    .select('exercise_id,exercise_name_snapshot,position,group_type,group_id,series(position,params,notes),exercises(name_pt,name_es,name_en,muscle_group,muscle_groups,thumbnail_url,video_url,media_type)')
     .eq('routine_id', routineId)
     .order('position')
   if (error) throw error
   type Fila = {
     exercise_id: string | null; exercise_name_snapshot: string | null; group_type: string; group_id: string | null
     series: { position: number; params: Record<string, string>; notes: string | null }[]
-    exercises: { muscle_group: string | null; thumbnail_url: string | null; video_url: string | null; media_type: string | null } | null
+    exercises: { name_pt: string | null; name_es: string | null; name_en: string | null; muscle_group: string | null; muscle_groups: string[] | null; thumbnail_url: string | null; video_url: string | null; media_type: string | null } | null
   }
   return {
     exercises: ((data as unknown as Fila[]) ?? []).map((e) => ({
+      // name es la clave estable (historial de cargas); name_xx es lo que se muestra.
       name: e.exercise_name_snapshot,
+      name_pt: e.exercises?.name_pt ?? null,
+      name_es: e.exercises?.name_es ?? null,
+      name_en: e.exercises?.name_en ?? null,
       exercise_id: e.exercise_id,
       muscle_group: e.exercises?.muscle_group ?? null,
+      muscle_groups: e.exercises?.muscle_groups ?? null,
       thumbnail_url: e.exercises?.thumbnail_url ?? null,
       video_url: e.exercises?.video_url ?? null,
       media_type: e.exercises?.media_type ?? null,

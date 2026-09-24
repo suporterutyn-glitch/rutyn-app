@@ -182,6 +182,9 @@ export function ReproductorMedia({ media, onCerrar }: { media: Media; onCerrar: 
  */
 export function useMediaDeExercicios(ids: (string | null)[]) {
   const [mapa, setMapa] = useState<Record<string, {
+    name_pt: string | null
+    name_es: string | null
+    name_en: string | null
     muscle_group: string | null
     thumbnail_url: string | null
     video_url: string | null
@@ -196,11 +199,14 @@ export function useMediaDeExercicios(ids: (string | null)[]) {
     void (async () => {
       const { data } = await supabase
         .from('exercises')
-        .select('id,muscle_group,thumbnail_url,video_url,media_type')
+        .select('id,name_pt,name_es,name_en,muscle_group,thumbnail_url,video_url,media_type')
         .in('id', limpios)
       const m: Record<string, any> = {}
       for (const x of (data as any[]) ?? []) {
         m[x.id] = {
+          name_pt: x.name_pt,
+          name_es: x.name_es,
+          name_en: x.name_en,
           muscle_group: x.muscle_group,
           thumbnail_url: x.thumbnail_url,
           video_url: x.video_url,

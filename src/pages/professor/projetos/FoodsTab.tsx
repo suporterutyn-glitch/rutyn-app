@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { coincide, textosAlimento } from '@/lib/busqueda'
 import { Plus, Star, Pencil, Egg, Wheat, Droplet, Leaf, Ban, UtensilsCrossed } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
@@ -43,11 +44,9 @@ export function sinAcentos(s: string) {
 }
 
 /** Palabras en cualquier orden, sin acentos, contra el nombre en PT, ES y EN. */
-export function coincideBusqueda(f: Pick<Food, 'name' | 'name_pt' | 'name_es' | 'name_en'>, busca: string) {
-  const palabras = sinAcentos(busca.trim()).split(/\s+/).filter(Boolean)
-  if (palabras.length === 0) return true
-  const texto = sinAcentos([f.name_pt, f.name_es, f.name_en, f.name].filter(Boolean).join(' '))
-  return palabras.every((p) => texto.includes(p))
+/** Nombre en cualquier idioma o categoría ('proteína', 'carbs'...). */
+export function coincideBusqueda(f: Pick<Food, 'name' | 'name_pt' | 'name_es' | 'name_en' | 'category'>, busca: string) {
+  return coincide(busca, textosAlimento(f))
 }
 
 export function porcionDe(f: Food) {

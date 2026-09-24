@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { coincide, textosReceta } from '@/lib/busqueda'
 import { useTranslation } from 'react-i18next'
 import { Plus, BookOpen, Star, ChevronLeft, Copy, Pencil, Trash2, UtensilsCrossed, Timer, Lightbulb, X, Camera, Video, Link2, AlertCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -12,7 +13,7 @@ import { nombreEjercicio as nombreEnIdioma } from '@/lib/nombreEjercicio'
 import { macrosDe, sumarMacros, type Macros } from '@/lib/nutricion'
 import { useDeslizar } from '@/lib/deslizar'
 import { EmptyState, FixedBottomActions, FullScreenSheet } from './RoutinesTab'
-import { sinAcentos, type Food } from './FoodsTab'
+import { type Food } from './FoodsTab'
 import { AdicionarAlimentos, type AlimentoElegido } from './AdicionarAlimentos'
 import { SubirArchivo } from './ExercisesTab'
 
@@ -79,7 +80,7 @@ export function RecipesTab({ query, filtro }: { query: string; filtro: Filtro })
 
   const filtered = items
     .filter((r) => (filtro === 'favoritos' ? r.is_favorite : true))
-    .filter((r) => { const p = sinAcentos(query.trim()).split(/\s+/).filter(Boolean); const t = sinAcentos(r.name); return p.every((x) => t.includes(x)) })
+    .filter((r) => coincide(query, textosReceta(r, r.recipe_ingredients.map((i) => i.foods ?? { name: i.food_name_snapshot }))))
 
   async function favorito(r: Receita) {
     setItems((p) => p.map((x) => (x.id === r.id ? { ...x, is_favorite: !x.is_favorite } : x)))
