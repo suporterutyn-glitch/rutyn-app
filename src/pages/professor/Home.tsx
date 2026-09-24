@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, Plus, Calendar, ChevronRight, Zap, RefreshCw, ClipboardCheck, MessageSquare, Users, Settings, Send } from 'lucide-react'
+import { Bell, Plus, Calendar, ChevronRight, Zap, RefreshCw, ClipboardCheck, MessageSquare, Users, Settings, Send, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { AnnouncementModal } from '@/components/AnnouncementModal'
+import { WeekCalendar } from '@/components/WeekCalendar'
 
 type Stats = {
   active_students: number
@@ -14,7 +15,7 @@ type Stats = {
   unread_notifications: number
 }
 
-type Appt = { id: string; title: string; starts_at: string; kind: string }
+type Appt = { id: string; title: string; starts_at: string; kind: string; location?: string; student_name?: string }
 
 const PLAN_LIMITS: Record<string, number> = { free: 2, pro: 25, master: 50, elite: 100 }
 const PLAN_LABEL: Record<string, string> = { free: 'Free', pro: 'Pro', master: 'Master', elite: 'Elite' }
@@ -35,8 +36,10 @@ export function ProfessorHome() {
   const { t } = useTranslation()
   const nav = useNavigate()
   const [stats, setStats] = useState<Stats | null>(null)
-  const [appointments, setAppointments] = useState<Appt[]>([])
+  const [allAppointments, setAllAppointments] = useState<Appt[]>([])
+  const [selectedDate, setSelectedDate] = useState(() => new Date())
   const [loading, setLoading] = useState(true)
+  const [showMoreAppointments, setShowMoreAppointments] = useState(false)
 
   const currency = COUNTRY_CURRENCY[profile?.country ?? 'BR'] ?? 'BRL'
   const plan = profile?.plan ?? 'free'
@@ -50,14 +53,13 @@ export function ProfessorHome() {
         supabase.from('v_teacher_stats').select('*').eq('teacher_id', profile.id).single(),
         supabase
           .from('appointments')
-          .select('id,title,starts_at,kind')
+          .select('id,title,starts_at,kind,location,student_name')
           .eq('teacher_id', profile.id)
           .gte('starts_at', new Date().toISOString())
-          .order('starts_at', { ascending: true })
-          .limit(3),
+          .order('starts_at', { ascending: true }),
       ])
       setStats(statsRow ?? { active_students: 0, pending_invites: 0, month_received: 0, unread_notifications: 0 })
-      setAppointments((appts as Appt[]) ?? [])
+      setAllAppointments((appts as Appt[]) ?? [])
       setLoading(false)
     })()
   }, [profile?.id])
@@ -67,6 +69,27 @@ export function ProfessorHome() {
   const received = Number(stats?.month_received ?? 0)
   const unread = stats?.unread_notifications ?? 0
   const profileIncomplete = !profile?.profile_complete
+
+  // Filter appointments for selected date and calculate dates with events
+  const appointmentsForDate = useMemo(() => {
+    return allAppointments.filter((appt) => {
+      const apptDate = new Date(appt.starts_at)
+      return (
+        apptDate.getDate() === selectedDate.getDate() &&
+        apptDate.getMonth() === selectedDate.getMonth() &&
+        apptDate.getFullYear() === selectedDate.getFullYear()
+      )
+    })
+  }, [allAppointments, selectedDate])
+
+  const datesWithEvents = useMemo(() => {
+    const dates = new Set<number>()
+    allAppointments.forEach((appt) => {
+      const d = new Date(appt.starts_at)
+      dates.add(d.getDate())
+    })
+    return dates
+  }, [allAppointments])
 
   return (
     <div className="px-4 pt-[calc(env(safe-area-inset-top)+16px)]">
@@ -178,7 +201,9 @@ export function ProfessorHome() {
         <DashCard title={t('professor:messages')} value="0" icon={MessageSquare} onClick={() => nav('/professor/mensagens')} />
       </div>
 
-      {/* Agenda */}
+      {/* Calendar and Agenda */}
+      <WeekCalendar selectedDate={selectedDate} onSelectDate={setSelectedDate} datesWithEvents={datesWithEvents} />
+
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2 px-1">
           <div className="text-white text-rt-15 font-bold flex items-center gap-2">
@@ -205,30 +230,49 @@ export function ProfessorHome() {
 
         {loading ? (
           <div className="card-dark p-4 text-white/60 text-rt-13">{t('loading')}</div>
-        ) : appointments.length === 0 ? (
+        ) : appointmentsForDate.length === 0 ? (
           <div className="card-dark p-4 text-white/60 text-rt-13">{t('professor:noAppointments')}</div>
         ) : (
-          <ul className="flex flex-col gap-2">
-            {appointments.map((a) => {
-              const d = new Date(a.starts_at)
-              return (
-                <li key={a.id} className="card-dark p-3 flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-md bg-surface-input flex flex-col items-center justify-center">
-                    <div className="text-white text-rt-14 font-bold leading-none">{d.getDate()}</div>
-                    <div className="text-white/60 text-rt-9 uppercase">
-                      {d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}
+          <>
+            <ul className="flex flex-col gap-2">
+              {appointmentsForDate.slice(0, showMoreAppointments ? appointmentsForDate.length : 3).map((a) => {
+                const d = new Date(a.starts_at)
+                const timeStr = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+                return (
+                  <li key={a.id} className="card-dark p-3 flex items-start gap-3 group relative">
+                    <div className="text-brand text-rt-15 font-bold min-w-[50px]">{timeStr}</div>
+                    <div className="w-px bg-brand" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-white text-rt-14 font-semibold">{a.title}</div>
+                      {a.student_name && (
+                        <div className="text-white/80 text-rt-12">{a.student_name}</div>
+                      )}
+                      {a.location && (
+                        <div className="text-white/60 text-rt-11">📍 {a.location}</div>
+                      )}
                     </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-white text-rt-14 font-semibold truncate">{a.title}</div>
-                    <div className="text-white/60 text-rt-11">
-                      {d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
+                    <button
+                      onClick={() => {
+                        // TODO: delete appointment
+                      }}
+                      className="opacity-0 group-hover:opacity-100 transition p-1"
+                      aria-label="Excluir compromisso"
+                    >
+                      <X size={18} className="text-white/60" />
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+            {appointmentsForDate.length > 3 && (
+              <button
+                onClick={() => setShowMoreAppointments(!showMoreAppointments)}
+                className="w-full text-center text-brand text-rt-13 font-semibold py-2 mt-2"
+              >
+                {showMoreAppointments ? 'Ver menos...' : 'Ver mais...'}
+              </button>
+            )}
+          </>
         )}
       </div>
 

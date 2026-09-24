@@ -2,14 +2,19 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { currencyOf, formatMoney } from '@/lib/plans'
 import { AnnouncementModal } from '@/components/AnnouncementModal'
-import { Bell, Droplet, Calendar, ClipboardCheck, Dumbbell, MessageSquare, Plus, Minus, Settings } from 'lucide-react'
+import { FeedbackDialog } from '@/components/FeedbackDialog'
+import { Bell, MessageSquare, Settings, Wallet, Dumbbell, ClipboardCheck, Calendar, Droplet, Flame } from 'lucide-react'
+import { VasoAgua, DialogHidratacion } from './HomeCards'
 import { supabase } from '@/lib/supabase'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/lib/auth'
 import { LanguageToggle } from '@/components/LanguageToggle'
 
-type Charge = { id: string; amount: number; due_date: string; status: string }
+type Charge = { id: string; amount: number; due_date: string; status: string; format: string | null }
 type Hydration = { ml: number; target_ml: number }
+
+/** Portugués: segunda a domingo. El diseño muestra S T Q Q S S D. */
+const DIAS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D']
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10)
@@ -24,7 +29,15 @@ export function AlunoHome() {
   const [hydration, setHydration] = useState<Hydration>({ ml: 0, target_ml: 2500 })
   const [newRoutines, setNewRoutines] = useState(0)
   const [unread, setUnread] = useState(0)
+  // Lunes a domingo, como en el diseño (S T Q Q S S D en portugués).
   const [weekDays, setWeekDays] = useState<boolean[]>([false, false, false, false, false, false, false])
+  const [semanasEntrenadas, setSemanasEntrenadas] = useState(0)
+  const [assessments, setAssessments] = useState(0)
+  const [treinosDelMes, setTreinosDelMes] = useState(0)
+  // La agenda es compartida: lo que el profesor marca para el alumno lo ve el alumno.
+  const [compromisos, setCompromisos] = useState<{ id: string; title: string; starts_at: string; kind: string }[]>([])
+  const [metaHidratacion, setMetaHidratacion] = useState(false)
+  const [errorConvite, setErrorConvite] = useState<string | null>(null)
 
   const firstName = profile?.full_name?.split(' ')[0] ?? 'Aluno'
   const today = todayISO()
@@ -33,7 +46,7 @@ export function AlunoHome() {
     if (!profile?.id) return
     void (async () => {
       const [chargeRes, hydRes, srRes, notifRes] = await Promise.all([
-        supabase.from('charges').select('id,amount,due_date,status').eq('student_id', profile.id).order('due_date', { ascending: false }).limit(1).maybeSingle(),
+        supabase.from('charges').select('id,amount,due_date,status,format').eq('student_id', profile.id).order('due_date', { ascending: false }).limit(1).maybeSingle(),
         supabase.from('hydration_days').select('ml,target_ml').eq('student_id', profile.id).eq('day', today).maybeSingle(),
         supabase.from('student_routines').select('id', { count: 'exact', head: true }).eq('student_id', profile.id).eq('completed_workouts', 0).eq('is_hidden', false),
         supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', profile.id).is('read_at', null),
@@ -53,17 +66,57 @@ export function AlunoHome() {
         teacher: (inv as any).profiles?.full_name ?? 'Seu professor',
       })
 
-      // frequência semanal: só simulado por ora (fase 5)
-      const wd = new Date().getDay()
+      // Frecuencia real: sesiones de esta semana, de lunes a domingo.
+      const hoy = new Date()
+      const diaSemana = (hoy.getDay() + 6) % 7 // 0 = lunes
+      const lunes = new Date(hoy)
+      lunes.setDate(hoy.getDate() - diaSemana)
+      lunes.setHours(0, 0, 0, 0)
+
+      const { data: sesiones } = await supabase
+        .from('workout_sessions')
+        .select('started_at')
+        .eq('student_id', profile.id)
+        .gte('started_at', lunes.toISOString())
+
       const days = [false, false, false, false, false, false, false]
-      days[wd] = true
+      for (const s of (sesiones as { started_at: string }[]) ?? []) {
+        const d = new Date(s.started_at)
+        days[(d.getDay() + 6) % 7] = true
+      }
       setWeekDays(days)
+      setSemanasEntrenadas(days.filter(Boolean).length)
+
+      const { count: nAssess } = await supabase
+        .from('assessments')
+        .select('id', { count: 'exact', head: true })
+        .eq('student_id', profile.id)
+      setAssessments(nAssess ?? 0)
+
+      const { data: citas } = await supabase
+        .from('appointments')
+        .select('id,title,starts_at,kind')
+        .eq('student_id', profile.id)
+        .gte('starts_at', new Date().toISOString())
+        .order('starts_at')
+        .limit(5)
+      setCompromisos((citas as { id: string; title: string; starts_at: string; kind: string }[]) ?? [])
+
+      const primeroDelMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1)
+      const { count: nTreinos } = await supabase
+        .from('workout_sessions')
+        .select('id', { count: 'exact', head: true })
+        .eq('student_id', profile.id)
+        .gte('started_at', primeroDelMes.toISOString())
+      setTreinosDelMes(nTreinos ?? 0)
     })()
   }, [profile?.id, today])
 
   async function drink(delta: number) {
     if (!profile?.id) return
     const next = Math.max(0, hydration.ml + delta)
+    // El aviso salta al cruzar la meta, no cada vez que se suma estando encima.
+    if (hydration.ml < hydration.target_ml && next >= hydration.target_ml) setMetaHidratacion(true)
     setHydration({ ...hydration, ml: next })
     await supabase.from('hydration_days').upsert({
       student_id: profile.id, day: today, ml: next, target_ml: hydration.target_ml,
@@ -71,94 +124,178 @@ export function AlunoHome() {
   }
 
   const hydPct = Math.min(100, Math.round((hydration.ml / hydration.target_ml) * 100))
-  const chargeUrgent = charge && daysUntil(charge.due_date) <= 5
+  const diasVencimiento = charge ? daysUntil(charge.due_date) : null
+  const vencida = charge?.status === 'pending' && diasVencimiento !== null && diasVencimiento < 0
+  const porHora = charge?.format === 'hourly'
+
+  const estadoPago: 'ok' | 'pendiente' | 'aguardando' | 'suspendido' =
+    !charge || charge.status === 'paid' ? 'ok'
+      : charge.status === 'awaiting' ? 'aguardando'
+        : charge.status === 'suspended' ? 'suspendido'
+          : 'pendiente'
 
   return (
     <div className="px-4 pt-[calc(env(safe-area-inset-top)+16px)]">
+      {/* Mismo encabezado que la home del profesor */}
       <div className="flex items-center justify-between mb-5">
-        <div>
-          <div className="text-white text-rt-20 font-bold">{t('aluno:hello', { name: firstName })}</div>
-          <div className="text-white/60 text-rt-11 mt-0.5">{t('aluno:welcome')}</div>
+        <div className="min-w-0">
+          <div className="text-white text-rt-20 font-bold truncate">{t('aluno:hello', { name: firstName })}</div>
+          <div className="text-white/60 text-rt-11 mt-0.5 truncate">{t('aluno:welcome')}</div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <LanguageToggle />
           <button onClick={() => nav('/aluno/configuracoes')} className="w-10 h-10 rounded-full bg-surface-raised flex items-center justify-center" aria-label="Configurações">
             <Settings size={20} className="text-white" />
           </button>
-          <button onClick={() => nav('/aluno/notificacoes')} className="w-10 h-10 rounded-full bg-surface-raised flex items-center justify-center relative">
+          <button onClick={() => nav('/aluno/notificacoes')} className="w-10 h-10 rounded-full bg-surface-raised flex items-center justify-center relative" aria-label="Notificações">
             <Bell size={20} className="text-white" />
             {unread > 0 && (
               <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-danger-soft shadow-badge-red text-white text-[9px] font-bold flex items-center justify-center">
-                {unread > 99 ? '99+' : unread}
+                {unread > 9 ? '9+' : unread}
               </span>
             )}
           </button>
         </div>
       </div>
 
-      {/* Card de mensalidade */}
+      {/* Mensalidade: misma forma que el card de plano del profesor */}
       <div className={
-        'rounded-card p-4 mb-3 border ' +
-        (!charge ? 'bg-pay-ok border-brand/40' :
-         charge.status === 'awaiting' ? 'bg-pay-awaiting border-info/40' :
-         charge.status === 'suspended' ? 'bg-pay-suspended border-warning/40' :
-         chargeUrgent ? 'bg-pay-pending border-danger-wine/40' :
-         'bg-pay-ok border-brand/40')
+        'rounded-card p-4 mb-3 ' +
+        (estadoPago === 'ok' ? 'bg-pay-ok'
+          : estadoPago === 'aguardando' ? 'bg-pay-awaiting'
+            : estadoPago === 'suspendido' ? 'bg-pay-suspended'
+              : 'bg-pay-pending')
       }>
-        <div className="text-white text-rt-18 font-bold leading-tight">
-          {(!charge || charge.status === 'paid') && t('aluno:paymentOk')}
-          {charge?.status === 'awaiting' && t('aluno:paymentAwaiting')}
-          {charge?.status === 'suspended' && t('aluno:paymentSuspended')}
-          {charge?.status === 'pending' && (chargeUrgent
-            ? t('aluno:paymentDueOn', { date: formatDate(charge.due_date) })
-            : t('aluno:paymentNext', { date: formatDate(charge.due_date) }))}
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="text-white/80 text-rt-11 font-semibold uppercase tracking-wider">
+              {t('aluno:monthlyFee')}
+            </div>
+            <div className="text-white text-rt-20 font-bold mt-1">
+              {estadoPago === 'ok'
+                ? t('aluno:paymentOk')
+                : formatMoney(Number(charge!.amount), currencyOf(profile?.country))}
+            </div>
+            <div className="text-white/80 text-rt-11 mt-1">
+              {estadoPago === 'ok'
+                ? t('aluno:paymentNone')
+                : estadoPago === 'aguardando'
+                  ? t('aluno:paymentAwaiting')
+                  : estadoPago === 'suspendido'
+                    ? t('aluno:paymentSuspended')
+                    : `${t('aluno:paymentDueOn', { date: formatDate(charge!.due_date) })} · ${
+                      porHora ? t('aluno:paymentHourly')
+                        : vencida ? t('aluno:paymentOverdue')
+                          : t('aluno:paymentMonthOf', { month: nombreMes(charge!.due_date) })}`}
+            </div>
+          </div>
+          <div className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+            <Wallet size={22} className="text-white" />
+          </div>
         </div>
-        {charge?.status === 'pending' && chargeUrgent && (
+
+        {estadoPago === 'pendiente' && (
           <button
-            className="mt-3 h-9 rounded-btn-pill bg-white/95 text-danger-wine text-rt-13 font-bold px-6"
             onClick={() => nav('/aluno/mensalidade')}
+            className="w-full mt-3 h-9 rounded-btn-pill bg-white/95 flex items-center justify-center text-danger-wine text-rt-13 font-bold"
           >
             {t('aluno:iPaid')}
           </button>
         )}
+        {estadoPago === 'suspendido' && (
+          <button
+            onClick={() => nav('/aluno/mensalidade')}
+            className="w-full mt-3 h-9 rounded-btn-pill bg-white/20 flex items-center justify-center text-white text-rt-13 font-bold"
+          >
+            {t('aluno:paymentSeeData')}
+          </button>
+        )}
       </div>
 
-      {/* Grid 2x2 */}
-      <div className="grid grid-cols-2 gap-3 mb-3">
-        {/* Hidratação */}
-        <div className="card-dark border-brand/25 p-3 flex flex-col justify-between h-32">
-          <div className="flex items-start justify-between">
-            <div className="text-white text-rt-13 font-semibold">{t('aluno:hydration')}</div>
+      {/* Grid 2x2, idéntico al del profesor */}
+      <div className="grid grid-cols-2 gap-2.5 mb-3">
+        <DashCard title={t('aluno:newWorkouts')} value={String(newRoutines)} icon={Dumbbell} onClick={() => nav('/aluno/treinos')} />
+        <DashCard title={t('aluno:physicalAss')} value={String(assessments)} icon={ClipboardCheck} onClick={() => nav('/aluno/avaliacao')} />
+        <DashCard title={t('aluno:messages')} value={String(unread)} icon={MessageSquare} onClick={() => nav('/aluno/chat')} />
+        <DashCard title={t('aluno:doneWorkouts')} value={String(treinosDelMes)} icon={Flame} onClick={() => nav('/aluno/treinos')} />
+      </div>
+
+      {/* Hidratação: es la única tarjeta con botones, por eso va a lo ancho */}
+      <div className="card-dark p-4 mb-3 flex items-center gap-4">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
             <Droplet size={18} className="text-info-light" />
+            <span className="text-white text-rt-15 font-bold">{t('aluno:hydration')}</span>
           </div>
-          <div>
-            <div className="text-white text-rt-18 font-bold leading-none">{hydration.ml} <span className="text-rt-11 text-white/60">/ {hydration.target_ml}ml</span></div>
-            <div className="h-1.5 bg-surface-raised rounded-full mt-1 overflow-hidden">
-              <div className="h-full bg-water" style={{ width: `${hydPct}%` }} />
-            </div>
-            <div className="flex gap-2 mt-2">
-              <button onClick={() => drink(-250)} className="flex-1 h-7 rounded-md bg-surface-raised flex items-center justify-center text-white">
-                <Minus size={14} />
-              </button>
-              <button onClick={() => drink(250)} className="flex-1 h-7 rounded-md bg-info-light flex items-center justify-center text-white">
-                <Plus size={14} />
-              </button>
-            </div>
+          <div className="mt-2">
+            <span className="text-white text-rt-29 font-bold leading-none">{hydration.ml}</span>
+            <span className="text-white/60 text-rt-12"> / {hydration.target_ml}ml</span>
+          </div>
+          <div className="flex gap-2 mt-3">
+            <button
+              onClick={() => drink(-250)}
+              disabled={hydration.ml === 0}
+              className="flex-1 h-9 rounded-btn-pill bg-surface-raised text-white/80 text-rt-12 font-bold disabled:opacity-40"
+            >
+              - 250ml
+            </button>
+            <button
+              onClick={() => drink(250)}
+              className="flex-1 h-9 rounded-btn-pill border-[1.5px] border-brand text-white text-rt-12 font-bold"
+            >
+              + 250ml
+            </button>
           </div>
         </div>
+        <VasoAgua pct={hydPct} />
+      </div>
 
-        {/* Frequência */}
-        <div className="card-dark border-brand/25 p-3 flex flex-col justify-between h-32">
-          <div className="flex items-start justify-between">
-            <div className="text-white text-rt-13 font-semibold">{t('aluno:frequency')}</div>
-            <Calendar size={18} className="text-brand" />
-          </div>
+      {/* Agenda: mismos compromisos que ve el profesor */}
+      <div className="mb-3">
+        <div className="flex items-center gap-2 mb-2 px-1">
+          <Calendar size={18} className="text-brand" />
+          <span className="text-white text-rt-15 font-bold">{t('aluno:agenda')}</span>
+        </div>
+        {compromisos.length === 0 ? (
+          <div className="card-dark p-4 text-white/60 text-rt-13">{t('aluno:noAppointments')}</div>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {compromisos.map((c) => {
+              const d = new Date(c.starts_at)
+              return (
+                <li key={c.id} className="card-dark p-3 flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-md bg-surface-input flex flex-col items-center justify-center shrink-0">
+                    <div className="text-white text-rt-14 font-bold leading-none">{d.getDate()}</div>
+                    <div className="text-white/60 text-rt-9 uppercase">
+                      {d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-white text-rt-14 font-semibold truncate">{c.title}</div>
+                    <div className="text-white/60 text-rt-11">
+                      {d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </div>
+
+      {/* Frequência de treinos: sección como la Agenda del profesor */}
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-2 px-1">
+          <Calendar size={18} className="text-brand" />
+          <span className="text-white text-rt-15 font-bold">{t('aluno:frequencyTitleInline')}</span>
+        </div>
+        <div className="card-dark p-4">
           <div className="flex justify-between">
-            {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((d, i) => (
-              <div key={i} className="flex flex-col items-center gap-1">
-                <span className="text-[9px] text-grey-400">{d}</span>
+            {DIAS.map((d, i) => (
+              <div key={i} className="flex flex-col items-center gap-1.5">
+                <span className="text-rt-10 text-white/50">{d}</span>
                 <div className={
-                  'w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ' +
+                  'w-8 h-8 rounded-full flex items-center justify-center text-rt-12 font-bold ' +
                   (weekDays[i] ? 'bg-brand text-white' : 'bg-surface-raised text-grey-500')
                 }>
                   {weekDays[i] ? '✓' : '—'}
@@ -166,50 +303,19 @@ export function AlunoHome() {
               </div>
             ))}
           </div>
+          <div className="text-white/50 text-rt-12 mt-3">
+            {t('aluno:frequencySub', { n: semanasEntrenadas })}
+          </div>
         </div>
-
-        {/* Treinos novos */}
-        <button
-          onClick={() => nav('/aluno/treinos')}
-          className="card-dark border-brand/25 p-3 flex flex-col justify-between h-28 text-left active:scale-[0.98]"
-        >
-          <div className="flex items-start justify-between">
-            <div className="text-white text-rt-13 font-semibold leading-tight whitespace-pre-line">{t('aluno:newWorkouts')}</div>
-            <Dumbbell size={18} className="text-brand" />
-          </div>
-          <div className="text-white text-rt-32 font-bold leading-none">{newRoutines}</div>
-        </button>
-
-        {/* Avaliação */}
-        <button
-          onClick={() => nav('/aluno/avaliacao')}
-          className="card-dark border-brand/25 p-3 flex flex-col justify-between h-28 text-left active:scale-[0.98]"
-        >
-          <div className="flex items-start justify-between">
-            <div className="text-white text-rt-13 font-semibold leading-tight whitespace-pre-line">{t('aluno:physicalAss')}</div>
-            <ClipboardCheck size={18} className="text-brand-assess" />
-          </div>
-          <div className="text-white/60 text-rt-11">{t('aluno:tapToSee')}</div>
-        </button>
       </div>
 
-      {/* Mensagens */}
-      <button
-        onClick={() => nav('/aluno/chat')}
-        className={
-          'w-full rounded-card p-4 flex items-center gap-3 mb-6 text-left ' +
-          (unread > 0 ? 'bg-[#3A1A1A]/90 border border-tone-rose/40' : 'card-dark border-brand/25')
-        }
-      >
-        <div className={'w-11 h-11 rounded-lg flex items-center justify-center ' + (unread > 0 ? 'bg-[#4A2020]' : 'bg-surface-input')}>
-          <MessageSquare size={20} className={unread > 0 ? 'text-tone-rose' : 'text-brand'} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="text-white text-rt-14 font-bold">{unread > 0 ? t('aluno:unreadMessages') : t('aluno:messages')}</div>
-          <div className="text-white/60 text-rt-11">{unread > 0 ? `${unread}` : t('aluno:talkTeacher')}</div>
-        </div>
-        {unread > 0 && <div className="w-2.5 h-2.5 rounded-full bg-tone-rose" />}
-      </button>
+      {metaHidratacion && (
+        <DialogHidratacion
+          titulo={t('aluno:hydrationDone')}
+          cuerpo={t('aluno:hydrationDoneBody')}
+          onClose={() => setMetaHidratacion(false)}
+        />
+      )}
 
       {counter && (
         <CounterModal
@@ -218,12 +324,16 @@ export function AlunoHome() {
           onAccept={async () => {
             if (!profile?.id) return
             const cur = counter
-            setCounter(null)
             const { data: inv } = await supabase.from('invites').select('teacher_id').eq('id', cur.id).single()
             if (!inv?.teacher_id) return
+
+            // El vínculo va por función: la escritura directa sobre el perfil
+            // la filtra RLS sin devolver error (ver migración 20260923060000).
+            const { error } = await supabase.rpc('aceptar_convite', { convite_id: cur.id })
+            if (error) { setErrorConvite(error.message); return }
+            setCounter(null)
+
             const dueDate = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10)
-            await supabase.from('invites').update({ status: 'accepted' }).eq('id', cur.id)
-            await supabase.from('profiles').update({ teacher_id: inv.teacher_id, link_status: 'active' }).eq('id', profile.id)
             await supabase.from('charges').insert({
               teacher_id: inv.teacher_id, student_id: profile.id,
               format: cur.format, amount: cur.amount, due_date: dueDate, status: 'pending',
@@ -237,6 +347,10 @@ export function AlunoHome() {
           }}
           onClose={() => setCounter(null)}
         />
+      )}
+
+      {errorConvite && (
+        <FeedbackDialog kind="error" message={errorConvite} onClose={() => setErrorConvite(null)} />
       )}
 
       <AnnouncementModal />
@@ -272,6 +386,10 @@ function CounterModal({ counter, currency, onAccept, onClose }: {
   )
 }
 
+function nombreMes(iso: string) {
+  const d = new Date(iso + 'T00:00:00')
+  return d.toLocaleDateString('pt-BR', { month: 'long' })
+}
 function formatDate(iso: string) {
   const d = new Date(iso + 'T00:00:00')
   return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`
@@ -279,4 +397,25 @@ function formatDate(iso: string) {
 function daysUntil(iso: string) {
   const d = new Date(iso + 'T00:00:00')
   return Math.ceil((d.getTime() - Date.now()) / 86400000)
+}
+
+/** Mismo card del dashboard del profesor: así las dos homes se leen igual. */
+function DashCard({ title, value, icon: Icon, onClick }: {
+  title: string
+  value: string
+  icon: React.ComponentType<{ size?: number; className?: string }>
+  onClick?: () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="card-dark p-3 flex flex-col justify-between h-24 text-left active:scale-[0.98] transition"
+    >
+      <div className="flex items-start justify-between">
+        <div className="text-white text-rt-13 font-semibold leading-tight whitespace-pre-line">{title}</div>
+        <Icon size={18} className="text-brand" />
+      </div>
+      <div className="text-white text-rt-29 font-bold leading-none">{value}</div>
+    </button>
+  )
 }

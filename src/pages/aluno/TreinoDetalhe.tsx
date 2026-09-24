@@ -3,12 +3,25 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Dumbbell, TrendingUp } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { DragSlider } from '@/components/DragSlider'
+import { BannerMedia } from '@/components/MediaExercicio'
+import { useTranslation } from 'react-i18next'
+import { objetivosTreino, etiquetaDe } from '@/lib/catalogos'
 
 type SR = {
   id: string
   name: string
   objective: string | null
-  data: { exercises?: Array<{ name: string; series: number }> }
+  data: {
+    exercises?: Array<{
+      name: string
+      muscle_group?: string | null
+      thumbnail_url?: string | null
+      video_url?: string | null
+      media_type?: string | null
+      /** number = snapshot viejo; array = con repeticiones, carga y descanso. */
+      series: number | Array<{ reps?: string; load?: string; rest?: string }>
+    }>
+  }
   completed_workouts: number
   estimated_workouts: number
 }
@@ -18,6 +31,7 @@ type Session = { started_at: string; duration_seconds: number; data: any }
 export function TreinoDetalhePage() {
   const { id } = useParams<{ id: string }>()
   const nav = useNavigate()
+  const { i18n } = useTranslation()
   const [routine, setRoutine] = useState<SR | null>(null)
   const [sessions, setSessions] = useState<Session[]>([])
 
@@ -55,13 +69,10 @@ export function TreinoDetalhePage() {
       </div>
 
       {routine?.objective && (
-        <div className="text-white/70 text-rt-13 mb-4">{routine.objective}</div>
+        <div className="text-white/70 text-rt-13 mb-4">
+          {etiquetaDe(objetivosTreino, routine.objective, i18n.language)}
+        </div>
       )}
-
-      <div className="card-dark p-4 mb-4">
-        <div className="text-white/60 text-rt-11 uppercase font-semibold tracking-wide mb-1">Progresso</div>
-        <div className="text-white text-rt-18 font-bold">{routine?.completed_workouts ?? 0} / {routine?.estimated_workouts ?? 0} treinos</div>
-      </div>
 
       <div className="text-white text-rt-15 font-bold mb-2">Exercícios</div>
       {exercises.length === 0 ? (
@@ -70,17 +81,38 @@ export function TreinoDetalhePage() {
         </div>
       ) : (
         <ul className="flex flex-col gap-2">
-          {exercises.map((e, i) => (
-            <li key={i} className="card-dark p-3 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-surface-input flex items-center justify-center">
-                <Dumbbell size={16} className="text-brand" />
-              </div>
-              <div className="flex-1">
-                <div className="text-white text-rt-13 font-semibold">{e.name}</div>
-                <div className="text-white/60 text-rt-11">{e.series} séries</div>
-              </div>
-            </li>
-          ))}
+          {exercises.map((e, i) => {
+            const cantidad = Array.isArray(e.series) ? e.series.length : e.series
+            const cargas = Array.isArray(e.series)
+              ? e.series.map((sr) => sr.load).filter((x) => x && x.trim() !== '')
+              : []
+            return (
+              <li key={i} className="card-dark p-3">
+                <div className="flex items-start gap-3">
+                <div className="w-16 h-16 rounded-[12px] bg-surface-input flex items-center justify-center overflow-hidden shrink-0">
+                  {e.thumbnail_url
+                    ? <img src={e.thumbnail_url} alt="" className="w-full h-full object-cover" />
+                    : <Dumbbell size={24} className="text-brand" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-white text-rt-15 font-semibold leading-tight">{e.name}</div>
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {e.muscle_group && <Chip>{e.muscle_group}</Chip>}
+                    <Chip>{cantidad} {cantidad === 1 ? 'Série' : 'Séries'}</Chip>
+                    {cargas.length > 0 && (
+                      <Chip><span className="font-bold">KG</span> - {cargas.join('/')}</Chip>
+                    )}
+                  </div>
+                </div>
+                </div>
+                {(e.video_url || e.media_type) && (
+                  <div className="mt-3">
+                    <BannerMedia media={e} alto={150} />
+                  </div>
+                )}
+              </li>
+            )
+          })}
         </ul>
       )}
 
@@ -141,5 +173,13 @@ function ProgressChart({ points }: { points: { date: string; vol: number }[] }) 
         {Math.round(coords[coords.length - 1].vol).toLocaleString('pt-BR')} kg
       </text>
     </svg>
+  )
+}
+
+function Chip({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="text-rt-11 px-2.5 py-1 rounded-btn-pill border border-grey-700 text-white/70">
+      {children}
+    </span>
   )
 }

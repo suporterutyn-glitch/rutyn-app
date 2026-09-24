@@ -86,7 +86,13 @@ export function ConversasPage() {
           {convs.map((c) => {
             const goto = isTeacher ? `/professor/mensagens/${c.id}` : `/aluno/chat/${c.id}`
             return (
-              <li key={c.id} onClick={() => nav(goto)} className="card-dark p-3 flex items-center gap-3 cursor-pointer active:scale-[0.99]">
+              <li key={c.id}>
+                {/* Botón, no un li con onClick: se abre con teclado y lo anuncia el lector. */}
+                <button
+                  type="button"
+                  onClick={() => nav(goto)}
+                  className="w-full text-left card-dark p-3 flex items-center gap-3 active:scale-[0.99]"
+                >
                 <div className="w-12 h-12 rounded-full bg-surface-raised flex items-center justify-center overflow-hidden">
                   {c.other?.avatar_url ? <img src={c.other.avatar_url} alt="" className="w-full h-full object-cover" /> : <UserIcon size={22} className="text-grey-500" />}
                 </div>
@@ -99,6 +105,7 @@ export function ConversasPage() {
                     {new Date(c.last_message_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 )}
+                </button>
               </li>
             )
           })}
@@ -151,7 +158,7 @@ export function ConversaPage() {
   }
 
   return (
-    <div className="app-shell chat-bg">
+    <div className="app-shell app-bg-pro">
       <div className="relative z-10 min-h-dvh flex flex-col">
         <div className="sticky top-0 bg-surface-app/95 backdrop-blur px-4 pt-[calc(env(safe-area-inset-top)+12px)] pb-3 flex items-center gap-3 border-b border-surface-line">
           <button onClick={() => nav(-1)} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white">

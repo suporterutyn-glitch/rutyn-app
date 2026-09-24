@@ -261,7 +261,7 @@ export function AnamneseResponderPage() {
           )}
 
           <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-app px-4 pb-4"
-               style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 16px)' }}>
+               style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 96px)' }}>
             <button onClick={next} disabled={!canNext || saving} className="btn-save disabled:opacity-50">
               {isLast ? (saving ? '...' : 'Enviar') : t('common:continue', { defaultValue: 'Continuar' })}
             </button>

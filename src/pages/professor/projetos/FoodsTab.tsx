@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Plus, Apple } from 'lucide-react'
+import { Plus, Apple, Star } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
+import type { Filtro } from '../MeusProjetos'
+import { useFavoritos } from '@/lib/favoritos'
+import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { useAuth } from '@/lib/auth'
-import { SearchBar, EmptyState, FixedBottomActions, FullScreenSheet, Field } from './RoutinesTab'
+import { EmptyState, FixedBottomActions, FullScreenSheet, Field } from './RoutinesTab'
 
 type Food = {
   id: string
@@ -17,10 +20,9 @@ type Food = {
   category: string | null
 }
 
-export function FoodsTab() {
+export function FoodsTab({ query, filtro }: { query: string; filtro: Filtro }) {
   const { i18n: _i18n } = useTranslation()
   const [items, setItems] = useState<Food[]>([])
-  const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [showNew, setShowNew] = useState(false)
 
@@ -32,14 +34,16 @@ export function FoodsTab() {
   }
   useEffect(() => { void load() }, [])
 
-  const filtered = items.filter((f) => {
-    const q = query.toLowerCase()
-    return f.name.toLowerCase().includes(q)
-  })
+  const { profile } = useAuth()
+  const { esFavorito, alternar, error: errorFav, limpiarError } = useFavoritos('food')
+
+  const filtered = items
+    .filter((f) => (filtro === 'favoritos' ? esFavorito(f.id) : true))
+    .filter((f) => (filtro === 'minhas' ? f.trainer_id === profile?.id : true))
+    .filter((f) => f.name.toLowerCase().includes(query.toLowerCase()))
 
   return (
     <div className="pb-24">
-      <SearchBar value={query} onChange={setQuery} placeholder="Buscar alimentos..." />
       {loading ? (
         <div className="text-white/60 text-rt-13 py-8 text-center">Carregando…</div>
       ) : filtered.length === 0 ? (
@@ -56,6 +60,9 @@ export function FoodsTab() {
                   <div className="text-white text-rt-14 font-bold truncate">{f.name}</div>
                   <div className="text-white/60 text-rt-11">{f.portion || '100g'} · {f.calories || 0} kcal</div>
                 </div>
+                <button type="button" onClick={() => void alternar(f.id)} aria-label="Favorito" className="shrink-0 p-1">
+                  <Star size={20} className={esFavorito(f.id) ? 'text-brand fill-brand' : 'text-brand'} />
+                </button>
               </div>
               <div className="flex gap-3 mt-2 text-rt-11">
                 <span className="text-macro-protein">P {f.protein_g || 0}g</span>
@@ -74,6 +81,7 @@ export function FoodsTab() {
       </FixedBottomActions>
 
       {showNew && <NewFoodSheet onClose={() => setShowNew(false)} onCreated={() => { setShowNew(false); void load() }} />}
+      {errorFav && <FeedbackDialog kind="error" message={errorFav} onClose={limpiarError} />}
     </div>
   )
 }

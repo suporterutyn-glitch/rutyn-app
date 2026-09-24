@@ -31,7 +31,11 @@ export type Profile = {
   bank_name?: string | null
   bank_agency?: string | null
   bank_account?: string | null
+  bank_account_type?: string | null
   pix_key?: string | null
+  link_message?: string | null
+  unlinked_by?: string | null
+  pix_key_type?: string | null
   avatar_url?: string | null
   phone?: string | null
   created_at?: string | null

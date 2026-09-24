@@ -4,7 +4,8 @@ import { ChevronRight } from 'lucide-react'
 type Props = {
   label: string
   onConfirm: () => void
-  variant?: 'brand' | 'danger'
+  /** 'light' = sobre fondo claro (resumo, esforço). */
+  variant?: 'brand' | 'danger' | 'light'
 }
 
 export function DragSlider({ label, onConfirm, variant = 'brand' }: Props) {
@@ -40,9 +41,10 @@ export function DragSlider({ label, onConfirm, variant = 'brand' }: Props) {
 
   const bg = variant === 'danger' ? 'bg-danger' : 'bg-save'
   const thumbBg = variant === 'danger' ? 'bg-danger-strong' : 'bg-brand-light'
+  const pista = variant === 'light' ? 'bg-grey-900' : 'bg-surface-raised'
 
   return (
-    <div className="relative w-full h-14 rounded-btn-pill bg-surface-raised overflow-hidden select-none">
+    <div className={'relative w-full h-14 rounded-btn-pill overflow-hidden select-none ' + pista}>
       <div className={'absolute inset-y-0 left-0 ' + bg} style={{ width: `${x + 24}px` }} />
       <div className="absolute inset-0 flex items-center justify-center text-white text-rt-16 font-semibold pointer-events-none">
         {label}

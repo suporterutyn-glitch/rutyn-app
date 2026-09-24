@@ -24,6 +24,12 @@ export function StatusGate({ role, children }: Props) {
 
   if (profile.role === 'student') {
     if (profile.link_status === 'pending') return <Navigate to="/aguardando" replace />
+    // 'ended' = el profesor lo removió: primero se le explica (y se le muestra
+    // el mensaje que dejó), recién después va al marketplace.
+    if (profile.link_status === 'ended' && profile.unlinked_by) {
+      if (loc.pathname !== '/aluno/encontrar-professor')
+        return <Navigate to="/bloqueado?motivo=removido" replace />
+    }
     if (profile.link_status === 'none' || profile.link_status === 'ended') {
       if (loc.pathname !== '/aluno/encontrar-professor')
         return <Navigate to="/aluno/encontrar-professor" replace />

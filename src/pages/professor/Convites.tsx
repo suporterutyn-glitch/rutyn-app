@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth'
 import { currencyOf, formatMoney } from '@/lib/plans'
 import { EmptyState, FullScreenSheet, Field } from './projetos/RoutinesTab'
 import { PLAN_LIMITS } from '@/lib/plans'
+import { FeedbackDialog } from '@/components/FeedbackDialog'
 
 type Invite = {
   id: string
@@ -27,6 +28,8 @@ export function ConvitesPage() {
   const [invites, setInvites] = useState<Invite[]>([])
   const [loading, setLoading] = useState(true)
   const [activeCount, setActiveCount] = useState(0)
+  const [errorAccion, setErrorAccion] = useState<string | null>(null)
+  const [limiteAvisado, setLimiteAvisado] = useState(false)
 
   const planLimit = PLAN_LIMITS[profile?.plan ?? 'free'] ?? 2
   const currency = currencyOf(profile?.country)
@@ -47,8 +50,7 @@ export function ConvitesPage() {
 
   async function accept(inv: Invite) {
     if (activeCount >= planLimit) {
-      alert('Limite de alunos atingido. Faça upgrade do plano.')
-      nav('/professor/assinatura')
+      setLimiteAvisado(true)
       return
     }
     // Vincula aluno + cria 1ª mensalidade
@@ -57,8 +59,11 @@ export function ConvitesPage() {
     const due = new Date(today.getFullYear(), today.getMonth(), dueDay)
     if (due <= today) due.setMonth(due.getMonth() + 1)
 
-    await supabase.from('invites').update({ status: 'accepted' }).eq('id', inv.id)
-    await supabase.from('profiles').update({ teacher_id: profile!.id, link_status: 'active' }).eq('id', inv.student_id)
+    // El vínculo va por función: el alumno todavía no es suyo, así que la
+    // escritura directa sobre su perfil la filtra RLS sin devolver error.
+    const { error } = await supabase.rpc('aceptar_convite', { convite_id: inv.id })
+    if (error) { setErrorAccion(error.message); return }
+
     await supabase.from('charges').insert({
       teacher_id: profile!.id, student_id: inv.student_id,
       format: (inv.format ?? 'monthly'), amount: Number(inv.amount ?? 0),
@@ -73,7 +78,8 @@ export function ConvitesPage() {
   }
 
   async function reject(inv: Invite) {
-    await supabase.from('invites').update({ status: 'rejected' }).eq('id', inv.id)
+    const { error } = await supabase.from('invites').update({ status: 'rejected' }).eq('id', inv.id)
+    if (error) { setErrorAccion(error.message); return }
     await supabase.from('notifications').insert({
       user_id: inv.student_id, type: 'invite', title: 'Proposta recusada',
       body: `${profile!.full_name ?? 'O professor'} recusou sua proposta.`,
@@ -129,6 +135,18 @@ export function ConvitesPage() {
             </li>
           ))}
         </ul>
+      )}
+
+      {errorAccion && (
+        <FeedbackDialog kind="error" message={errorAccion} onClose={() => setErrorAccion(null)} />
+      )}
+
+      {limiteAvisado && (
+        <FeedbackDialog
+          kind="error"
+          message="Limite de alunos atingido. Faça upgrade do plano."
+          onClose={() => { setLimiteAvisado(false); nav('/professor/assinatura') }}
+        />
       )}
 
       {counterOf && (

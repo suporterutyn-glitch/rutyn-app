@@ -1,10 +1,16 @@
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { UserCircle2 } from 'lucide-react'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { RutynLogo } from '@/components/RutynLogo'
 import { OfflineBanner } from '@/components/OfflineBanner'
+import { IconeUsuario } from '@/components/IconeUsuario'
 
+/**
+ * Prints 003/004/005 del módulo 01. Las medidas salen de la captura y van en
+ * proporciones: el logo y los botones ocupan un porcentaje del ancho, y los
+ * espacios verticales van en dvh, porque en la captura la pantalla queda con
+ * casi un tercio vacío abajo y con px fijos eso se rompe en cada teléfono.
+ */
 export function IdentificacaoPage() {
   const nav = useNavigate()
   const { t } = useTranslation()
@@ -12,42 +18,38 @@ export function IdentificacaoPage() {
   return (
     <div className="app-shell app-bg-pro flex flex-col">
       <OfflineBanner />
-      <div className="relative z-10 flex flex-col min-h-dvh px-6 pt-[env(safe-area-inset-top)]">
-        <div className="flex-1 flex flex-col items-center justify-center gap-5">
-          <RutynLogo size={150} />
-          <div className="text-white font-black text-rt-24 tracking-tight text-center">
+      <div className="relative z-10 flex flex-col min-h-dvh pt-[calc(env(safe-area-inset-top)+15.6dvh)] pb-[27dvh]">
+        <div className="flex flex-col items-center">
+          <RutynLogo className="w-[21%] aspect-square" />
+          <h1 className="text-white font-bold text-rt-22 tracking-tight text-center mt-[2.4dvh]">
             {t('identification:welcome')}
-          </div>
+          </h1>
         </div>
 
-        <div className="flex flex-col gap-4 pb-[calc(env(safe-area-inset-bottom)+32px)]">
+        <div className="flex-1" />
+
+        <div className="flex flex-col items-center">
           <button
-            className="btn-primary-pill gap-3"
+            className="w-[66%] h-[50px] rounded-[50px] bg-brand-v shadow-btn text-white font-bold text-rt-17 flex items-center px-4 transition active:scale-[0.98]"
             onClick={() => nav('/cadastro/professor')}
           >
-            <UserCircle2 size={32} strokeWidth={1.5} />
-            <span>{t('identification:imTeacher')}</span>
-            <span className="w-8" />
+            <IconeUsuario size={30} />
+            <span className="flex-1 text-center">{t('identification:imTeacher')}</span>
+            <span className="w-[30px]" />
           </button>
 
           <button
-            className="btn-outline-white"
+            className="w-[66%] h-[50px] rounded-[50px] border-[1.5px] border-white bg-transparent text-white font-semibold text-rt-17 flex items-center px-4 mt-[2dvh] transition active:scale-[0.98]"
             onClick={() => nav('/cadastro/aluno')}
           >
-            <UserCircle2 size={32} strokeWidth={1.5} />
-            <span>{t('identification:imStudent')}</span>
+            <IconeUsuario size={30} />
+            <span className="flex-1 text-center">{t('identification:imStudent')}</span>
+            <span className="w-[30px]" />
           </button>
 
-          <div className="flex justify-center py-1">
+          <div className="mt-[3.5dvh]">
             <LanguageToggle />
           </div>
-
-          <button
-            className="text-white/80 text-rt-13 font-semibold underline"
-            onClick={() => nav('/login')}
-          >
-            {t('identification:login')}
-          </button>
         </div>
       </div>
     </div>

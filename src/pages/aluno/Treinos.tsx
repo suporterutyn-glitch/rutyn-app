@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Dumbbell, CheckCircle2, Play } from 'lucide-react'
+import { Dumbbell, CheckCircle2, Play, Bell } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { objetivosTreino, etiquetaDe } from '@/lib/catalogos'
+import { LanguageToggle } from '@/components/LanguageToggle'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { EmptyState } from '@/pages/professor/projetos/RoutinesTab'
@@ -27,6 +30,7 @@ function isVisible(r: SR): boolean {
 export function TreinosPage() {
   const { profile } = useAuth()
   const nav = useNavigate()
+  const { t, i18n } = useTranslation()
   const [items, setItems] = useState<SR[]>([])
   const [loading, setLoading] = useState(true)
   const [ongoing, setOngoing] = useState<{ id: string; startedAt: number } | null>(null)
@@ -68,9 +72,42 @@ export function TreinosPage() {
     setOngoing(null)
   }
 
+  // Progreso global del plan, como en el diseño ("9/36 Treinos").
+  const hechosTotal = items.reduce((n, r) => n + (r.completed_workouts ?? 0), 0)
+  const estimadosTotal = items.reduce((n, r) => n + (r.estimated_workouts ?? 0), 0)
+  const pctTotal = estimadosTotal > 0 ? Math.min(100, Math.round((hechosTotal / estimadosTotal) * 100)) : 0
+
   return (
     <div className="pt-[calc(env(safe-area-inset-top)+16px)] px-4 pb-24">
-      <h1 className="text-white text-rt-20 font-bold mb-4">Meus Treinos</h1>
+      {/* Mismo encabezado que el resto de las pantallas del alumno */}
+      <div className="flex items-center justify-between mb-5">
+        <div className="min-w-0">
+          <div className="text-white text-rt-20 font-bold truncate">
+            {t('aluno:hello', { name: profile?.full_name?.split(' ')[0] ?? 'Aluno' })}
+          </div>
+          <div className="text-white/60 text-rt-11 mt-0.5 truncate">{t('aluno:myWorkouts')}</div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <LanguageToggle />
+          <button onClick={() => nav('/aluno/notificacoes')} className="w-10 h-10 rounded-full bg-surface-raised flex items-center justify-center" aria-label="Notificações">
+            <Bell size={20} className="text-white" />
+          </button>
+        </div>
+      </div>
+
+      {items.length > 0 && (
+        <div className="flex items-end justify-between gap-4 mb-3">
+          <div className="text-white text-rt-15">{t('aluno:pickWorkout')}</div>
+          <div className="flex-1 max-w-[180px]">
+            <div className="text-white/70 text-rt-11 text-right mb-1">
+              {t('aluno:workoutsCount', { done: hechosTotal, total: estimadosTotal })}
+            </div>
+            <div className="h-1.5 rounded-full bg-surface-raised overflow-hidden">
+              <div className="h-full bg-brand" style={{ width: `${pctTotal}%` }} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {ongoing && (
         <div className="rounded-card bg-brand/15 border border-brand p-3 mb-4 flex items-center gap-3 animate-pulse-highlight">
@@ -90,37 +127,45 @@ export function TreinosPage() {
       {loading ? (
         <div className="text-white/60 text-rt-13 py-8 text-center">Carregando…</div>
       ) : items.length === 0 ? (
-        <EmptyState icon={Dumbbell} title="Nenhum treino disponível" body="Seu professor ainda não atribuiu uma rotina para você." />
+        <EmptyState icon={Dumbbell} title={t('aluno:noWorkouts')} body={t('aluno:noWorkoutsSub')} />
       ) : (
         <ul className="flex flex-col gap-3">
           {items.map((r) => {
-            const pct = r.estimated_workouts > 0 ? Math.min(100, Math.round((r.completed_workouts / r.estimated_workouts) * 100)) : 0
             const done = r.estimated_workouts > 0 && r.completed_workouts >= r.estimated_workouts
             const atual = r.completed_workouts > 0 && !done
             return (
               <li key={r.id}>
-                <Link to={`/aluno/treinos/${r.id}`} className="card-dark p-4 block active:scale-[0.99] transition">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-11 h-11 rounded-lg bg-surface-input flex items-center justify-center">
-                      {done ? <CheckCircle2 size={22} className="text-brand" /> : <Dumbbell size={20} className="text-brand" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-white text-rt-14 font-bold truncate">{r.name}</div>
-                      <div className="text-white/60 text-rt-11 truncate">{r.objective ?? 'Sem descrição'}</div>
-                    </div>
-                    {atual && <span className="text-rt-9 font-bold px-2 py-0.5 rounded-tag bg-brand/15 text-brand border border-brand/30">ATUAL</span>}
-                    {done && <span className="text-rt-9 font-bold px-2 py-0.5 rounded-tag bg-brand text-white">CONCLUÍDO</span>}
+                <Link
+                  to={`/aluno/treinos/${r.id}`}
+                  className={
+                    'card-dark p-3 flex items-center gap-3 active:scale-[0.99] transition ' +
+                    (done || atual ? 'border-brand' : '')
+                  }
+                >
+                  <div className="w-16 h-16 rounded-[12px] bg-surface-input flex items-center justify-center shrink-0">
+                    {done ? <CheckCircle2 size={26} className="text-brand" /> : <Dumbbell size={24} className="text-brand" />}
                   </div>
-                  {r.estimated_workouts > 0 && (
-                    <div>
-                      <div className="flex justify-between text-rt-10 mb-1">
-                        <span className="text-white/60">{r.completed_workouts} / {r.estimated_workouts} treinos</span>
-                        <span className="text-brand font-semibold">{pct}%</span>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="text-white text-rt-15 font-bold leading-tight">{r.name}</div>
+                    {r.objective && (
+                      <div className="mt-1.5">
+                        <span className="text-rt-11 px-2.5 py-1 rounded-btn-pill border border-grey-700 text-white/70">
+                          {etiquetaDe(objetivosTreino, r.objective, i18n.language)}
+                        </span>
                       </div>
-                      <div className="h-1.5 rounded-full bg-surface-raised overflow-hidden">
-                        <div className="h-full bg-brand" style={{ width: `${pct}%` }} />
-                      </div>
-                    </div>
+                    )}
+                  </div>
+
+                  {atual && (
+                    <span className="px-3 py-1.5 rounded-btn-pill bg-brand text-white text-rt-12 font-semibold shrink-0">
+                      {t('aluno:current')}
+                    </span>
+                  )}
+                  {done && (
+                    <span className="px-3 py-1.5 rounded-btn-pill border border-brand text-brand text-rt-12 font-semibold shrink-0 flex items-center gap-1">
+                      <CheckCircle2 size={14} /> {t('aluno:doneLabel')}
+                    </span>
                   )}
                 </Link>
               </li>

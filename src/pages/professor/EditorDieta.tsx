@@ -4,6 +4,7 @@ import { ArrowLeft, Plus, Trash2, Salad, Apple, Users } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { EmptyState, FullScreenSheet, Field } from './projetos/RoutinesTab'
 import { useAuth } from '@/lib/auth'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 
 type Diet = { id: string; name: string; goal: string | null }
 type Meal = { id: string; diet_id: string; name: string; time_of_day: string | null; position: number; foods?: MealFood[] }
@@ -15,6 +16,7 @@ export function EditorDietaPage() {
   const nav = useNavigate()
   useAuth() // ensures auth
   const [diet, setDiet] = useState<Diet | null>(null)
+  const [borrandoRefeicao, setBorrandoRefeicao] = useState<string | null>(null)
   const [meals, setMeals] = useState<Meal[]>([])
   const [foodsMap, setFoodsMap] = useState<Map<string, FoodCat>>(new Map())
   const [loading, setLoading] = useState(true)
@@ -58,7 +60,7 @@ export function EditorDietaPage() {
     await supabase.from('meals').update({ time_of_day }).eq('id', mId)
   }
   async function removeMeal(mId: string) {
-    if (!confirm('Remover refeição?')) return
+    setBorrandoRefeicao(null)
     await supabase.from('meals').delete().eq('id', mId)
     await load()
   }
@@ -85,8 +87,7 @@ export function EditorDietaPage() {
   function foodMacros(f: MealFood) {
     const cat = f.food_id ? foodsMap.get(f.food_id) : null
     if (!cat) return { kcal: 0, p: 0, c: 0, fat: 0 }
-    const portionNum = cat.portion ? parseFloat(cat.portion) : 100
-    const ratio = Number(f.quantity) / portionNum
+    const ratio = Number(f.quantity) / medidaDePorcion(cat.portion).cantidad
     return { kcal: Number(cat.calories || 0) * ratio, p: Number(cat.protein_g || 0) * ratio, c: Number(cat.carbs_g || 0) * ratio, fat: Number(cat.fats_g || 0) * ratio }
   }
   const totals = meals.reduce((acc, m) => {
@@ -140,7 +141,7 @@ export function EditorDietaPage() {
                   type="time" defaultValue={m.time_of_day ?? ''} onBlur={(e) => updateMealTime(m.id, e.target.value)}
                   className="w-20 bg-surface-input rounded px-2 py-1 text-white text-rt-11 outline-none"
                 />
-                <button onClick={() => removeMeal(m.id)} className="w-7 h-7 rounded-md bg-surface-input flex items-center justify-center">
+                <button onClick={() => setBorrandoRefeicao(m.id)} className="w-7 h-7 rounded-md bg-surface-input flex items-center justify-center">
                   <Trash2 size={14} className="text-danger" />
                 </button>
               </div>
@@ -171,7 +172,7 @@ export function EditorDietaPage() {
         </ul>
       )}
 
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-app px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+16px)] flex gap-2 bg-surface-app/95 backdrop-blur">
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-app px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+96px)] flex gap-2 bg-surface-app/95 backdrop-blur">
         <button onClick={addMeal} className="flex-1 h-12 rounded-btn-pill bg-brand text-white text-rt-14 font-semibold flex items-center justify-center gap-2">
           <Plus size={18} /> Refeição
         </button>
@@ -184,6 +185,17 @@ export function EditorDietaPage() {
 
       {pickerFor && <FoodPicker onClose={() => setPickerFor(null)} onPick={(c, qty) => addFood(pickerFor, c, qty)} />}
       {assignOpen && diet && <AssignDietSheet diet={diet} meals={meals} foodsMap={foodsMap} onClose={() => setAssignOpen(false)} />}
+      {borrandoRefeicao && (
+        <ConfirmDialog
+          message="Remover refeição?"
+          detail="Os alimentos desta refeição também serão removidos."
+          confirmLabel="Remover"
+          tone="danger"
+          onConfirm={() => void removeMeal(borrandoRefeicao)}
+          onCancel={() => setBorrandoRefeicao(null)}
+        />
+      )}
+
     </div>
   )
 }
@@ -215,7 +227,7 @@ function FoodPicker({ onClose, onPick }: { onClose: () => void; onPick: (c: Food
                     <Apple size={18} className="text-brand" />
                     <div className="flex-1">
                       <div className="text-white text-rt-13 font-semibold">{x.name}</div>
-                      <div className="text-grey-500 text-rt-10">{x.portion}g · {Number(x.calories)} kcal</div>
+                      <div className="text-grey-500 text-rt-10">{x.portion || '100g'} · {Number(x.calories)} kcal</div>
                     </div>
                   </button>
                 </li>
@@ -231,7 +243,8 @@ function FoodPicker({ onClose, onPick }: { onClose: () => void; onPick: (c: Food
           </Field>
           <div className="grid grid-cols-4 gap-2 text-center card-dark p-3">
             {(() => {
-              const r = (Number(qty) || 0) / Number(picked.portion || 100)
+              // Number('50g') es NaN: hay que extraer el número de la porción.
+              const r = (Number(qty) || 0) / medidaDePorcion(picked.portion).cantidad
               return [
                 { l: 'kcal', v: Number(picked.calories) * r, c: 'text-macro-kcal' },
                 { l: 'P', v: Number(picked.protein_g) * r, c: 'text-macro-protein' },
@@ -276,14 +289,21 @@ function AssignDietSheet({ diet, meals, foodsMap, onClose }: {
   async function assign() {
     if (!profile?.id || selected.size === 0) return
     setSaving(true)
+    // El horario de cada comida y el objetivo también viajan: el alumno ve
+    // "Café da Manhã 07:00" y el chip del objetivo, no solo la lista.
     const snapshot = {
+      goal: (diet as { goal?: string | null }).goal ?? null,
       meals: meals.map((m) => ({
         name: m.name,
+        time: m.time_of_day ?? null,
         foods: (m.foods ?? []).map((f) => {
           const cat = f.food_id ? foodsMap.get(f.food_id) : null
-          const r = cat ? Number(f.quantity) / Number(cat.portion || 100) : 1
+          const porcion = medidaDePorcion(cat?.portion)
+          const r = cat ? Number(f.quantity) / porcion.cantidad : 1
           return {
-            name: f.food_name_snapshot, qty: Number(f.quantity), unit: 'g',
+            name: f.food_name_snapshot,
+            qty: Number(f.quantity),
+            unit: porcion.unidad,
             kcal: cat ? Number(cat.calories) * r : 0,
             p: cat ? Number(cat.protein_g) * r : 0,
             c: cat ? Number(cat.carbs_g) * r : 0,
@@ -335,4 +355,18 @@ function AssignDietSheet({ diet, meals, foodsMap, onClose }: {
       </div>
     </FullScreenSheet>
   )
+}
+
+/**
+ * La porción del catálogo es texto libre: "100g", "1 unidade", "200 ml".
+ * De ahí salen la cantidad base para la regla de tres y la unidad que ve el alumno.
+ */
+function medidaDePorcion(porcion: string | null | undefined): { cantidad: number; unidad: string } {
+  const txt = (porcion ?? '').trim()
+  const num = Number(txt.match(/[\d.,]+/)?.[0]?.replace(',', '.'))
+  const unidad = txt.replace(/[\d.,\s]/g, '').toLowerCase()
+  return {
+    cantidad: Number.isFinite(num) && num > 0 ? num : 100,
+    unidad: unidad === 'unidade' || unidad === 'uni' ? 'Uni' : unidad || 'g',
+  }
 }

@@ -2,16 +2,16 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, ChefHat } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import type { Filtro } from '../MeusProjetos'
 import { useAuth } from '@/lib/auth'
-import { SearchBar, EmptyState, FixedBottomActions, FullScreenSheet, Field } from './RoutinesTab'
+import { EmptyState, FixedBottomActions, FullScreenSheet, Field } from './RoutinesTab'
 
-type Recipe = { id: string; name: string; instructions: string | null }
+type Recipe = { id: string; name: string; instructions: string | null; is_favorite: boolean }
 
-export function RecipesTab() {
+export function RecipesTab({ query, filtro }: { query: string; filtro: Filtro }) {
   const { profile } = useAuth()
   const nav = useNavigate()
   const [items, setItems] = useState<Recipe[]>([])
-  const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [showNew, setShowNew] = useState(false)
 
@@ -24,11 +24,12 @@ export function RecipesTab() {
   }
   useEffect(() => { void load() }, [profile?.id])
 
-  const filtered = items.filter((r) => r.name.toLowerCase().includes(query.toLowerCase()))
+  const filtered = items
+    .filter((r) => (filtro === 'favoritos' ? r.is_favorite : true))
+    .filter((r) => r.name.toLowerCase().includes(query.toLowerCase()))
 
   return (
     <div className="pb-24">
-      <SearchBar value={query} onChange={setQuery} placeholder="Buscar receitas..." />
       {loading ? (
         <div className="text-white/60 text-rt-13 py-8 text-center">Carregando…</div>
       ) : filtered.length === 0 ? (

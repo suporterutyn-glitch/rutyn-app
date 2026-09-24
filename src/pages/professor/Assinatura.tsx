@@ -1,8 +1,11 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Check } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
 import { PLAN_LIMITS, PLAN_LABEL, PLAN_PRICES, currencyOf, formatMoney } from '@/lib/plans'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { FeedbackDialog } from '@/components/FeedbackDialog'
 
 type Plan = 'free' | 'pro' | 'master' | 'elite'
 
@@ -19,21 +22,29 @@ export function AssinaturaPage() {
   const currency = currencyOf(profile?.country)
   const [pro, master, elite] = PLAN_PRICES[currency] ?? [0, 0, 0]
   const current = profile?.plan ?? 'free'
+  const [confirmandoFree, setConfirmandoFree] = useState(false)
+  const [errorCheckout, setErrorCheckout] = useState<string | null>(null)
+
+  async function voltarParaFree() {
+    if (!profile?.id) return
+    setConfirmandoFree(false)
+    const { error } = await supabase.from('profiles').update({ plan: 'free', plan_expires_at: null }).eq('id', profile.id)
+    if (error) { setErrorCheckout(error.message); return }
+    await refresh()
+    nav(-1)
+  }
 
   async function selectPlan(p: Plan) {
     if (!profile?.id) return
     if (p === 'free') {
       if (current === 'free') return
-      if (!confirm('Cancelar plano pago e voltar para Free?')) return
-      await supabase.from('profiles').update({ plan: 'free', plan_expires_at: null }).eq('id', profile.id)
-      await refresh()
-      nav(-1)
+      setConfirmandoFree(true)
       return
     }
     // Planos pagos → Stripe Checkout via Edge Function
     const { data, error } = await supabase.functions.invoke('stripe-create-checkout', { body: { plan: p } })
     if (error || (data as any)?.error) {
-      alert((data as any)?.error ?? error?.message ?? 'Erro ao criar checkout')
+      setErrorCheckout((data as any)?.error ?? error?.message ?? 'Erro ao criar checkout')
       return
     }
     const url = (data as any)?.url as string | undefined
@@ -62,6 +73,20 @@ export function AssinaturaPage() {
       <div className="text-white/50 text-rt-11 text-center">
         Assinatura mensal. Pode cancelar a qualquer momento.
       </div>
+      {confirmandoFree && (
+        <ConfirmDialog
+          message="Cancelar plano pago e voltar para Free?"
+          detail="Você mantém seus alunos até o limite do plano Free."
+          confirmLabel="Voltar para Free"
+          tone="danger"
+          onConfirm={() => void voltarParaFree()}
+          onCancel={() => setConfirmandoFree(false)}
+        />
+      )}
+
+      {errorCheckout && (
+        <FeedbackDialog kind="error" message={errorCheckout} onClose={() => setErrorCheckout(null)} />
+      )}
     </div>
   )
 }

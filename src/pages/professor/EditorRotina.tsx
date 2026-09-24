@@ -1,9 +1,18 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Plus, Trash2, Dumbbell, GripVertical, Users, Link2 } from 'lucide-react'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { ArrowLeft, Plus, Trash2, Dumbbell, GripVertical, Users, Link2, ChevronDown, MoreVertical, Unlink } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { EmptyState, FullScreenSheet, Field } from './projetos/RoutinesTab'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { FilaSerie } from '@/components/professor/SeriesParametros'
+import { normalizarParams } from '@/lib/parametros'
+import { useArrastreLista, moverEnLista } from '@/lib/reordenar'
+import { objetivosTreino, etiquetaDe } from '@/lib/catalogos'
+import { BannerMedia, useMediaDeExercicios, type Media } from '@/components/MediaExercicio'
+import { useTranslation } from 'react-i18next'
+import { FeedbackDialog } from '@/components/FeedbackDialog'
+import { nombreEjercicio, COLUMNAS_NOMBRE, type ConTraducciones } from '@/lib/nombreEjercicio'
 
 type Routine = { id: string; name: string; objective: string | null }
 type Ex = {
@@ -16,18 +25,103 @@ type Ex = {
   notes: string | null
   series?: Serie[]
 }
-type Serie = { id?: string; routine_exercise_id?: string; position: number; params: { reps?: string; load?: string; rest?: string }; notes?: string | null }
-type Catalog = { id: string; name: string }
+type Serie = { id?: string; routine_exercise_id?: string; position: number; params: Record<string, string>; notes?: string | null }
+type Catalog = { id: string; name: string } & ConTraducciones
 
 export function EditorRotinaPage() {
   const { id } = useParams<{ id: string }>()
+  return <EditorRotina routineId={id} />
+}
+
+/**
+ * El editor vive dentro de la tarjeta de la rutina en Meus Projetos
+ * (prints 017 a 027) y también como pantalla propia, para poder entrar
+ * directo por URL. `embebido` es la diferencia: sin encabezado ni barra fija.
+ */
+export function EditorRotina({ routineId, embebido = false }: { routineId?: string; embebido?: boolean }) {
+  const id = routineId
   const nav = useNavigate()
   const { profile } = useAuth()
+  const { i18n } = useTranslation()
   const [routine, setRoutine] = useState<Routine | null>(null)
+  const [borrandoExercicio, setBorrandoExercicio] = useState<string | null>(null)
   const [exs, setExs] = useState<Ex[]>([])
   const [loading, setLoading] = useState(true)
   const [pickerOpen, setPickerOpen] = useState(false)
-  const [assignOpen, setAssignOpen] = useState(false)
+  // 'Clonar' desde la lista de Meus Projetos entra directo a esta hoja.
+  const [params] = useSearchParams()
+  const [assignOpen, setAssignOpen] = useState(params.get('clonar') === '1')
+  const [errorGuardado, setErrorGuardado] = useState<string | null>(null)
+  const mediaPorExercicio = useMediaDeExercicios(exs.map((e) => e.exercise_id))
+  const [abiertos, setAbiertos] = useState<Record<string, boolean>>({})
+  const [todosAbiertos, setTodosAbiertos] = useState(false)
+  const [seleccion, setSeleccion] = useState<string[]>([])
+  const [grupoAbierto, setGrupoAbierto] = useState<{ tipo: string; ids: string[] } | null>(null)
+
+  // Reordenar ejercicios arrastrando por la manija.
+  const arrastre = useArrastreLista<string>((desde, hasta) => void reordenarExercicios(desde, hasta))
+
+  async function reordenarSeries(re: Ex, desdeId: string, hastaId: string) {
+    const orden = (re.series ?? []).slice().sort((a, b) => a.position - b.position)
+    const i = orden.findIndex((x) => x.id === desdeId)
+    const j = orden.findIndex((x) => x.id === hastaId)
+    if (i < 0 || j < 0) return
+    const nuevo = moverEnLista(orden, i, j)
+    setExs((prev) => prev.map((x) => (x.id === re.id ? { ...x, series: nuevo.map((sr, n) => ({ ...sr, position: n })) } : x)))
+    for (let n = 0; n < nuevo.length; n++) {
+      const { error } = await supabase.from('series').update({ position: n }).eq('id', nuevo[n].id!)
+      if (error) { setErrorGuardado(error.message); return }
+    }
+  }
+
+  async function reordenarExercicios(desdeId: string, hastaId: string) {
+    const orden = exs.slice().sort((a, b) => a.position - b.position)
+    const i = orden.findIndex((x) => x.id === desdeId)
+    const j = orden.findIndex((x) => x.id === hastaId)
+    if (i < 0 || j < 0) return
+    const nuevo = moverEnLista(orden, i, j)
+    setExs(nuevo.map((x, n) => ({ ...x, position: n })))
+    // Una escritura por fila: son pocas y así no hace falta una función nueva.
+    for (let n = 0; n < nuevo.length; n++) {
+      const { error } = await supabase.from('routine_exercises').update({ position: n }).eq('id', nuevo[n].id!)
+      if (error) { setErrorGuardado(error.message); return }
+    }
+  }
+  const catalogo = useMediaDeExercicios(exs.map((e) => e.exercise_id))
+
+  function chipsDe(re: Ex): string[] {
+    const info = re.exercise_id ? catalogo[re.exercise_id] : null
+    return [info?.muscle_group ?? ''].filter(Boolean) as string[]
+  }
+
+  /**
+   * Bi-set con 2, tri-set con 3 (prints 021 y 022). Los elegidos comparten un
+   * group_id nuevo: es lo que después los dibuja dentro del mismo marco.
+   */
+  async function agruparSeleccion() {
+    const tipo = seleccion.length === 2 ? 'biset' : 'triset'
+    const grupo = crypto.randomUUID()
+    const { error } = await supabase.from('routine_exercises')
+      .update({ group_type: tipo, group_id: grupo })
+      .in('id', seleccion)
+    if (error) { setErrorGuardado(error.message); return }
+    setSeleccion([])
+    await load()
+  }
+
+  async function borrarSeleccion() {
+    const { error } = await supabase.from('routine_exercises').delete().in('id', seleccion)
+    if (error) { setErrorGuardado(error.message); return }
+    setSeleccion([])
+    await load()
+  }
+
+  async function desagruparExercicio(exId: string) {
+    const { error } = await supabase.from('routine_exercises')
+      .update({ group_type: 'single', group_id: null }).eq('id', exId)
+    if (error) { setErrorGuardado(error.message); return }
+    await load()
+  }
 
   async function load() {
     if (!id) return
@@ -50,11 +144,13 @@ export function EditorRotinaPage() {
 
   async function addExercise(cat: Catalog) {
     if (!id) return
+    // El snapshot congela el nombre en el idioma en que lo eligió el profesor.
+    const nombre = nombreEjercicio(cat, i18n.language)
     const pos = exs.length
     const { data } = await supabase.from('routine_exercises').insert({
       routine_id: id,
       exercise_id: cat.id,
-      exercise_name_snapshot: cat.name,
+      exercise_name_snapshot: nombre,
       position: pos,
       group_type: 'single',
     }).select('*').single()
@@ -70,7 +166,7 @@ export function EditorRotinaPage() {
   }
 
   async function removeExercise(exId: string) {
-    if (!confirm('Remover este exercício?')) return
+    setBorrandoExercicio(null)
     await supabase.from('routine_exercises').delete().eq('id', exId)
     await load()
   }
@@ -92,7 +188,36 @@ export function EditorRotinaPage() {
   }
 
   async function updateSerieParams(sId: string, params: any) {
-    await supabase.from('series').update({ params }).eq('id', sId)
+    // También en memoria: el snapshot que se manda al alumno se arma con este
+    // estado, y si no se actualiza viaja lo que había al abrir la pantalla.
+    setExs((prev) => prev.map((ex) => ({
+      ...ex,
+      series: (ex.series ?? []).map((sr) => (sr.id === sId ? { ...sr, params } : sr)),
+    })))
+    const { error } = await supabase.from('series').update({ params }).eq('id', sId)
+    if (error) setErrorGuardado(error.message)
+  }
+
+  async function updateSerieNotas(sId: string, notes: string) {
+    setExs((prev) => prev.map((ex) => ({
+      ...ex,
+      series: (ex.series ?? []).map((sr) => (sr.id === sId ? { ...sr, notes } : sr)),
+    })))
+    const { error } = await supabase.from('series').update({ notes }).eq('id', sId)
+    if (error) setErrorGuardado(error.message)
+  }
+
+  /** Copia parámetros y observación al final, como pide el diseño. */
+  async function duplicarSerie(re: Ex, s: Serie) {
+    const pos = re.series?.length ?? 0
+    const { error } = await supabase.from('series').insert({
+      routine_exercise_id: re.id,
+      position: pos,
+      params: s.params ?? {},
+      notes: s.notes ?? null,
+    })
+    if (error) { setErrorGuardado(error.message); return }
+    await load()
   }
 
   async function removeSerie(sId: string) {
@@ -101,62 +226,148 @@ export function EditorRotinaPage() {
   }
 
   return (
-    <div className="pt-[calc(env(safe-area-inset-top)+16px)] px-4 pb-32">
-      <div className="flex items-center gap-3 mb-4">
-        <button onClick={() => nav(-1)} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white">
-          <ArrowLeft size={20} />
-        </button>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-white text-rt-20 font-bold truncate">{routine?.name ?? '...'}</h1>
-          {routine?.objective && <div className="text-white/60 text-rt-11">{routine.objective}</div>}
+    <div className={embebido ? '' : 'pt-[calc(env(safe-area-inset-top)+16px)] px-4 pb-32'}>
+      {!embebido && (
+        <div className="flex items-center gap-3 mb-4">
+          <button onClick={() => nav(-1)} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white">
+            <ArrowLeft size={20} />
+          </button>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-white text-rt-20 font-bold truncate">{routine?.name ?? '...'}</h1>
+            {routine?.objective && (
+              <div className="text-white/60 text-rt-11">
+                {etiquetaDe(objetivosTreino, routine.objective, i18n.language)}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {loading ? (
         <div className="text-white/60 text-rt-13 py-8 text-center">Carregando…</div>
       ) : exs.length === 0 ? (
         <EmptyState icon={Dumbbell} title="Sem exercícios" body="Adicione o primeiro exercício à rotina." />
       ) : (
-        <ul className="flex flex-col gap-3">
-          {exs.map((re, i) => {
-            const groupCls = re.group_type === 'biset' ? 'border-l-4 border-l-group-biset'
-              : re.group_type === 'triset' ? 'border-l-4 border-l-group-triset' : ''
-            return (
-            <li key={re.id} className={'card-dark p-3 ' + groupCls}>
-              <div className="flex items-center gap-2 mb-3">
-                <GripVertical size={16} className="text-grey-500" />
-                <span className="text-white text-rt-14 font-bold flex-1 truncate">
-                  {i + 1}. {re.exercise_name_snapshot ?? 'Exercício'}
-                </span>
-                {re.group_type !== 'single' && (
-                  <span className={
-                    'text-rt-9 font-bold px-2 py-0.5 rounded-tag ' +
-                    (re.group_type === 'biset' ? 'bg-group-biset/15 text-group-biset border border-group-biset/40' : 'bg-group-triset/15 text-group-triset border border-group-triset/40')
-                  }>{re.group_type === 'biset' ? 'BI-SET' : 'TRI-SET'}</span>
-                )}
-                <button onClick={() => cycleGroup(re.id!, re.group_type)} className="w-7 h-7 rounded-md bg-surface-input flex items-center justify-center" title="Alternar bi/tri-set">
-                  <Link2 size={14} className="text-brand" />
+        <>
+          {seleccion.length > 0 ? (
+            <div className="flex items-center gap-2 mb-3">
+              {(seleccion.length === 2 || seleccion.length === 3) && (
+                <button
+                  onClick={() => void agruparSeleccion()}
+                  className="h-10 px-5 rounded-btn-pill bg-danger text-white text-rt-14 font-semibold"
+                >
+                  {seleccion.length === 2 ? 'Bi-set' : 'Tri-set'}
                 </button>
-                <button onClick={() => removeExercise(re.id!)} className="w-7 h-7 rounded-md bg-surface-input flex items-center justify-center">
-                  <Trash2 size={14} className="text-danger" />
-                </button>
-              </div>
+              )}
+              <button
+                onClick={() => void borrarSeleccion()}
+                className="h-10 px-5 rounded-btn-pill bg-danger text-white text-rt-14 font-semibold"
+              >
+                Excluir
+              </button>
+              <button onClick={() => setSeleccion([])} className="ml-auto text-white/70 text-rt-14">
+                Cancelar
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setTodosAbiertos((v) => !v)}
+              className="block ml-auto text-brand text-rt-13 font-semibold mb-2"
+            >
+              {todosAbiertos ? 'Recolher todos' : 'Expandir todos'}
+            </button>
+          )}
 
-              <div className="flex flex-col gap-2">
-                {re.series?.map((s, si) => (
-                  <SerieRow key={s.id} n={si + 1} serie={s} onChange={(p) => updateSerieParams(s.id!, p)} onRemove={() => removeSerie(s.id!)} />
-                ))}
-                <button onClick={() => addSerie(re)} className="text-brand text-rt-12 font-semibold flex items-center gap-1 mt-1">
-                  <Plus size={14} /> Nova série
-                </button>
-              </div>
-            </li>
-            )
-          })}
-        </ul>
+          <ul className="flex flex-col gap-3">
+            {agrupar(exs).map((bloque, bi) => {
+              if (bloque.tipo === 'single') {
+                const re = bloque.exercicios[0]
+                return (
+                  <li key={re.id}>
+                    <TarjetaExercicio
+                      re={re}
+                      abierto={abiertos[re.id!] ?? todosAbiertos}
+                      media={re.exercise_id ? (mediaPorExercicio[re.exercise_id] ?? {}) : {}}
+                      chips={chipsDe(re)}
+                      lang={i18n.language}
+                      arrastre={arrastre}
+                      seleccionado={seleccion.includes(re.id!)}
+                      onSeleccionar={() => setSeleccion((p) => p.includes(re.id!) ? p.filter((x) => x !== re.id) : [...p, re.id!])}
+                      onAlternar={() => setAbiertos((p) => ({ ...p, [re.id!]: !(p[re.id!] ?? todosAbiertos) }))}
+                      onGrupo={() => cycleGroup(re.id!, re.group_type)}
+                      onBorrar={() => setBorrandoExercicio(re.id!)}
+                      onSerieParams={updateSerieParams}
+                      onSerieNotas={updateSerieNotas}
+                      onDuplicarSerie={(sr) => duplicarSerie(re, sr)}
+                      onBorrarSerie={removeSerie}
+                      onNuevaSerie={() => addSerie(re)}
+                      onReordenarSeries={(a, b) => void reordenarSeries(re, a, b)}
+                    />
+                  </li>
+                )
+              }
+
+              const esBiset = bloque.tipo === 'biset'
+              return (
+                <li
+                  key={'g' + bi}
+                  className={
+                    'rounded-card border-2 overflow-hidden ' +
+                    (esBiset ? 'border-group-biset' : 'border-group-triset')
+                  }
+                >
+                  <div className={
+                    'flex items-center gap-2 px-3 py-2 ' +
+                    (esBiset ? 'bg-group-biset/15' : 'bg-group-triset/15')
+                  }>
+                    <Link2 size={16} className={esBiset ? 'text-group-biset' : 'text-group-triset'} />
+                    <span className={'text-rt-14 font-bold flex-1 ' + (esBiset ? 'text-group-biset' : 'text-group-triset')}>
+                      {esBiset ? 'Bi-set' : 'Tri-set'}
+                    </span>
+                    <button
+                      onClick={() => setGrupoAbierto({ tipo: bloque.tipo, ids: bloque.exercicios.map((x) => x.id!) })}
+                      aria-label="Opções do grupo"
+                      className="w-7 h-7 flex items-center justify-center"
+                    >
+                      <MoreVertical size={16} className={esBiset ? 'text-group-biset' : 'text-group-triset'} />
+                    </button>
+                  </div>
+
+                  <ul className="flex flex-col gap-2 p-2">
+                    {bloque.exercicios.map((re) => (
+                      <li key={re.id}>
+                        <TarjetaExercicio
+                          re={re}
+                          abierto={abiertos[re.id!] ?? todosAbiertos}
+                          media={re.exercise_id ? (mediaPorExercicio[re.exercise_id] ?? {}) : {}}
+                          chips={chipsDe(re)}
+                          lang={i18n.language}
+                          arrastre={arrastre}
+                      seleccionado={seleccion.includes(re.id!)}
+                          onSeleccionar={() => setSeleccion((p) => p.includes(re.id!) ? p.filter((x) => x !== re.id) : [...p, re.id!])}
+                          onAlternar={() => setAbiertos((p) => ({ ...p, [re.id!]: !(p[re.id!] ?? todosAbiertos) }))}
+                          onGrupo={() => cycleGroup(re.id!, re.group_type)}
+                          onBorrar={() => setBorrandoExercicio(re.id!)}
+                          onSerieParams={updateSerieParams}
+                          onSerieNotas={updateSerieNotas}
+                          onDuplicarSerie={(sr) => duplicarSerie(re, sr)}
+                          onBorrarSerie={removeSerie}
+                          onNuevaSerie={() => addSerie(re)}
+                          onReordenarSeries={(a, b) => void reordenarSeries(re, a, b)}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              )
+            })}
+          </ul>
+        </>
       )}
 
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-app px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+16px)] flex gap-2 bg-surface-app/95 backdrop-blur">
+      <div className={embebido
+        ? 'flex gap-2 mt-3'
+        : 'fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-app px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+96px)] flex gap-2 bg-surface-app/95 backdrop-blur'}>
         <button onClick={() => setPickerOpen(true)} className="flex-1 h-12 rounded-btn-pill bg-brand text-white text-rt-14 font-semibold flex items-center justify-center gap-2">
           <Plus size={18} /> Exercício
         </button>
@@ -167,50 +378,47 @@ export function EditorRotinaPage() {
         )}
       </div>
 
-      {pickerOpen && <ExercisePicker onClose={() => setPickerOpen(false)} onPick={addExercise} />}
-      {assignOpen && routine && <AssignSheet routine={routine} exercises={exs} onClose={() => setAssignOpen(false)} />}
-    </div>
-  )
-}
+      {grupoAbierto && (
+        <HojaOpcionesGrupo
+          tipo={grupoAbierto.tipo}
+          onDesfazer={async () => {
+            for (const id of grupoAbierto.ids) await desagruparExercicio(id)
+            setGrupoAbierto(null)
+          }}
+          onCerrar={() => setGrupoAbierto(null)}
+        />
+      )}
 
-function SerieRow({ n, serie, onChange, onRemove }: {
-  n: number; serie: Serie
-  onChange: (p: Serie['params']) => void
-  onRemove: () => void
-}) {
-  const [p, setP] = useState(serie.params ?? {})
-  return (
-    <div className="flex items-center gap-2 bg-surface-input rounded-lg p-2">
-      <span className="text-white text-rt-13 font-bold w-6 text-center">{n}</span>
-      <input
-        value={p.reps ?? ''} onChange={(e) => { const np = { ...p, reps: e.target.value }; setP(np); onChange(np) }}
-        placeholder="reps" className="w-14 bg-transparent border-b border-brand/30 text-white text-rt-12 outline-none text-center py-0.5"
-      />
-      <input
-        value={p.load ?? ''} onChange={(e) => { const np = { ...p, load: e.target.value }; setP(np); onChange(np) }}
-        placeholder="kg" className="w-14 bg-transparent border-b border-brand/30 text-white text-rt-12 outline-none text-center py-0.5"
-      />
-      <input
-        value={p.rest ?? ''} onChange={(e) => { const np = { ...p, rest: e.target.value }; setP(np); onChange(np) }}
-        placeholder="desc" className="w-16 bg-transparent border-b border-brand/30 text-white text-rt-12 outline-none text-center py-0.5"
-      />
-      <button onClick={onRemove} className="w-6 h-6 rounded-md bg-surface-card flex items-center justify-center ml-auto">
-        <Trash2 size={12} className="text-danger" />
-      </button>
+      {pickerOpen && <ExercisePicker onClose={() => setPickerOpen(false)} onPick={addExercise} />}
+      {errorGuardado && (
+        <FeedbackDialog kind="error" message={errorGuardado} onClose={() => setErrorGuardado(null)} />
+      )}
+      {assignOpen && routine && <AssignSheet routine={routine} exercises={exs} onClose={() => setAssignOpen(false)} />}
+      {borrandoExercicio && (
+        <ConfirmDialog
+          message="Remover este exercício?"
+          detail="As séries configuradas serão perdidas."
+          confirmLabel="Remover"
+          tone="danger"
+          onConfirm={() => void removeExercise(borrandoExercicio)}
+          onCancel={() => setBorrandoExercicio(null)}
+        />
+      )}
     </div>
   )
 }
 
 function ExercisePicker({ onClose, onPick }: { onClose: () => void; onPick: (c: Catalog) => void }) {
+  const { i18n } = useTranslation()
   const [items, setItems] = useState<Catalog[]>([])
   const [q, setQ] = useState('')
   useEffect(() => {
     void (async () => {
-      const { data } = await supabase.from('exercises').select('id,name').order('name').limit(200)
+      const { data } = await supabase.from('exercises').select(`id,${COLUMNAS_NOMBRE}`).order('name').limit(200)
       setItems((data as Catalog[]) ?? [])
     })()
   }, [])
-  const filtered = items.filter((x) => x.name.toLowerCase().includes(q.toLowerCase()))
+  const filtered = items.filter((x) => nombreEjercicio(x, i18n.language).toLowerCase().includes(q.toLowerCase()))
   return (
     <FullScreenSheet title="Escolher exercício" onClose={onClose}>
       <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar…" className="input-dark mb-4" />
@@ -224,7 +432,7 @@ function ExercisePicker({ onClose, onPick }: { onClose: () => void; onPick: (c: 
             <li key={x.id}>
               <button onClick={() => onPick(x)} className="w-full card-dark p-3 flex items-center gap-3 text-left">
                 <Dumbbell size={18} className="text-brand" />
-                <span className="text-white text-rt-13 font-semibold">{x.name}</span>
+                <span className="text-white text-rt-13 font-semibold">{nombreEjercicio(x, i18n.language)}</span>
               </button>
             </li>
           ))}
@@ -243,6 +451,10 @@ function AssignSheet({ routine, exercises, onClose }: { routine: Routine; exerci
   const [freq, setFreq] = useState(3)
   const [days, setDays] = useState<number[]>([1, 3, 5])
   const [saving, setSaving] = useState(false)
+  const [musculos, setMusculos] = useState<Record<string, string | null>>({})
+  const [miniaturas, setMiniaturas] = useState<Record<string, string | null>>({})
+  const [videos, setVideos] = useState<Record<string, string | null>>({})
+  const [tiposDeMedio, setTiposDeMedio] = useState<Record<string, string | null>>({})
 
   useEffect(() => {
     if (!profile?.id) return
@@ -252,6 +464,27 @@ function AssignSheet({ routine, exercises, onClose }: { routine: Routine; exerci
       setStudents((data as any) ?? [])
     })()
   }, [profile?.id])
+
+  // Grupo muscular y miniatura viven en el catálogo, no en la rotina.
+  useEffect(() => {
+    const ids = exercises.map((e) => e.exercise_id).filter(Boolean) as string[]
+    if (ids.length === 0) return
+    void (async () => {
+      const { data } = await supabase.from('exercises').select('id,muscle_group,thumbnail_url,video_url,media_type').in('id', ids)
+      const m: Record<string, string | null> = {}
+      const t: Record<string, string | null> = {}
+      const v: Record<string, string | null> = {}
+      const tm: Record<string, string | null> = {}
+      type Fila = { id: string; muscle_group: string | null; thumbnail_url: string | null; video_url: string | null; media_type: string | null }
+      for (const x of (data as Fila[]) ?? []) {
+        m[x.id] = x.muscle_group
+        t[x.id] = x.thumbnail_url
+        v[x.id] = x.video_url
+        tm[x.id] = x.media_type
+      }
+      setMusculos(m); setMiniaturas(t); setVideos(v); setTiposDeMedio(tm)
+    })()
+  }, [exercises])
 
   function toggle(id: string) {
     const n = new Set(selected)
@@ -276,7 +509,32 @@ function AssignSheet({ routine, exercises, onClose }: { routine: Routine; exerci
   async function assign() {
     if (!profile?.id || selected.size === 0) return
     setSaving(true)
-    const snapshot = { exercises: exercises.map((e) => ({ name: e.exercise_name_snapshot, series: e.series?.length ?? 0 })) }
+    // El snapshot es lo único que el alumno ve: si acá no van las series con
+    // sus repeticiones, carga y descanso, el alumno entrena a ciegas.
+    const snapshot = {
+      exercises: exercises.map((e) => ({
+        name: e.exercise_name_snapshot,
+        exercise_id: e.exercise_id,
+        muscle_group: musculos[e.exercise_id ?? ''] ?? null,
+        thumbnail_url: miniaturas[e.exercise_id ?? ''] ?? null,
+        // Sin esto el alumno nunca ve el video del ejercicio.
+        video_url: videos[e.exercise_id ?? ''] ?? null,
+        media_type: tiposDeMedio[e.exercise_id ?? ''] ?? null,
+        group_type: e.group_type,
+        series: (e.series ?? [])
+          .slice()
+          .sort((a, b) => a.position - b.position)
+          .map((sr) => ({
+            // Los tres de siempre, para que la ejecución no dependa del catálogo...
+            reps: normalizarParams(sr.params).repetition ?? '',
+            load: normalizarParams(sr.params).load ?? '',
+            rest: normalizarParams(sr.params).rest ?? '',
+            // ...y todos los demás, que el alumno también tiene que ver.
+            params: normalizarParams(sr.params),
+            notes: sr.notes ?? null,
+          })),
+      })),
+    }
     const est = estimateWorkouts()
     const dist = distribute(est, selected.size)
     const arr = Array.from(selected).map((sid, i) => ({
@@ -364,4 +622,175 @@ function distribute(total: number, n: number): number[] {
   const base = Math.floor(total / n)
   const rest = total - base * n
   return Array.from({ length: n }, (_, i) => base + (i < rest ? 1 : 0))
+}
+
+type Bloque = { tipo: 'single' | 'biset' | 'triset'; exercicios: Ex[] }
+
+/**
+ * Los ejercicios agrupados en bi-set/tri-set van juntos dentro de un marco de
+ * color (prints 017 y 018). Se agrupan por group_id; los sueltos van solos.
+ */
+function agrupar(exs: Ex[]): Bloque[] {
+  const orden = exs.slice().sort((a, b) => a.position - b.position)
+  const salida: Bloque[] = []
+  for (const ex of orden) {
+    const gid = (ex as Ex & { group_id?: string | null }).group_id
+    const ultimo = salida[salida.length - 1]
+    const mismoGrupo = ex.group_type !== 'single'
+      && gid
+      && ultimo
+      && ultimo.tipo === ex.group_type
+      && (ultimo.exercicios[0] as Ex & { group_id?: string | null }).group_id === gid
+    if (mismoGrupo) ultimo.exercicios.push(ex)
+    else salida.push({ tipo: ex.group_type, exercicios: [ex] })
+  }
+  return salida
+}
+
+/** Ejercicio dentro de la rotina: colapsado muestra nombre y chips; abierto, media y series. */
+function TarjetaExercicio({
+  re, abierto, media, chips, lang, seleccionado, arrastre,
+  onSeleccionar, onAlternar, onGrupo, onBorrar,
+  onSerieParams, onSerieNotas, onDuplicarSerie, onBorrarSerie, onNuevaSerie,
+  onReordenarSeries,
+}: {
+  re: Ex
+  abierto: boolean
+  media: Media
+  chips: string[]
+  lang: string
+  seleccionado: boolean
+  arrastre: ReturnType<typeof useArrastreLista<string>>
+  onSeleccionar: () => void
+  onAlternar: () => void
+  onGrupo: () => void
+  onBorrar: () => void
+  onSerieParams: (sId: string, params: Record<string, string>) => void
+  onSerieNotas: (sId: string, notas: string) => void
+  onDuplicarSerie: (s: Serie) => void
+  onBorrarSerie: (sId: string) => void
+  onNuevaSerie: () => void
+  onReordenarSeries: (desdeId: string, hastaId: string) => void
+}) {
+  const arrastreSeries = useArrastreLista<string>(onReordenarSeries)
+  return (
+    <div
+      ref={(el) => arrastre.registrar(re.id!, el)}
+      onPointerMove={arrastre.alMover}
+      onPointerUp={arrastre.alSoltar}
+      className={
+        'card-dark p-3 transition ' +
+        (seleccionado ? 'border-brand ' : '') +
+        (arrastre.arrastrando === re.id ? 'opacity-50 ' : '') +
+        (arrastre.encima === re.id && arrastre.arrastrando !== re.id ? 'border-brand border-dashed ' : '')
+      }
+    >
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onPointerDown={arrastre.alBajar(re.id!)}
+          aria-label="Arrastar para reordenar"
+          className="shrink-0 touch-none cursor-grab active:cursor-grabbing"
+        >
+          <GripVertical size={16} className="text-grey-600" />
+        </button>
+        <button
+          type="button"
+          onClick={onSeleccionar}
+          aria-label={seleccionado ? 'Desmarcar' : 'Marcar'}
+          className={
+            'w-6 h-6 rounded-[6px] border-2 flex items-center justify-center shrink-0 text-rt-12 ' +
+            (seleccionado ? 'bg-brand border-brand text-white' : 'border-grey-600')
+          }
+        >
+          {seleccionado && '✓'}
+        </button>
+        <div className="w-12 h-12 rounded-[8px] bg-surface-input overflow-hidden shrink-0 flex items-center justify-center">
+          {media.thumbnail_url
+            ? <img src={media.thumbnail_url} alt="" className="w-full h-full object-cover" />
+            : <Dumbbell size={18} className="text-brand" />}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-white text-rt-14 font-semibold truncate">
+            {re.exercise_name_snapshot ?? 'Exercício'}
+          </div>
+          {chips.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {chips.map((c) => (
+                <span key={c} className="text-rt-10 px-2 py-0.5 rounded-tag bg-surface-raised text-white/70">{c}</span>
+              ))}
+            </div>
+          )}
+        </div>
+        <button onClick={onGrupo} className="w-7 h-7 rounded-md bg-surface-input flex items-center justify-center shrink-0" title="Alternar bi/tri-set">
+          <Link2 size={14} className="text-brand" />
+        </button>
+        <button onClick={onBorrar} className="w-7 h-7 rounded-md bg-surface-input flex items-center justify-center shrink-0" aria-label="Excluir exercício">
+          <Trash2 size={14} className="text-danger" />
+        </button>
+        <button onClick={onAlternar} className="w-7 h-7 flex items-center justify-center shrink-0" aria-label={abierto ? 'Recolher' : 'Expandir'}>
+          <ChevronDown size={18} className={'text-grey-500 transition-transform ' + (abierto ? 'rotate-180' : '')} />
+        </button>
+      </div>
+
+      {abierto && (
+        <div className="mt-3 pt-3 border-t border-surface-line">
+          <BannerMedia media={media} />
+
+          <div className="flex items-baseline gap-2 mt-4 mb-2">
+            <span className="text-white text-rt-14 font-semibold">Séries</span>
+            <span className="text-grey-500 text-rt-11 italic">(arraste para reordenar)</span>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            {re.series?.slice().sort((a, b) => a.position - b.position).map((sr, si) => (
+              <FilaSerie
+                key={sr.id}
+                id={sr.id}
+                arrastre={arrastreSeries}
+                numero={si + 1}
+                params={normalizarParams(sr.params)}
+                observacion={sr.notes ?? ''}
+                lang={lang}
+                onParams={(np) => onSerieParams(sr.id!, np)}
+                onObservacion={(v) => onSerieNotas(sr.id!, v)}
+                onDuplicar={() => onDuplicarSerie(sr)}
+                onEliminar={() => onBorrarSerie(sr.id!)}
+              />
+            ))}
+          </div>
+
+          <button onClick={onNuevaSerie} className="text-brand text-rt-14 font-semibold underline mt-4">
+            + Adicionar Nova Serie
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** Print 032: las opciones del grupo se abren desde los tres puntos. */
+function HojaOpcionesGrupo({ tipo, onDesfazer, onCerrar }: {
+  tipo: string
+  onDesfazer: () => void
+  onCerrar: () => void
+}) {
+  const etiqueta = tipo === 'biset' ? 'Bi-set' : 'Tri-set'
+  return (
+    <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/60" onClick={onCerrar}>
+      <div
+        className="w-full max-w-app rounded-t-[20px] bg-surface-raised pt-3 pb-[calc(env(safe-area-inset-bottom)+16px)]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="w-16 h-1 rounded-full bg-grey-600 mx-auto mb-4" />
+        <button
+          onClick={onDesfazer}
+          className="w-full flex items-center gap-4 px-6 py-4 text-left"
+        >
+          <Unlink size={22} className="text-white" />
+          <span className="text-white text-rt-16">Desfazer {etiqueta}</span>
+        </button>
+      </div>
+    </div>
+  )
 }

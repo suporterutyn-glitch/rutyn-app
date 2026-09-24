@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { useAuth } from '@/lib/auth'
 import { Field } from './projetos/RoutinesTab'
 
@@ -25,6 +26,7 @@ export function NovoCompromissoPage() {
   const [notify, setNotify] = useState(true)
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
+  const [errorAviso, setErrorAviso] = useState<string | null>(null)
 
   useEffect(() => {
     if (!profile?.id) return
@@ -50,11 +52,14 @@ export function NovoCompromissoPage() {
     }).select('id').single()
 
     if (notify && studentId && data?.id) {
-      await supabase.from('notifications').insert({
+      // Si el aviso falla el compromiso igual existe, pero el alumno no se entera:
+      // por eso se dice, en vez de seguir como si nada.
+      const { error } = await supabase.from('notifications').insert({
         user_id: studentId, type: 'info',
         title: `Novo compromisso: ${title.trim()}`,
         body: `${new Date(startsAt).toLocaleString('pt-BR')}`,
       })
+      if (error) { setSaving(false); setErrorAviso(error.message); return }
     }
     setSaving(false)
     nav(-1)
@@ -107,6 +112,9 @@ export function NovoCompromissoPage() {
           {saving ? 'Salvando…' : 'Salvar Compromisso'}
         </button>
       </div>
+      {errorAviso && (
+        <FeedbackDialog kind="error" message={errorAviso} onClose={() => setErrorAviso(null)} />
+      )}
     </div>
   )
 }

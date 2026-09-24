@@ -7,6 +7,8 @@ import { useAuth } from '@/lib/auth'
 import { setLang } from '@/lib/i18n'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { currentPermission, isPushSupported, subscribeToPush, unsubscribeFromPush } from '@/lib/push'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { DadosProfessorSheet } from '@/components/DadosProfessorSheet'
 
 export function ConfiguracoesPage() {
   const nav = useNavigate()
@@ -14,6 +16,8 @@ export function ConfiguracoesPage() {
   const { profile, signOut } = useAuth()
   const isTeacher = profile?.role === 'teacher'
   const [deleting, setDeleting] = useState(false)
+  const [confirmandoExclusao, setConfirmandoExclusao] = useState(false)
+  const [datosProfesor, setDatosProfesor] = useState(false)
   const [pushOn, setPushOn] = useState(false)
   const [pushErr, setPushErr] = useState<string | null>(null)
 
@@ -35,7 +39,7 @@ export function ConfiguracoesPage() {
   }
 
   async function deleteAccount() {
-    if (!confirm('Isto marca sua conta para exclusão. Tem certeza?')) return
+    setConfirmandoExclusao(false)
     if (!profile?.id) return
     setDeleting(true)
     await supabase.from('profiles').update({ account_status: 'deleting' }).eq('id', profile.id)
@@ -104,6 +108,9 @@ export function ConfiguracoesPage() {
           </>
         )}
         <MenuItem icon={Lock} label={t('settings:security')} onClick={() => nav('/redefinir-senha')} />
+        {!isTeacher && profile?.teacher_id && (
+          <MenuItem icon={Wallet} label={t('settings:teacherData')} onClick={() => setDatosProfesor(true)} />
+        )}
         <MenuItem icon={FileText} label={t('settings:terms')} onClick={() => nav('/termos')} />
         <li>
           <a
@@ -125,16 +132,41 @@ export function ConfiguracoesPage() {
           <LogOut size={18} /> {t('settings:signOut')}
         </button>
         <button
-          onClick={deleteAccount}
+          onClick={() => setConfirmandoExclusao(true)}
           disabled={deleting}
           className="h-11 rounded-menu border border-[#8B0000]/50 text-danger text-rt-13 font-semibold flex items-center justify-center gap-2"
         >
           <Trash2 size={16} /> {t('settings:deleteAccount')}
         </button>
       </div>
+      {datosProfesor && profile?.teacher_id && (
+        <DadosProfessorSheet
+          teacherId={profile.teacher_id}
+          textos={{
+            titulo: t('settings:paymentData'),
+            banco: t('settings:payBank'), agencia: t('settings:agency'),
+            conta: t('settings:account'), tipoConta: t('settings:accountType'),
+            tipoChave: t('settings:pixKeyType'), chavePix: t('settings:pixKey'),
+            sinDatos: t('settings:noPaymentData'), copiado: t('settings:copied'),
+          }}
+          onClose={() => setDatosProfesor(false)}
+        />
+      )}
+
       {pushErr && (
         <FeedbackDialog kind="error" message={pushErr} onClose={() => setPushErr(null)} />
       )}
+      {confirmandoExclusao && (
+        <ConfirmDialog
+          message="Excluir sua conta?"
+          detail="Sua conta fica marcada para exclusão e você sai do aplicativo."
+          confirmLabel="Excluir"
+          tone="danger"
+          onConfirm={() => void deleteAccount()}
+          onCancel={() => setConfirmandoExclusao(false)}
+        />
+      )}
+
     </div>
   )
 }

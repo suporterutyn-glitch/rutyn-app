@@ -1,11 +1,16 @@
 import { useEffect, useState } from 'react'
-import { Salad, MessageCircle } from 'lucide-react'
+import { Salad, MessageCircle, Bell, RefreshCw, ChevronUp, ChevronDown } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { LanguageToggle } from '@/components/LanguageToggle'
+import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { EmptyState } from '@/pages/professor/projetos/RoutinesTab'
 
-type Meal = { name: string; foods: Array<{ name: string; qty: number; unit: string; kcal: number; p: number; c: number; f: number }> }
-type SD = { id: string; name: string; cycle_start: string; data: { meals?: Meal[] } }
+type Food = { name: string; qty: number; unit: string; kcal: number; p: number; c: number; f: number }
+type Meal = { name: string; time?: string | null; foods: Food[] }
+type SD = { id: string; name: string; cycle_start: string; data: { meals?: Meal[]; goal?: string | null } }
 
 export function NutricaoPage() {
   const { profile } = useAuth()
@@ -13,6 +18,11 @@ export function NutricaoPage() {
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<'dietas' | 'compras'>('dietas')
   const [marked, setMarked] = useState<Record<string, boolean>>({}) // key: `${dietIdx}-${mealIdx}-${foodIdx}`
+  const [macrosOn, setMacrosOn] = useState(true)
+  const [plegadas, setPlegadas] = useState<Record<string, boolean>>({})
+  const [dietaListaAvisada, setDietaListaAvisada] = useState(false)
+  const nav = useNavigate()
+  const { t } = useTranslation()
 
   useEffect(() => {
     if (!profile?.id) return
@@ -47,23 +57,73 @@ export function NutricaoPage() {
     { kcal: 0, p: 0, c: 0, f: 0 },
   )
 
+  /** Todas las claves de la dieta del día, para saber cuándo está completa. */
+  function clavesDelDia() {
+    return meals.flatMap((m, mi) => m.foods.map((_, fi) => `${todayIdx}-${mi}-${fi}`))
+  }
+
+  function aplicarMarcas(siguiente: Record<string, boolean>) {
+    setMarked(siguiente)
+    const todas = clavesDelDia()
+    if (todas.length > 0 && todas.every((k) => siguiente[k]) && !dietaListaAvisada) {
+      setDietaListaAvisada(true)
+    }
+  }
+
+  function alternarAlimento(key: string) {
+    aplicarMarcas({ ...marked, [key]: !marked[key] })
+  }
+
+  /** Marcar la comida marca o desmarca todos sus alimentos de una vez. */
+  function marcarComida(mi: number, valor: boolean) {
+    const siguiente = { ...marked }
+    meals[mi].foods.forEach((_, fi) => { siguiente[`${todayIdx}-${mi}-${fi}`] = valor })
+    aplicarMarcas(siguiente)
+  }
+
   return (
     <div className="pt-[calc(env(safe-area-inset-top)+16px)] px-4 pb-24">
-      <h1 className="text-white text-rt-20 font-bold mb-4">Nutrição</h1>
+      <div className="flex items-center justify-between mb-5">
+        <div className="min-w-0">
+          <div className="text-white text-rt-20 font-bold truncate">
+            {t('aluno:hello', { name: profile?.full_name?.split(' ')[0] ?? 'Aluno' })}
+          </div>
+          <div className="text-white/60 text-rt-11 mt-0.5 truncate">{t('aluno:tabs.nutrition')}</div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <LanguageToggle />
+          <button onClick={() => nav('/aluno/notificacoes')} className="w-10 h-10 rounded-full bg-surface-raised flex items-center justify-center" aria-label="Notificações">
+            <Bell size={20} className="text-white" />
+          </button>
+        </div>
+      </div>
 
-      <div className="flex justify-end gap-2 mb-4">
-        {(['dietas', 'compras'] as const).map((t) => {
-          const on = tab === t
+      <div className="flex justify-center gap-2 mb-3">
+        {(['dietas', 'compras'] as const).map((x) => {
+          const on = tab === x
           return (
-            <button key={t} onClick={() => setTab(t)} className={
-              'px-3 h-8 rounded-card border text-rt-11 font-semibold ' +
-              (on ? 'bg-white text-black border-white' : 'bg-transparent border-grey-700 text-grey-400')
+            <button key={x} onClick={() => setTab(x)} className={
+              'px-5 h-10 rounded-btn-pill border text-rt-13 font-semibold ' +
+              (on ? 'bg-brand border-brand text-white' : 'bg-transparent border-grey-700 text-white/80')
             }>
-              {t === 'dietas' ? 'Minhas Dietas' : 'Lista de Compras'}
+              {x === 'dietas' ? 'Minhas Dietas' : 'Lista de Compras'}
             </button>
           )
         })}
       </div>
+
+      {tab === 'dietas' && (
+        <div className="flex items-center justify-end gap-2 mb-4">
+          <span className="text-white/70 text-rt-13">Macros nutrientes</span>
+          <button
+            onClick={() => setMacrosOn((v) => !v)}
+            className={'w-14 h-7 rounded-full flex items-center px-1 transition ' + (macrosOn ? 'bg-brand justify-end' : 'bg-grey-700 justify-start')}
+            aria-label="Macros nutrientes"
+          >
+            <span className="w-5 h-5 rounded-full bg-white" />
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <div className="text-white/60 text-rt-13 py-8 text-center">Carregando…</div>
@@ -71,61 +131,146 @@ export function NutricaoPage() {
         <EmptyState icon={Salad} title="Nenhuma dieta" body="Seu professor ainda não atribuiu uma dieta." />
       ) : tab === 'dietas' ? (
         <>
-          {diets.length > 1 && (
-            <div className="text-white/60 text-rt-11 mb-2">Dieta do dia: <span className="text-brand font-semibold">{String.fromCharCode(65 + todayIdx)} · {todayDiet?.name}</span></div>
+          {/* Banner de la dieta del día, como en el diseño */}
+          <div className="rounded-card border border-brand/50 bg-brand/10 px-3 py-2.5 mb-3 flex items-center gap-2">
+            <RefreshCw size={16} className="text-brand shrink-0" />
+            <span className="text-brand text-rt-13 font-semibold">
+              Dieta do dia: {todayDiet?.name}
+              {diets.length > 1 && ` (${todayIdx + 1} de ${diets.length})`}
+            </span>
+          </div>
+
+          {/* Macros del día */}
+          {macrosOn && (
+            <div className="card-dark p-3 mb-3 grid grid-cols-4 gap-2 text-center">
+              {[
+                { l: 'kcal', v: total.kcal, c: 'text-macro-kcal', d: 0 },
+                { l: 'proteínas', v: total.p, c: 'text-macro-protein', d: 1 },
+                { l: 'carboidrato', v: total.c, c: 'text-macro-carb', d: 1 },
+                { l: 'gordura', v: total.f, c: 'text-macro-fat', d: 1 },
+              ].map((m) => (
+                <div key={m.l}>
+                  <div className={'text-rt-18 font-bold ' + m.c}>
+                    {m.d === 0 ? Math.round(m.v) : m.v.toFixed(1) + 'g'}
+                  </div>
+                  <div className="text-grey-500 text-rt-10">{m.l}</div>
+                </div>
+              ))}
+            </div>
           )}
-          {/* Macros do dia */}
-          <div className="card-dark p-3 mb-3 grid grid-cols-4 gap-2 text-center">
-            {[
-              { l: 'kcal', v: total.kcal, c: 'text-macro-kcal' },
-              { l: 'P', v: total.p, c: 'text-macro-protein' },
-              { l: 'C', v: total.c, c: 'text-macro-carb' },
-              { l: 'G', v: total.f, c: 'text-macro-fat' },
-            ].map((m) => (
-              <div key={m.l}>
-                <div className={'text-rt-18 font-bold ' + m.c}>{Math.round(m.v)}</div>
-                <div className="text-grey-500 text-rt-10 uppercase">{m.l}</div>
+
+          {/* Dieta del día, con su objetivo */}
+          <div className="card-dark p-3 mb-3">
+            <div className="flex items-start gap-2">
+              <div className="flex-1 min-w-0">
+                <div className="text-white text-rt-16 font-bold">{todayDiet?.name}</div>
+                {todayDiet?.data?.goal && (
+                  <span className="inline-block mt-1 text-rt-11 px-2.5 py-1 rounded-btn-pill bg-surface-raised text-white/70">
+                    {todayDiet.data.goal}
+                  </span>
+                )}
               </div>
-            ))}
+            </div>
           </div>
 
           {meals.length === 0 ? (
             <div className="card-dark p-4 text-white/60 text-rt-13">Nenhuma refeição cadastrada.</div>
           ) : (
             <ul className="flex flex-col gap-3">
-              {meals.map((m, mi) => (
-                <li key={mi} className="card-dark p-3">
-                  <div className="text-white text-rt-14 font-bold mb-2">{m.name}</div>
-                  <ul className="flex flex-col gap-1.5">
-                    {m.foods.map((f, fi) => {
-                      const key = `${todayIdx}-${mi}-${fi}`
-                      const on = !!marked[key]
-                      return (
-                        <li key={fi} className="flex items-center gap-2">
-                          <button
-                            onClick={() => setMarked({ ...marked, [key]: !on })}
-                            className={
-                              'w-5 h-5 rounded-sm border-2 flex items-center justify-center ' +
-                              (on ? 'bg-brand border-brand' : 'border-grey-600')
-                            }
-                          >
-                            {on && <span className="text-white text-[10px]">✓</span>}
-                          </button>
-                          <div className={'flex-1 text-rt-13 ' + (on ? 'text-grey-600 line-through' : 'text-white')}>
-                            {f.qty}{f.unit} · {f.name}
-                          </div>
-                          <div className={'text-rt-11 ' + (on ? 'text-grey-600' : 'text-brand font-semibold')}>{Math.round(f.kcal)} kcal</div>
-                        </li>
-                      )
-                    })}
-                  </ul>
-                </li>
-              ))}
+              {meals.map((m, mi) => {
+                const claves = m.foods.map((_, fi) => `${todayIdx}-${mi}-${fi}`)
+                const hechos = claves.filter((k) => marked[k]).length
+                const completa = hechos === claves.length && claves.length > 0
+                const plegada = !!plegadas[`${todayIdx}-${mi}`]
+                return (
+                  <li key={mi} className={'card-dark p-3 ' + (completa ? 'border-brand' : '')}>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-white text-rt-15 font-bold truncate">{m.name}</div>
+                        {hechos > 0 && !completa && (
+                          <div className="text-white/50 text-rt-11">{hechos} de {claves.length}</div>
+                        )}
+                      </div>
+                      {m.time && <span className="text-white/60 text-rt-12 shrink-0">{m.time.slice(0, 5)}</span>}
+                      <button
+                        onClick={() => marcarComida(mi, !completa)}
+                        aria-label={completa ? 'Desmarcar refeição' : 'Marcar refeição'}
+                        className={
+                          'w-7 h-7 rounded-[6px] border-2 flex items-center justify-center shrink-0 ' +
+                          (completa ? 'bg-brand border-brand text-white' : 'border-grey-600')
+                        }
+                      >
+                        {completa && '✓'}
+                      </button>
+                      <button
+                        onClick={() => setPlegadas({ ...plegadas, [`${todayIdx}-${mi}`]: !plegada })}
+                        className="w-7 h-7 flex items-center justify-center text-grey-500 shrink-0"
+                        aria-label={plegada ? 'Expandir' : 'Recolher'}
+                      >
+                        {plegada ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
+                      </button>
+                    </div>
+
+                    {!plegada && (
+                      <ul className="flex flex-col gap-2 mt-3">
+                        {m.foods.map((f, fi) => {
+                          const key = `${todayIdx}-${mi}-${fi}`
+                          const on = !!marked[key]
+                          return (
+                            <li key={fi} className={
+                              'rounded-card border p-3 flex items-center gap-3 ' +
+                              (on ? 'border-brand/40 bg-brand/5' : 'border-surface-line')
+                            }>
+                              <div className="flex-1 min-w-0">
+                                <div className={'text-rt-14 font-semibold ' + (on ? 'text-grey-500 line-through' : 'text-white')}>
+                                  {f.name}
+                                </div>
+                                {macrosOn && (
+                                  <div className="text-rt-11 mt-0.5 flex flex-wrap gap-x-1">
+                                    <span className="text-macro-kcal">{Math.round(f.kcal)} kcal</span>
+                                    <span className="text-grey-600">|</span>
+                                    <span className="text-macro-protein">P: {f.p.toFixed(1)}g</span>
+                                    <span className="text-grey-600">|</span>
+                                    <span className="text-macro-carb">C: {f.c.toFixed(1)}g</span>
+                                    <span className="text-grey-600">|</span>
+                                    <span className="text-macro-fat">G: {f.f.toFixed(1)}g</span>
+                                  </div>
+                                )}
+                              </div>
+                              <span className="text-white text-rt-15 font-bold shrink-0">
+                                {Math.round(f.qty)}{f.unit === 'Uni' ? ' Uni' : f.unit}
+                              </span>
+                              <button
+                                onClick={() => alternarAlimento(key)}
+                                aria-label={on ? 'Desmarcar alimento' : 'Marcar alimento'}
+                                className={
+                                  'w-7 h-7 rounded-[6px] border-2 flex items-center justify-center shrink-0 ' +
+                                  (on ? 'bg-brand border-brand text-white' : 'border-grey-600')
+                                }
+                              >
+                                {on && '✓'}
+                              </button>
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    )}
+                  </li>
+                )
+              })}
             </ul>
           )}
         </>
       ) : (
         <ComprasList diets={diets} />
+      )}
+
+      {dietaListaAvisada && (
+        <FeedbackDialog
+          kind="success"
+          message="Dieta do dia concluída! Parabéns por seguir o plano."
+          onClose={() => setDietaListaAvisada(false)}
+        />
       )}
     </div>
   )
@@ -133,6 +278,14 @@ export function NutricaoPage() {
 
 function ComprasList({ diets }: { diets: SD[] }) {
   const [period, setPeriod] = useState<'semana' | 'mes'>('semana')
+  // Lo comprado se recuerda: la lista se usa caminando por el supermercado.
+  const [comprados, setComprados] = useState<Record<string, boolean>>(() => {
+    try { return JSON.parse(localStorage.getItem('compras-marcadas') ?? '{}') } catch { return {} }
+  })
+  useEffect(() => {
+    localStorage.setItem('compras-marcadas', JSON.stringify(comprados))
+  }, [comprados])
+
   const days = period === 'semana' ? 7 : 30
   const totals = new Map<string, { qty: number; unit: string }>()
   for (let i = 0; i < days; i++) {
@@ -144,6 +297,7 @@ function ComprasList({ diets }: { diets: SD[] }) {
     }))
   }
   const list = Array.from(totals.entries()).sort()
+  const hechos = list.filter(([k]) => comprados[k]).length
 
   function sendWhats() {
     const txt = list.map(([k, v]) => `• ${Math.round(v.qty)}${v.unit} ${k}`).join('\n')
@@ -153,28 +307,50 @@ function ComprasList({ diets }: { diets: SD[] }) {
 
   return (
     <>
-      <div className="flex gap-2 mb-3">
-        {(['semana', 'mes'] as const).map((p) => (
-          <button key={p} onClick={() => setPeriod(p)} className={
-            'px-4 h-8 rounded-btn-pill text-rt-11 font-semibold ' +
-            (period === p ? 'bg-brand text-white' : 'bg-surface-raised text-grey-400')
-          }>
-            {p === 'semana' ? '1 semana' : '1 mês'}
-          </button>
-        ))}
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex gap-2">
+          {(['semana', 'mes'] as const).map((p) => (
+            <button key={p} onClick={() => setPeriod(p)} className={
+              'px-4 h-9 rounded-btn-pill text-rt-12 font-semibold ' +
+              (period === p ? 'bg-brand text-white' : 'bg-surface-raised text-grey-400')
+            }>
+              {p === 'semana' ? '1 semana' : '1 mês'}
+            </button>
+          ))}
+        </div>
+        {list.length > 0 && (
+          <span className="text-white/60 text-rt-12">{hechos}/{list.length}</span>
+        )}
       </div>
+
       {list.length === 0 ? (
         <div className="card-dark p-4 text-white/60 text-rt-13">Sem itens na sua dieta.</div>
       ) : (
         <ul className="flex flex-col gap-2 mb-4">
-          {list.map(([k, v]) => (
-            <li key={k} className="card-dark p-3 flex items-center justify-between">
-              <span className="text-white text-rt-13">{k}</span>
-              <span className="text-brand text-rt-13 font-semibold">{Math.round(v.qty)}{v.unit}</span>
-            </li>
-          ))}
+          {list.map(([k, v]) => {
+            const on = !!comprados[k]
+            return (
+              <li key={k} className={'card-dark p-3 flex items-center gap-3 ' + (on ? 'border-brand/40' : '')}>
+                <button
+                  onClick={() => setComprados({ ...comprados, [k]: !on })}
+                  aria-label={on ? 'Desmarcar' : 'Marcar'}
+                  className={
+                    'w-6 h-6 rounded-[6px] border-2 flex items-center justify-center shrink-0 ' +
+                    (on ? 'bg-brand border-brand text-white text-rt-12' : 'border-grey-600')
+                  }
+                >
+                  {on && '✓'}
+                </button>
+                <span className={'flex-1 text-rt-14 ' + (on ? 'text-grey-500 line-through' : 'text-white')}>{k}</span>
+                <span className={'text-rt-13 font-semibold ' + (on ? 'text-grey-600' : 'text-brand')}>
+                  {Math.round(v.qty)}{v.unit === 'Uni' ? ' Uni' : v.unit}
+                </span>
+              </li>
+            )
+          })}
         </ul>
       )}
+
       <button onClick={sendWhats} className="w-full h-12 rounded-btn-pill bg-whatsapp text-white font-semibold flex items-center justify-center gap-2">
         <MessageCircle size={18} /> Enviar pelo WhatsApp
       </button>

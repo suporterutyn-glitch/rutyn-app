@@ -2,16 +2,16 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Salad } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import type { Filtro } from '../MeusProjetos'
 import { useAuth } from '@/lib/auth'
-import { SearchBar, EmptyState, FixedBottomActions, FullScreenSheet, Field } from './RoutinesTab'
+import { EmptyState, FixedBottomActions, FullScreenSheet, Field } from './RoutinesTab'
 
 type Diet = { id: string; name: string; goal: string | null; is_favorite: boolean }
 
-export function DietsTab() {
+export function DietsTab({ query, filtro }: { query: string; filtro: Filtro }) {
   const { profile } = useAuth()
   const nav = useNavigate()
   const [items, setItems] = useState<Diet[]>([])
-  const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [showNew, setShowNew] = useState(false)
 
@@ -24,11 +24,12 @@ export function DietsTab() {
   }
   useEffect(() => { void load() }, [profile?.id])
 
-  const filtered = items.filter((d) => d.name.toLowerCase().includes(query.toLowerCase()))
+  const filtered = items
+    .filter((d) => (filtro === 'favoritos' ? d.is_favorite : true))
+    .filter((d) => d.name.toLowerCase().includes(query.toLowerCase()))
 
   return (
     <div className="pb-24">
-      <SearchBar value={query} onChange={setQuery} placeholder="Buscar dietas..." />
       {loading ? (
         <div className="text-white/60 text-rt-13 py-8 text-center">Carregando…</div>
       ) : filtered.length === 0 ? (

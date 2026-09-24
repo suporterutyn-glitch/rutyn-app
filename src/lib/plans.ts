@@ -24,9 +24,14 @@ export function currencyOf(country?: string | null) {
   return COUNTRY_CURRENCY[country ?? 'BR'] ?? 'BRL'
 }
 
-export function formatMoney(v: number, currency: string) {
+/** Sin centavos: para rangos de precio, donde ",00" solo agrega ruido. */
+export function formatMoneyShort(v: number, currency: string) {
+  return formatMoney(v, currency, true)
+}
+
+export function formatMoney(v: number, currency: string, sinDecimales = false) {
   const locale = currency === 'BRL' ? 'pt-BR' : currency === 'EUR' ? 'pt-PT' : 'es-UY'
-  const noDecimals = currency === 'PYG' || currency === 'CLP'
+  const noDecimals = sinDecimales || currency === 'PYG' || currency === 'CLP'
   try {
     return new Intl.NumberFormat(locale, {
       style: 'currency',
