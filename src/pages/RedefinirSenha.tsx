@@ -19,10 +19,23 @@ export function RedefinirSenhaPage() {
   useEffect(() => {
     // Supabase detectSessionInUrl processa o hash automaticamente
     // e dispara PASSWORD_RECOVERY. Aguardamos a sessão ficar disponível.
-    void (async () => {
+    let retries = 0
+    const maxRetries = 10
+    const checkSession = async () => {
       const { data } = await supabase.auth.getSession()
-      setReady(!!data.session)
-    })()
+      if (data.session) {
+        setReady(true)
+        return
+      }
+      // Em mobile, o hash pode levar tempo para processar.
+      // Retentar até 10 vezes com delay.
+      if (retries < maxRetries) {
+        retries++
+        setTimeout(checkSession, 500)
+      }
+    }
+    void checkSession()
+
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') setReady(true)
     })
