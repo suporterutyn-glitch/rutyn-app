@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { localeDe } from '@/lib/fechas'
+import { useTranslation } from 'react-i18next'
 import { X, TrendingUp } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { BannerMedia, type Media } from '@/components/MediaExercicio'
@@ -24,6 +26,7 @@ export function ProgressaoCarga({ studentId, nombreExercicio, media, chips, onCe
   onCerrar: () => void
 }) {
   const [puntos, setPuntos] = useState<Punto[]>([])
+  const { t, i18n } = useTranslation()
   const [cargando, setCargando] = useState(true)
 
   useEffect(() => {
@@ -62,7 +65,7 @@ export function ProgressaoCarga({ studentId, nombreExercicio, media, chips, onCe
 
         <div className="flex items-start justify-between gap-3">
           <h2 className="text-grey-900 text-rt-20 font-bold flex-1">{nombreExercicio}</h2>
-          <button onClick={onCerrar} className="w-9 h-9 rounded-full bg-grey-200 flex items-center justify-center shrink-0" aria-label="Fechar">
+          <button onClick={onCerrar} className="w-9 h-9 rounded-full bg-grey-200 flex items-center justify-center shrink-0" aria-label={t('treino:close')}>
             <X size={18} className="text-grey-600" />
           </button>
         </div>
@@ -86,19 +89,19 @@ export function ProgressaoCarga({ studentId, nombreExercicio, media, chips, onCe
         ) : puntos.length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-12 text-center">
             <TrendingUp size={36} className="text-grey-300" />
-            <p className="text-grey-600 text-rt-14">Ainda não há treinos registrados com carga.</p>
-            <p className="text-grey-500 text-rt-12">O gráfico aparece depois do primeiro treino concluído.</p>
+            <p className="text-grey-600 text-rt-14">{t('treino:noLoadYet')}</p>
+            <p className="text-grey-500 text-rt-12">{t('treino:chartAfter')}</p>
           </div>
         ) : (
           <>
             <Grafico puntos={puntos} />
 
-            <h3 className="text-grey-900 text-rt-16 font-bold mt-6 mb-2">Histórico</h3>
+            <h3 className="text-grey-900 text-rt-16 font-bold mt-6 mb-2">{t('treino:history')}</h3>
             <ul className="flex flex-col">
               {[...puntos].reverse().map((p, i) => (
                 <li key={i} className="flex items-center justify-between py-2.5 border-b border-grey-200 last:border-0">
                   <span className="text-grey-600 text-rt-14">
-                    {new Date(p.fecha).toLocaleDateString('pt-BR')}
+                    {new Date(p.fecha).toLocaleDateString(localeDe(i18n.language))}
                   </span>
                   <span className="text-grey-900 text-rt-15 font-bold">{p.carga} kg</span>
                 </li>
@@ -130,9 +133,10 @@ function Grafico({ puntos }: { puntos: Punto[] }) {
 
   const marcas = [min, min + rango / 2, max].map((v) => Math.round(v))
 
+  const { t } = useTranslation()
   return (
     <div className="mt-5 -mx-1">
-      <svg viewBox={`0 0 ${ancho} ${alto}`} className="w-full" role="img" aria-label="Progressão de carga">
+      <svg viewBox={`0 0 ${ancho} ${alto}`} className="w-full" role="img" aria-label={t('treino:loadProgress')}>
         {marcas.map((m) => (
           <g key={m}>
             <line x1={margen.izq} x2={ancho - margen.der} y1={y(m)} y2={y(m)} stroke="#E0E0E0" strokeDasharray="4 4" />

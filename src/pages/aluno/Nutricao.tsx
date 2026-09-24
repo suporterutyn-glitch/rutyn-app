@@ -91,13 +91,13 @@ export function NutricaoPage() {
       <div className="flex items-center justify-between mb-5">
         <div className="min-w-0">
           <div className="text-white text-rt-20 font-bold truncate">
-            {t('aluno:hello', { name: profile?.full_name?.split(' ')[0] ?? 'Aluno' })}
+            {t('aluno:hello', { name: profile?.full_name?.split(' ')[0] ?? t('nutricao:student') })}
           </div>
           <div className="text-white/60 text-rt-11 mt-0.5 truncate">{t('aluno:tabs.nutrition')}</div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <LanguageToggle />
-          <button onClick={() => nav('/aluno/notificacoes')} className="w-10 h-10 rounded-full bg-surface-raised flex items-center justify-center" aria-label="Notificações">
+          <button onClick={() => nav('/aluno/notificacoes')} className="w-10 h-10 rounded-full bg-surface-raised flex items-center justify-center" aria-label={t('nutricao:notifications')}>
             <Bell size={20} className="text-white" />
           </button>
         </div>
@@ -111,7 +111,7 @@ export function NutricaoPage() {
               'px-5 h-10 rounded-btn-pill border text-rt-13 font-semibold ' +
               (on ? 'bg-brand border-brand text-white' : 'bg-transparent border-grey-700 text-white/80')
             }>
-              {x === 'dietas' ? 'Minhas Dietas' : 'Lista de Compras'}
+              {x === 'dietas' ? t('nutricao:myDiets') : t('nutricao:shoppingList')}
             </button>
           )
         })}
@@ -119,11 +119,11 @@ export function NutricaoPage() {
 
       {tab === 'dietas' && (
         <div className="flex items-center justify-end gap-2 mb-4">
-          <span className="text-white/70 text-rt-13">Macros nutrientes</span>
+          <span className="text-white/70 text-rt-13">{t('nutricao:macros')}</span>
           <button
             onClick={() => setMacrosOn((v) => !v)}
             className={'w-14 h-7 rounded-full flex items-center px-1 transition ' + (macrosOn ? 'bg-brand justify-end' : 'bg-grey-700 justify-start')}
-            aria-label="Macros nutrientes"
+            aria-label={t('nutricao:macros')}
           >
             <span className="w-5 h-5 rounded-full bg-white" />
           </button>
@@ -131,17 +131,17 @@ export function NutricaoPage() {
       )}
 
       {loading ? (
-        <div className="text-white/60 text-rt-13 py-8 text-center">Carregando…</div>
+        <div className="text-white/60 text-rt-13 py-8 text-center">{t('nutricao:loading')}</div>
       ) : diets.length === 0 ? (
-        <EmptyState icon={Salad} title="Nenhuma dieta" body="Seu professor ainda não atribuiu uma dieta." />
+        <EmptyState icon={Salad} title={t('nutricao:noDiet')} body={t('nutricao:noDietBody')} />
       ) : tab === 'dietas' ? (
         <>
           {/* Banner de la dieta del día, como en el diseño */}
           <div className="rounded-card border border-brand/50 bg-brand/10 px-3 py-2.5 mb-3 flex items-center gap-2">
             <RefreshCw size={16} className="text-brand shrink-0" />
             <span className="text-brand text-rt-13 font-semibold">
-              Dieta do dia: {todayDiet?.name}
-              {diets.length > 1 && ` (${todayIdx + 1} de ${diets.length})`}
+              {t('nutricao:dietOfDay', { name: todayDiet?.name })}
+              {diets.length > 1 && t('nutricao:dayOf', { n: todayIdx + 1, total: diets.length })}
             </span>
           </div>
 
@@ -149,10 +149,10 @@ export function NutricaoPage() {
           {macrosOn && (
             <div className="card-dark p-3 mb-3 grid grid-cols-4 gap-2 text-center">
               {[
-                { l: 'kcal', v: total.kcal, c: 'text-macro-kcal', d: 0 },
-                { l: 'proteínas', v: total.p, c: 'text-macro-protein', d: 1 },
-                { l: 'carboidrato', v: total.c, c: 'text-macro-carb', d: 1 },
-                { l: 'gordura', v: total.f, c: 'text-macro-fat', d: 1 },
+                { l: t('nutricao:kcal'), v: total.kcal, c: 'text-macro-kcal', d: 0 },
+                { l: t('nutricao:proteins'), v: total.p, c: 'text-macro-protein', d: 1 },
+                { l: t('nutricao:carbs'), v: total.c, c: 'text-macro-carb', d: 1 },
+                { l: t('nutricao:fats'), v: total.f, c: 'text-macro-fat', d: 1 },
               ].map((m) => (
                 <div key={m.l}>
                   <div className={'text-rt-18 font-bold ' + m.c}>
@@ -179,7 +179,7 @@ export function NutricaoPage() {
           </div>
 
           {meals.length === 0 ? (
-            <div className="card-dark p-4 text-white/60 text-rt-13">Nenhuma refeição cadastrada.</div>
+            <div className="card-dark p-4 text-white/60 text-rt-13">{t('nutricao:noMeals')}</div>
           ) : (
             <ul className="flex flex-col gap-3">
               {meals.map((m, mi) => {
@@ -193,13 +193,13 @@ export function NutricaoPage() {
                       <div className="flex-1 min-w-0">
                         <div className="text-white text-rt-15 font-bold truncate">{m.meal_type && !m.meal_type.startsWith('custom:') ? etiquetaDe(tiposRefeicao, m.meal_type, i18n.language) : m.name}</div>
                         {hechos > 0 && !completa && (
-                          <div className="text-white/50 text-rt-11">{hechos} de {claves.length}</div>
+                          <div className="text-white/50 text-rt-11">{t('nutricao:nOfTotal', { n: hechos, total: claves.length })}</div>
                         )}
                       </div>
                       {m.time && <span className="text-white/60 text-rt-12 shrink-0">{m.time.slice(0, 5)}</span>}
                       <button
                         onClick={() => marcarComida(mi, !completa)}
-                        aria-label={completa ? 'Desmarcar refeição' : 'Marcar refeição'}
+                        aria-label={completa ? t('nutricao:unmarkMeal') : t('nutricao:markMeal')}
                         className={
                           'w-7 h-7 rounded-[6px] border-2 flex items-center justify-center shrink-0 ' +
                           (completa ? 'bg-brand border-brand text-white' : 'border-grey-600')
@@ -210,7 +210,7 @@ export function NutricaoPage() {
                       <button
                         onClick={() => setPlegadas({ ...plegadas, [`${todayIdx}-${mi}`]: !plegada })}
                         className="w-7 h-7 flex items-center justify-center text-grey-500 shrink-0"
-                        aria-label={plegada ? 'Expandir' : 'Recolher'}
+                        aria-label={plegada ? t('nutricao:expand') : t('nutricao:collapse')}
                       >
                         {plegada ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
                       </button>
@@ -236,20 +236,20 @@ export function NutricaoPage() {
                                   <div className="text-rt-11 mt-0.5 flex flex-wrap gap-x-1">
                                     <span className="text-macro-kcal">{Math.round(f.kcal)} kcal</span>
                                     <span className="text-grey-600">|</span>
-                                    <span className="text-macro-protein">P: {f.p.toFixed(1)}g</span>
+                                    <span className="text-macro-protein">{t('nutricao:pAbbr')}: {f.p.toFixed(1)}g</span>
                                     <span className="text-grey-600">|</span>
-                                    <span className="text-macro-carb">C: {f.c.toFixed(1)}g</span>
+                                    <span className="text-macro-carb">{t('nutricao:cAbbr')}: {f.c.toFixed(1)}g</span>
                                     <span className="text-grey-600">|</span>
-                                    <span className="text-macro-fat">G: {f.f.toFixed(1)}g</span>
+                                    <span className="text-macro-fat">{t('nutricao:fAbbr')}: {f.f.toFixed(1)}g</span>
                                   </div>
                                 )}
                               </div>
                               <span className="text-white text-rt-15 font-bold shrink-0">
-                                {Math.round(f.qty)}{f.unit === 'Uni' ? ' Uni' : f.unit}
+                                {Math.round(f.qty)}{f.unit === 'Uni' ? ` ${t('nutricao:unit')}` : f.unit}
                               </span>
                               <button
                                 onClick={() => alternarAlimento(key)}
-                                aria-label={on ? 'Desmarcar alimento' : 'Marcar alimento'}
+                                aria-label={on ? t('nutricao:unmarkFood') : t('nutricao:markFood')}
                                 className={
                                   'w-7 h-7 rounded-[6px] border-2 flex items-center justify-center shrink-0 ' +
                                   (on ? 'bg-brand border-brand text-white' : 'border-grey-600')
@@ -269,7 +269,7 @@ export function NutricaoPage() {
                                     <BookOpen size={16} className="text-brand shrink-0" />
                                     <span className="flex-1 text-white text-rt-14 font-bold truncate">{r.name}</span>
                                     <button onClick={() => setPreparo(r)} className="shrink-0 px-2.5 py-1 rounded-btn-pill border border-brand text-brand text-rt-11 font-semibold">
-                                      Modo de preparo
+                                      {t('nutricao:howToPrepare')}
                                     </button>
                                   </div>
                                   <ul className="flex flex-col gap-2">
@@ -297,7 +297,7 @@ export function NutricaoPage() {
       {dietaListaAvisada && (
         <FeedbackDialog
           kind="success"
-          message="Dieta do dia concluída! Parabéns por seguir o plano."
+          message={t('nutricao:dietDone')}
           onClose={() => setDietaListaAvisada(false)}
         />
       )}
@@ -306,6 +306,7 @@ export function NutricaoPage() {
 }
 
 function ComprasList({ diets }: { diets: SD[] }) {
+  const { t, i18n } = useTranslation()
   const [period, setPeriod] = useState<'semana' | 'mes'>('semana')
   // Lo comprado se recuerda: la lista se usa caminando por el supermercado.
   const [comprados, setComprados] = useState<Record<string, boolean>>(() => {
@@ -316,21 +317,21 @@ function ComprasList({ diets }: { diets: SD[] }) {
   }, [comprados])
 
   const days = period === 'semana' ? 7 : 30
-  const totals = new Map<string, { qty: number; unit: string }>()
+  const totals = new Map<string, { qty: number; unit: string; nombre: string }>()
   for (let i = 0; i < days; i++) {
     const d = diets[i % diets.length]
     d?.data?.meals?.forEach((m) => m.foods.forEach((f) => {
       const key = f.name
-      const cur = totals.get(key) ?? { qty: 0, unit: f.unit }
-      totals.set(key, { qty: cur.qty + f.qty, unit: f.unit })
+      const cur = totals.get(key) ?? { qty: 0, unit: f.unit, nombre: nombreEjercicio({ ...f, name_pt: f.name_pt ?? f.name }, i18n.language) }
+      totals.set(key, { ...cur, qty: cur.qty + f.qty })
     }))
   }
   const list = Array.from(totals.entries()).sort()
   const hechos = list.filter(([k]) => comprados[k]).length
 
   function sendWhats() {
-    const txt = list.map(([k, v]) => `• ${Math.round(v.qty)}${v.unit} ${k}`).join('\n')
-    const url = `https://wa.me/?text=${encodeURIComponent('Lista de compras Rutyn:\n' + txt)}`
+    const txt = list.map(([, v]) => `• ${Math.round(v.qty)}${v.unit} ${v.nombre}`).join('\n')
+    const url = `https://wa.me/?text=${encodeURIComponent(t('nutricao:shoppingTitle') + '\n' + txt)}`
     window.open(url, '_blank')
   }
 
@@ -343,7 +344,7 @@ function ComprasList({ diets }: { diets: SD[] }) {
               'px-4 h-9 rounded-btn-pill text-rt-12 font-semibold ' +
               (period === p ? 'bg-brand text-white' : 'bg-surface-raised text-grey-400')
             }>
-              {p === 'semana' ? '1 semana' : '1 mês'}
+              {p === 'semana' ? t('nutricao:oneWeek') : t('nutricao:oneMonth')}
             </button>
           ))}
         </div>
@@ -353,7 +354,7 @@ function ComprasList({ diets }: { diets: SD[] }) {
       </div>
 
       {list.length === 0 ? (
-        <div className="card-dark p-4 text-white/60 text-rt-13">Sem itens na sua dieta.</div>
+        <div className="card-dark p-4 text-white/60 text-rt-13">{t('nutricao:noItems')}</div>
       ) : (
         <ul className="flex flex-col gap-2 mb-4">
           {list.map(([k, v]) => {
@@ -362,7 +363,7 @@ function ComprasList({ diets }: { diets: SD[] }) {
               <li key={k} className={'card-dark p-3 flex items-center gap-3 ' + (on ? 'border-brand/40' : '')}>
                 <button
                   onClick={() => setComprados({ ...comprados, [k]: !on })}
-                  aria-label={on ? 'Desmarcar' : 'Marcar'}
+                  aria-label={on ? t('nutricao:unmark') : t('nutricao:mark')}
                   className={
                     'w-6 h-6 rounded-[6px] border-2 flex items-center justify-center shrink-0 ' +
                     (on ? 'bg-brand border-brand text-white text-rt-12' : 'border-grey-600')
@@ -370,9 +371,9 @@ function ComprasList({ diets }: { diets: SD[] }) {
                 >
                   {on && '✓'}
                 </button>
-                <span className={'flex-1 text-rt-14 ' + (on ? 'text-grey-500 line-through' : 'text-white')}>{k}</span>
+                <span className={'flex-1 text-rt-14 ' + (on ? 'text-grey-500 line-through' : 'text-white')}>{v.nombre}</span>
                 <span className={'text-rt-13 font-semibold ' + (on ? 'text-grey-600' : 'text-brand')}>
-                  {Math.round(v.qty)}{v.unit === 'Uni' ? ' Uni' : v.unit}
+                  {Math.round(v.qty)}{v.unit === 'Uni' ? ` ${t('nutricao:unit')}` : v.unit}
                 </span>
               </li>
             )
@@ -381,7 +382,7 @@ function ComprasList({ diets }: { diets: SD[] }) {
       )}
 
       <button onClick={sendWhats} className="w-full h-12 rounded-btn-pill bg-whatsapp text-white font-semibold flex items-center justify-center gap-2">
-        <MessageCircle size={18} /> Enviar pelo WhatsApp
+        <MessageCircle size={18} /> {t('nutricao:sendWhatsapp')}
       </button>
     </>
   )

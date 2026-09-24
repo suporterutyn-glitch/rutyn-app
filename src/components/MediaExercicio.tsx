@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { Dumbbell, Play, VideoOff, X } from 'lucide-react'
 
@@ -86,7 +87,7 @@ export function MiniaturaMedia({ media, tamano = 60 }: { media: Media; tamano?: 
 }
 
 const SELLO: Record<string, { texto: string; clase: string }> = {
-  video: { texto: 'Vídeo', clase: 'bg-info' },
+  video: { texto: 'treino:video', clase: 'bg-info' },
   gif: { texto: 'GIF', clase: 'bg-tone-purple' },
   youtube: { texto: 'YouTube', clase: 'bg-danger' },
 }
@@ -96,6 +97,7 @@ const SELLO: Record<string, { texto: string; clase: string }> = {
  * reproducir y sello del tipo. Al tocarlo abre el reproductor a pantalla completa.
  */
 export function BannerMedia({ media, alto = 160 }: { media: Media; alto?: number }) {
+  const { t } = useTranslation()
   const [abierto, setAbierto] = useState(false)
   const { ref, visible } = useVisible<HTMLButtonElement>()
   const tipo = tipoDe(media)
@@ -107,7 +109,7 @@ export function BannerMedia({ media, alto = 160 }: { media: Media; alto?: number
         style={{ height: alto }}
       >
         <VideoOff size={36} className="text-grey-600" />
-        <span className="text-grey-500 text-rt-12">Nenhuma mídia</span>
+        <span className="text-grey-500 text-rt-12">{t('treino:noMedia')}</span>
       </div>
     )
   }
@@ -130,7 +132,7 @@ export function BannerMedia({ media, alto = 160 }: { media: Media; alto?: number
           </span>
         </span>
         <span className={'absolute bottom-2 right-2 px-2 py-1 rounded-md text-white text-rt-10 font-semibold ' + sello.clase}>
-          {sello.texto}
+          {t(sello.texto)}
         </span>
       </button>
 
@@ -141,6 +143,7 @@ export function BannerMedia({ media, alto = 160 }: { media: Media; alto?: number
 
 /** Player a pantalla completa: video, GIF o YouTube según el medio. */
 export function ReproductorMedia({ media, onCerrar }: { media: Media; onCerrar: () => void }) {
+  const { t } = useTranslation()
   const tipo = tipoDe(media)
   const url = media.video_url ?? ''
   return (
@@ -150,7 +153,7 @@ export function ReproductorMedia({ media, onCerrar }: { media: Media; onCerrar: 
           <div className="relative w-full pt-[56.25%]">
             <iframe
               src={`https://www.youtube.com/embed/${idDeYoutube(url)}?autoplay=1`}
-              title="Vídeo do exercício"
+              title={t('treino:exerciseVideo')}
               allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
               className="absolute inset-0 w-full h-full rounded-[12px]"
@@ -168,7 +171,7 @@ export function ReproductorMedia({ media, onCerrar }: { media: Media; onCerrar: 
       <button
         onClick={onCerrar}
         className="absolute top-[calc(env(safe-area-inset-top)+16px)] right-4 w-10 h-10 rounded-full bg-black/60 flex items-center justify-center text-white"
-        aria-label="Fechar"
+        aria-label={t('treino:close')}
       >
         <X size={22} />
       </button>

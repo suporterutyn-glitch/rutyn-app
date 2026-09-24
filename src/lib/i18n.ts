@@ -927,12 +927,23 @@ const en: typeof pt = {
   },
 }
 
+// Cada archivo de src/i18n/ es un namespace con sus tres idiomas.
+const modulos = import.meta.glob<{ default: { pt: object; es: object; en: object } }>('../i18n/*.ts', { eager: true })
+const resources: Record<'pt' | 'es' | 'en', Record<string, object>> = { pt: { ...pt }, es: { ...es }, en: { ...en } }
+for (const [ruta, mod] of Object.entries(modulos)) {
+  if (!mod.default) continue
+  const ns = ruta.split('/').pop()!.replace(/\.ts$/, '')
+  resources.pt[ns] = mod.default.pt
+  resources.es[ns] = mod.default.es
+  resources.en[ns] = mod.default.en
+}
+
 void i18n.use(initReactI18next).init({
-  resources: { pt: pt as any, es: es as any, en: en as any },
+  resources: resources as any,
   lng: initialLang(),
   fallbackLng: 'pt',
   defaultNS: 'common',
-  ns: Object.keys(pt),
+  ns: Object.keys(resources.pt),
   interpolation: { escapeValue: false },
 })
 

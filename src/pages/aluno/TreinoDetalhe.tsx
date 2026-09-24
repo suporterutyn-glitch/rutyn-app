@@ -35,7 +35,7 @@ type Session = { started_at: string; duration_seconds: number; data: any }
 export function TreinoDetalhePage() {
   const { id } = useParams<{ id: string }>()
   const nav = useNavigate()
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [routine, setRoutine] = useState<SR | null>(null)
   const [sessions, setSessions] = useState<Session[]>([])
 
@@ -78,11 +78,9 @@ export function TreinoDetalhePage() {
         </div>
       )}
 
-      <div className="text-white text-rt-15 font-bold mb-2">Exercícios</div>
+      <div className="text-white text-rt-15 font-bold mb-2">{t('treino:exercises')}</div>
       {exercises.length === 0 ? (
-        <div className="card-dark p-4 text-white/60 text-rt-13">
-          Nenhum exercício cadastrado ainda. Peça para seu professor adicionar séries.
-        </div>
+        <div className="card-dark p-4 text-white/60 text-rt-13">{t('treino:noExercises')}</div>
       ) : (
         <ul className="flex flex-col gap-2">
           {exercises.map((e, i) => {
@@ -98,7 +96,7 @@ export function TreinoDetalhePage() {
                   <div className="text-white text-rt-15 font-semibold leading-tight">{nombreEjercicio(e, i18n.language)}</div>
                   <div className="flex flex-wrap gap-1.5 mt-2">
                     {e.muscle_group && <Chip>{etiquetaDe(gruposMusculares, e.muscle_group, i18n.language) || e.muscle_group}</Chip>}
-                    <Chip>{cantidad} {cantidad === 1 ? 'Série' : 'Séries'}</Chip>
+                    <Chip>{t('treino:series', { count: cantidad })}</Chip>
                     {cargas.length > 0 && (
                       <Chip><span className="font-bold">KG</span> - {cargas.join('/')}</Chip>
                     )}
@@ -120,7 +118,7 @@ export function TreinoDetalhePage() {
         <div className="card-dark p-4 mt-4">
           <div className="flex items-center gap-2 mb-3">
             <TrendingUp size={16} className="text-brand" />
-            <span className="text-white text-rt-13 font-bold">Progressão de volume</span>
+            <span className="text-white text-rt-13 font-bold">{t('treino:volumeProgress')}</span>
           </div>
           <ProgressChart points={points} />
         </div>
@@ -130,7 +128,7 @@ export function TreinoDetalhePage() {
            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 116px)' }}>
         <div className="h-[5px] rounded-full bg-brand-h mb-2" />
         <DragSlider
-          label="Arraste para iniciar treino"
+          label={t('treino:dragToStart')}
           onConfirm={() => nav(`/aluno/treinos/${id}/execucao`)}
         />
       </div>

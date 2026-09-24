@@ -46,7 +46,7 @@ type Descanso = { terminaEn: number | null; pausadoCon: number | null; total: nu
 export function TreinoExecucaoPage() {
   const { id } = useParams<{ id: string }>()
   const nav = useNavigate()
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { profile } = useAuth()
 
   const [confirmarSaida, setConfirmarSaida] = useState(false)
@@ -247,25 +247,25 @@ export function TreinoExecucaoPage() {
         {/* Descanso arriba, siempre visible: solo la lista de ejercicios se desplaza. */}
         <div className="shrink-0 z-20 bg-surface-app shadow-header px-4 pt-[calc(env(safe-area-inset-top)+12px)] pb-3">
           <div className="flex items-start gap-3">
-            <button onClick={() => setConfirmarSaida(true)} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center shrink-0" aria-label="Sair">
+            <button onClick={() => setConfirmarSaida(true)} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center shrink-0" aria-label={t('treino:exit')}>
               <X size={20} />
             </button>
 
             <div className="flex-1 min-w-0">
-              <div className="text-[10px] uppercase tracking-[2px] font-semibold text-white/60">Descanso</div>
+              <div className="text-[10px] uppercase tracking-[2px] font-semibold text-white/60">{t('treino:rest')}</div>
               <div className="flex items-center gap-2 mt-1">
                 <button
                   onClick={() => { if (corriendo || descanso.pausadoCon) setPantallaDescanso(true) }}
                   className={'h-11 min-w-[88px] px-3 rounded-[10px] border-[1.5px] flex items-center justify-center text-rt-22 font-bold tabular-nums ' +
                     (corriendo ? 'border-brand text-brand bg-brand/10' : descanso.pausadoCon ? 'border-warning text-warning' : 'border-grey-700 text-white/60')}
-                  aria-label="Abrir tela de descanso"
+                  aria-label={t('treino:openRest')}
                 >
                   {fmt(corriendo || descanso.pausadoCon ? restante : descansoSugerido)}
                 </button>
-                <button onClick={pausarOReanudar} className="w-11 h-11 rounded-[10px] bg-brand flex items-center justify-center" aria-label={corriendo ? 'Pausar' : 'Iniciar'}>
+                <button onClick={pausarOReanudar} className="w-11 h-11 rounded-[10px] bg-brand flex items-center justify-center" aria-label={corriendo ? t('treino:pause') : t('treino:start')}>
                   {corriendo ? <Pause size={20} className="text-white" /> : <Play size={20} className="text-white" fill="white" />}
                 </button>
-                <button onClick={cortarDescanso} className="w-11 h-11 rounded-[10px] bg-surface-raised flex items-center justify-center" aria-label="Zerar">
+                <button onClick={cortarDescanso} className="w-11 h-11 rounded-[10px] bg-surface-raised flex items-center justify-center" aria-label={t('treino:reset')}>
                   <RotateCcw size={18} className="text-grey-400" />
                 </button>
               </div>
@@ -273,7 +273,7 @@ export function TreinoExecucaoPage() {
 
             <div className="text-right shrink-0">
               <span className="inline-block px-2.5 py-1 rounded-btn-pill bg-brand/20 text-brand text-rt-12 font-bold">{doneSeries}/{totalSeries}</span>
-              <div className="text-[10px] uppercase tracking-wider text-white/60 font-semibold mt-2">Tempo de treino</div>
+              <div className="text-[10px] uppercase tracking-wider text-white/60 font-semibold mt-2">{t('treino:workoutTime')}</div>
               <div className="text-rt-22 font-bold leading-none tabular-nums">{fmt(elapsed)}</div>
             </div>
           </div>
@@ -301,18 +301,18 @@ export function TreinoExecucaoPage() {
                     </div>
                     <div className="text-white text-rt-16 font-bold leading-tight mt-0.5">{nombreEjercicio(e, i18n.language)}</div>
                     {listo && !activo ? (
-                      <div className="flex items-center gap-1.5 mt-1.5 text-brand text-rt-12 font-semibold"><Check size={15} /> Completado</div>
+                      <div className="flex items-center gap-1.5 mt-1.5 text-brand text-rt-12 font-semibold"><Check size={15} /> {t('treino:completed')}</div>
                     ) : (
                       <div className="flex flex-wrap gap-1.5 mt-2">
                         {e.muscle_group && <ChipEx>{grupo(e.muscle_group)}</ChipEx>}
-                        <ChipEx>{e.series.length} {e.series.length === 1 ? 'Série' : 'Séries'}</ChipEx>
-                        {e.series[0]?.reps ? <ChipEx>{e.series[0].reps} Rep</ChipEx> : null}
+                        <ChipEx>{t('treino:series', { count: e.series.length })}</ChipEx>
+                        {e.series[0]?.reps ? <ChipEx>{t('treino:rep', { reps: e.series[0].reps })}</ChipEx> : null}
                         {cargas.length > 0 && <ChipEx><span className="font-bold">KG</span> - {cargas.join('/')}</ChipEx>}
                       </div>
                     )}
                   </div>
                   {activo ? (
-                    <span role="button" tabIndex={0} onClick={(ev) => { ev.stopPropagation(); setVerProgresso(ei) }} aria-label="Progressão de carga"
+                    <span role="button" tabIndex={0} onClick={(ev) => { ev.stopPropagation(); setVerProgresso(ei) }} aria-label={t('treino:loadProgress')}
                       className="w-9 h-9 rounded-[8px] bg-surface-input flex items-center justify-center shrink-0">
                       <TrendingUp size={18} className="text-brand" />
                     </span>
@@ -329,11 +329,11 @@ export function TreinoExecucaoPage() {
                         <div key={i} className="rounded-card overflow-hidden flex items-stretch bg-surface-raised">
                           <div className={'w-14 flex items-center justify-center text-rt-32 font-bold shrink-0 ' + (s.done ? 'bg-brand text-white' : 'bg-black/60 text-white')}>{i + 1}</div>
                           <div className="flex-1 p-3 grid grid-cols-3 gap-2">
-                            <CampoSerie label="Reps" value={s.reps} onChange={(v) => updateSerie(ei, i, { reps: v })} inputMode="text" />
-                            <CampoSerie label="Carga" value={s.load} onChange={(v) => updateSerie(ei, i, { load: v })} inputMode="decimal" />
-                            <CampoSerie label="Desc. (s)" value={String(s.rest ?? DEFAULT_REST)} onChange={(v) => updateSerie(ei, i, { rest: Number(v.replace(/\D/g, '')) || 0 })} inputMode="numeric" />
+                            <CampoSerie label={t('treino:reps')} value={s.reps} onChange={(v) => updateSerie(ei, i, { reps: v })} inputMode="text" />
+                            <CampoSerie label={t('treino:load')} value={s.load} onChange={(v) => updateSerie(ei, i, { load: v })} inputMode="decimal" />
+                            <CampoSerie label={t('treino:restSec')} value={String(s.rest ?? DEFAULT_REST)} onChange={(v) => updateSerie(ei, i, { rest: Number(v.replace(/\D/g, '')) || 0 })} inputMode="numeric" />
                           </div>
-                          <button onClick={() => tocarCirculo(ei, i)} className="w-14 flex items-center justify-center shrink-0" aria-label={s.done ? 'Desmarcar série' : 'Marcar série'}>
+                          <button onClick={() => tocarCirculo(ei, i)} className="w-14 flex items-center justify-center shrink-0" aria-label={s.done ? t('treino:unmarkSeries') : t('treino:markSeries')}>
                             <span className={'w-8 h-8 rounded-full border-2 flex items-center justify-center ' + (s.done ? 'bg-brand border-brand text-white' : 'border-grey-500')}>{s.done && '✓'}</span>
                           </button>
                         </div>
@@ -341,7 +341,7 @@ export function TreinoExecucaoPage() {
                     </div>
                     {pendiente >= 0 && (
                       <button onClick={() => completarSerie(ei, pendiente)} className="w-full h-12 rounded-card bg-brand text-white text-rt-15 font-bold mt-3">
-                        Finalizar Série {pendiente + 1}
+                        {t('treino:finishSeries', { n: pendiente + 1 })}
                       </button>
                     )}
                   </>
@@ -352,8 +352,8 @@ export function TreinoExecucaoPage() {
 
           {exercises.length > 0 && (
             <li className="pt-2 pb-[calc(env(safe-area-inset-bottom)+16px)]">
-              {todoHecho && <p className="text-brand text-rt-13 font-semibold text-center mb-3">Todos os exercícios concluídos!</p>}
-              <DragSlider label="Finalizar treinamento" onConfirm={pedirFinalizar} />
+              {todoHecho && <p className="text-brand text-rt-13 font-semibold text-center mb-3">{t('treino:allDone')}</p>}
+              <DragSlider label={t('treino:finishWorkout')} onConfirm={pedirFinalizar} />
             </li>
           )}
         </ul>
@@ -364,7 +364,7 @@ export function TreinoExecucaoPage() {
           restante={restante}
           total={descanso.total}
           corriendo={corriendo}
-          proximo={siguiente ? `Série ${siguiente.serie + 1} · ${nombreEjercicio(exercises[siguiente.ex], i18n.language)}` : null}
+          proximo={siguiente ? t('treino:nextSeries', { n: siguiente.serie + 1, name: nombreEjercicio(exercises[siguiente.ex], i18n.language) }) : null}
           onPausar={pausarOReanudar}
           onAjustar={ajustar}
           onSaltar={cortarDescanso}
@@ -377,7 +377,7 @@ export function TreinoExecucaoPage() {
           studentId={profile.id}
           nombreExercicio={exProgreso.name}
           media={exProgreso}
-          chips={[grupo(exProgreso.muscle_group), `${exProgreso.series.length} Séries`, exProgreso.series[0]?.reps ? `${exProgreso.series[0].reps} Rep` : ''].filter(Boolean)}
+          chips={[grupo(exProgreso.muscle_group), t('treino:series', { count: exProgreso.series.length }), exProgreso.series[0]?.reps ? t('treino:rep', { reps: exProgreso.series[0].reps }) : ''].filter(Boolean)}
           onCerrar={() => setVerProgresso(null)}
         />
       )}
@@ -391,9 +391,9 @@ export function TreinoExecucaoPage() {
 
       {desmarcando !== null && (
         <ConfirmDialog
-          message="Desmarcar esta série?"
-          detail="Ela volta a contar como pendente."
-          confirmLabel="Desmarcar"
+          message={t('treino:unmarkQ')}
+          detail={t('treino:unmarkDetail')}
+          confirmLabel={t('treino:unmark')}
           tone="danger"
           onConfirm={() => { marcar(desmarcando.ex, desmarcando.serie, false); setDesmarcando(null) }}
           onCancel={() => setDesmarcando(null)}
@@ -402,10 +402,10 @@ export function TreinoExecucaoPage() {
 
       {confirmarIncompleto && (
         <ConfirmDialog
-          message={doneSeries === 0 ? 'Treino sem séries concluídas' : 'Treino incompleto'}
-          detail={doneSeries === 0 ? 'Você não marcou nenhuma série. Finalizar assim mesmo?' : `Faltam ${totalSeries - doneSeries} de ${totalSeries} séries. Finalizar assim mesmo?`}
-          confirmLabel="Finalizar"
-          cancelLabel="Continuar treino"
+          message={doneSeries === 0 ? t('treino:noSeriesDone') : t('treino:incomplete')}
+          detail={doneSeries === 0 ? t('treino:noSeriesDoneDetail') : t('treino:incompleteDetail', { left: totalSeries - doneSeries, total: totalSeries })}
+          confirmLabel={t('treino:finish')}
+          cancelLabel={t('treino:keepTraining')}
           tone="danger"
           onConfirm={() => { setConfirmarIncompleto(false); void finish() }}
           onCancel={() => setConfirmarIncompleto(false)}
@@ -414,10 +414,10 @@ export function TreinoExecucaoPage() {
 
       {confirmarSaida && (
         <ConfirmDialog
-          message="Abandonar treino?"
-          detail="O progresso desta sessão não será salvo."
-          confirmLabel="Abandonar"
-          cancelLabel="Continuar"
+          message={t('treino:abandonQ')}
+          detail={t('treino:abandonDetail')}
+          confirmLabel={t('treino:abandon')}
+          cancelLabel={t('treino:resume')}
           tone="danger"
           onConfirm={() => { if (id) olvidarSesion(id); nav(-1) }}
           onCancel={() => setConfirmarSaida(false)}
@@ -449,12 +449,13 @@ function PantallaDescanso({ restante, total, corriendo, proximo, onPausar, onAju
   onSaltar: () => void
   onOcultar: () => void
 }) {
+  const { t } = useTranslation()
   const r = 110
   const c = 2 * Math.PI * r
   const frac = total > 0 ? Math.min(1, restante / total) : 0
   return (
     <div className="fixed inset-0 z-[60] bg-surface-app/[0.97] flex flex-col items-center justify-center px-6 text-white">
-      <div className="text-rt-13 uppercase tracking-[3px] font-semibold text-white/60">Descanso</div>
+      <div className="text-rt-13 uppercase tracking-[3px] font-semibold text-white/60">{t('treino:rest')}</div>
       <div className="relative mt-6" style={{ width: 260, height: 260 }}>
         <svg width="260" height="260" className="-rotate-90">
           <circle cx="130" cy="130" r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="12" />
@@ -463,13 +464,13 @@ function PantallaDescanso({ restante, total, corriendo, proximo, onPausar, onAju
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-[56px] font-bold tabular-nums leading-none">{fmt(restante)}</span>
-          {!corriendo && <span className="text-warning text-rt-13 font-semibold mt-2">Pausado</span>}
+          {!corriendo && <span className="text-warning text-rt-13 font-semibold mt-2">{t('treino:paused')}</span>}
         </div>
       </div>
 
       <div className="flex items-center gap-4 mt-8">
         <button onClick={() => onAjustar(-15)} className="w-16 h-12 rounded-[12px] bg-surface-raised text-white text-rt-15 font-semibold">-15s</button>
-        <button onClick={onPausar} aria-label={corriendo ? 'Pausar' : 'Continuar'} className="w-16 h-16 rounded-full bg-brand flex items-center justify-center">
+        <button onClick={onPausar} aria-label={corriendo ? t('treino:pause') : t('treino:resume')} className="w-16 h-16 rounded-full bg-brand flex items-center justify-center">
           {corriendo ? <Pause size={28} className="text-white" /> : <Play size={28} className="text-white" fill="white" />}
         </button>
         <button onClick={() => onAjustar(15)} className="w-16 h-12 rounded-[12px] bg-surface-raised text-white text-rt-15 font-semibold">+15s</button>
@@ -477,15 +478,15 @@ function PantallaDescanso({ restante, total, corriendo, proximo, onPausar, onAju
 
       {proximo && (
         <div className="mt-8 text-center">
-          <div className="text-white/50 text-rt-12 uppercase tracking-wider">Próximo</div>
+          <div className="text-white/50 text-rt-12 uppercase tracking-wider">{t('treino:next')}</div>
           <div className="text-white text-rt-16 font-semibold mt-1">{proximo}</div>
         </div>
       )}
 
       <button onClick={onSaltar} className="mt-8 h-12 px-6 rounded-btn-pill border border-grey-600 text-white text-rt-14 font-semibold flex items-center gap-2">
-        <SkipForward size={18} /> Pular descanso
+        <SkipForward size={18} /> {t('treino:skipRest')}
       </button>
-      <button onClick={onOcultar} className="mt-3 text-white/60 text-rt-13">Ver treino</button>
+      <button onClick={onOcultar} className="mt-3 text-white/60 text-rt-13">{t('treino:seeWorkout')}</button>
     </div>
   )
 }
@@ -520,6 +521,7 @@ function AvisoTiempoAgotado({ onVolver, onMasTiempo }: {
   onVolver: () => void
   onMasTiempo: (segundos: number) => void
 }) {
+  const { t } = useTranslation()
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center px-6 bg-black/70">
       <div className="w-full max-w-[350px] rounded-[16px] bg-surface-card border border-danger/60 px-6 pt-8 pb-6">
@@ -529,18 +531,18 @@ function AvisoTiempoAgotado({ onVolver, onMasTiempo }: {
           </span>
         </div>
         <h2 className="text-white text-rt-22 font-bold text-center tracking-[1px] uppercase mt-5">
-          Tempo esgotado!
+          {t('treino:timeUp')}
         </h2>
-        <p className="text-white/70 text-rt-14 text-center mt-2">Hora de voltar ao treino</p>
+        <p className="text-white/70 text-rt-14 text-center mt-2">{t('treino:backToTraining')}</p>
 
         <button
           onClick={onVolver}
           className="w-full h-[54px] rounded-btn-pill bg-brand text-white text-rt-16 font-bold tracking-[1px] uppercase mt-6 shadow-glow"
         >
-          Voltar ao treino
+          {t('treino:backButton')}
         </button>
 
-        <p className="text-white/50 text-rt-13 text-center mt-5">Precisa de mais tempo?</p>
+        <p className="text-white/50 text-rt-13 text-center mt-5">{t('treino:needMore')}</p>
         <div className="flex gap-2 mt-2">
           {[
             { l: '+30s', s: 30 },

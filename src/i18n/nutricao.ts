@@ -1,0 +1,40 @@
+import { textos } from './textos'
+
+export default textos({
+  pt: {
+    student: 'Aluno', notifications: 'Notificações', myDiets: 'Minhas Dietas', shoppingList: 'Lista de Compras', macros: 'Macros nutrientes',
+    loading: 'Carregando…', noDiet: 'Nenhuma dieta', noDietBody: 'Seu professor ainda não atribuiu uma dieta.',
+    dietOfDay: 'Dieta do dia: {{name}}', dayOf: ' ({{n}} de {{total}})',
+    kcal: 'kcal', proteins: 'proteínas', carbs: 'carboidrato', fats: 'gordura', pAbbr: 'P', cAbbr: 'C', fAbbr: 'G',
+    noMeals: 'Nenhuma refeição cadastrada.', nOfTotal: '{{n}} de {{total}}',
+    markMeal: 'Marcar refeição', unmarkMeal: 'Desmarcar refeição', expand: 'Expandir', collapse: 'Recolher',
+    markFood: 'Marcar alimento', unmarkFood: 'Desmarcar alimento', howToPrepare: 'Modo de preparo',
+    dietDone: 'Dieta do dia concluída! Parabéns por seguir o plano.',
+    oneWeek: '1 semana', oneMonth: '1 mês', noItems: 'Sem itens na sua dieta.', mark: 'Marcar', unmark: 'Desmarcar',
+    sendWhatsapp: 'Enviar pelo WhatsApp', shoppingTitle: 'Lista de compras Rutyn:', unit: 'Uni',
+  },
+  es: {
+    student: 'Alumno', notifications: 'Notificaciones', myDiets: 'Mis Dietas', shoppingList: 'Lista de Compras', macros: 'Macronutrientes',
+    loading: 'Cargando…', noDiet: 'Ninguna dieta', noDietBody: 'Tu profesor todavía no te asignó una dieta.',
+    dietOfDay: 'Dieta del día: {{name}}', dayOf: ' ({{n}} de {{total}})',
+    kcal: 'kcal', proteins: 'proteínas', carbs: 'carbohidratos', fats: 'grasas', pAbbr: 'P', cAbbr: 'C', fAbbr: 'G',
+    noMeals: 'No hay comidas cargadas.', nOfTotal: '{{n}} de {{total}}',
+    markMeal: 'Marcar comida', unmarkMeal: 'Desmarcar comida', expand: 'Expandir', collapse: 'Contraer',
+    markFood: 'Marcar alimento', unmarkFood: 'Desmarcar alimento', howToPrepare: 'Modo de preparación',
+    dietDone: '¡Dieta del día completada! Felicitaciones por seguir el plan.',
+    oneWeek: '1 semana', oneMonth: '1 mes', noItems: 'No hay ítems en tu dieta.', mark: 'Marcar', unmark: 'Desmarcar',
+    sendWhatsapp: 'Enviar por WhatsApp', shoppingTitle: 'Lista de compras Rutyn:', unit: 'Uni',
+  },
+  en: {
+    student: 'Student', notifications: 'Notifications', myDiets: 'My Diets', shoppingList: 'Shopping List', macros: 'Macronutrients',
+    loading: 'Loading…', noDiet: 'No diet', noDietBody: "Your trainer hasn't assigned a diet yet.",
+    dietOfDay: "Today's diet: {{name}}", dayOf: ' ({{n}} of {{total}})',
+    kcal: 'kcal', proteins: 'protein', carbs: 'carbs', fats: 'fat', pAbbr: 'P', cAbbr: 'C', fAbbr: 'F',
+    noMeals: 'No meals added.', nOfTotal: '{{n}} of {{total}}',
+    markMeal: 'Mark meal', unmarkMeal: 'Unmark meal', expand: 'Expand', collapse: 'Collapse',
+    markFood: 'Mark food', unmarkFood: 'Unmark food', howToPrepare: 'How to prepare',
+    dietDone: "Today's diet completed! Great job following the plan.",
+    oneWeek: '1 week', oneMonth: '1 month', noItems: 'No items in your diet.', mark: 'Mark', unmark: 'Unmark',
+    sendWhatsapp: 'Send via WhatsApp', shoppingTitle: 'Rutyn shopping list:', unit: 'Unit',
+  },
+})

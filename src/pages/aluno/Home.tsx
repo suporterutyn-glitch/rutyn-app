@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { localeDe } from '@/lib/fechas'
 import { useNavigate } from 'react-router-dom'
 import { currencyOf, formatMoney } from '@/lib/plans'
 import { AnnouncementModal } from '@/components/AnnouncementModal'
@@ -22,7 +23,7 @@ function todayISO() {
 
 export function AlunoHome() {
   const { profile } = useAuth()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const nav = useNavigate()
   const [counter, setCounter] = useState<{ id: string; amount: number; format: string; frequency: number; teacher: string } | null>(null)
   const [charge, setCharge] = useState<Charge | null>(null)
@@ -39,7 +40,7 @@ export function AlunoHome() {
   const [metaHidratacion, setMetaHidratacion] = useState(false)
   const [errorConvite, setErrorConvite] = useState<string | null>(null)
 
-  const firstName = profile?.full_name?.split(' ')[0] ?? 'Aluno'
+  const firstName = profile?.full_name?.split(' ')[0] ?? t('inicio:student')
   const today = todayISO()
 
   useEffect(() => {
@@ -64,7 +65,7 @@ export function AlunoHome() {
       if (inv) setCounter({
         id: inv.id, amount: Number(inv.amount ?? 0), format: (inv as any).format,
         frequency: (inv as any).frequency ?? 0,
-        teacher: (inv as any).profiles?.full_name ?? 'Seu professor',
+        teacher: (inv as any).profiles?.full_name ?? t('inicio:yourTeacher'),
       })
 
       // Frecuencia real: sesiones de esta semana, de lunes a domingo.
@@ -145,10 +146,10 @@ export function AlunoHome() {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <LanguageToggle />
-          <button onClick={() => nav('/aluno/configuracoes')} className="w-10 h-10 rounded-full bg-surface-raised flex items-center justify-center" aria-label="Configurações">
+          <button onClick={() => nav('/aluno/configuracoes')} className="w-10 h-10 rounded-full bg-surface-raised flex items-center justify-center" aria-label={t('inicio:settings')}>
             <Settings size={20} className="text-white" />
           </button>
-          <button onClick={() => nav('/aluno/notificacoes')} className="w-10 h-10 rounded-full bg-surface-raised flex items-center justify-center relative" aria-label="Notificações">
+          <button onClick={() => nav('/aluno/notificacoes')} className="w-10 h-10 rounded-full bg-surface-raised flex items-center justify-center relative" aria-label={t('inicio:notifications')}>
             <Bell size={20} className="text-white" />
             {unread > 0 && (
               <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-danger-soft shadow-badge-red text-white text-[9px] font-bold flex items-center justify-center">
@@ -184,10 +185,10 @@ export function AlunoHome() {
                   ? t('aluno:paymentAwaiting')
                   : estadoPago === 'suspendido'
                     ? t('aluno:paymentSuspended')
-                    : `${t('aluno:paymentDueOn', { date: formatDate(charge!.due_date) })} · ${
+                    : `${t('aluno:paymentDueOn', { date: formatDate(charge!.due_date, i18n.language) })} · ${
                       porHora ? t('aluno:paymentHourly')
                         : vencida ? t('aluno:paymentOverdue')
-                          : t('aluno:paymentMonthOf', { month: nombreMes(charge!.due_date) })}`}
+                          : t('aluno:paymentMonthOf', { month: nombreMes(charge!.due_date, i18n.language) })}`}
             </div>
           </div>
           <div className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center shrink-0">
@@ -363,23 +364,24 @@ function CounterModal({ counter, currency, onAccept, onClose }: {
   counter: { id: string; amount: number; format: string; frequency: number; teacher: string }
   currency: string; onAccept: () => Promise<void>; onClose: () => void
 }) {
+  const { t } = useTranslation()
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6" onClick={onClose}>
       <div className="w-full max-w-sm rounded-card bg-surface-raised p-5" onClick={(e) => e.stopPropagation()}>
-        <div className="text-white text-rt-16 font-bold mb-1">Proposta do Professor</div>
-        <div className="text-white/70 text-rt-12 mb-4">{counter.teacher} enviou uma contraproposta:</div>
+        <div className="text-white text-rt-16 font-bold mb-1">{t('inicio:counterTitle')}</div>
+        <div className="text-white/70 text-rt-12 mb-4">{t('inicio:counterSent', { name: counter.teacher })}</div>
         <div className="card-dark p-3 mb-4">
           <div className="text-brand text-rt-22 font-bold">{formatMoney(counter.amount, currency)}</div>
           <div className="text-white/70 text-rt-12">
-            {counter.format === 'monthly' ? 'Mensal' : 'Por hora'} · {counter.frequency}x/semana
+            {counter.format === 'monthly' ? t('inicio:monthly') : t('inicio:hourly')} · {t('inicio:perWeek', { n: counter.frequency })}
           </div>
         </div>
         <div className="flex gap-2">
           <button onClick={onClose} className="flex-1 h-11 rounded-btn-pill border border-grey-700 text-grey-400 text-rt-13 font-semibold">
-            Depois
+            {t('inicio:later')}
           </button>
           <button onClick={onAccept} className="flex-1 h-11 rounded-btn-pill bg-brand text-white text-rt-13 font-bold">
-            Aceitar
+            {t('inicio:accept')}
           </button>
         </div>
       </div>
@@ -387,13 +389,11 @@ function CounterModal({ counter, currency, onAccept, onClose }: {
   )
 }
 
-function nombreMes(iso: string) {
-  const d = new Date(iso + 'T00:00:00')
-  return d.toLocaleDateString('pt-BR', { month: 'long' })
+function nombreMes(iso: string, lang: string) {
+  return new Date(iso + 'T00:00:00').toLocaleDateString(localeDe(lang), { month: 'long' })
 }
-function formatDate(iso: string) {
-  const d = new Date(iso + 'T00:00:00')
-  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`
+function formatDate(iso: string, lang: string) {
+  return new Date(iso + 'T00:00:00').toLocaleDateString(localeDe(lang), { day: '2-digit', month: '2-digit' })
 }
 function daysUntil(iso: string) {
   const d = new Date(iso + 'T00:00:00')

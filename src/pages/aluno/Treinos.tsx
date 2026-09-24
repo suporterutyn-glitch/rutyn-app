@@ -85,13 +85,13 @@ export function TreinosPage() {
       <div className="flex items-center justify-between mb-5">
         <div className="min-w-0">
           <div className="text-white text-rt-20 font-bold truncate">
-            {t('aluno:hello', { name: profile?.full_name?.split(' ')[0] ?? 'Aluno' })}
+            {t('aluno:hello', { name: profile?.full_name?.split(' ')[0] ?? t('treino:student') })}
           </div>
           <div className="text-white/60 text-rt-11 mt-0.5 truncate">{t('aluno:myWorkouts')}</div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <LanguageToggle />
-          <button onClick={() => nav('/aluno/notificacoes')} className="w-10 h-10 rounded-full bg-surface-raised flex items-center justify-center" aria-label="Notificações">
+          <button onClick={() => nav('/aluno/notificacoes')} className="w-10 h-10 rounded-full bg-surface-raised flex items-center justify-center" aria-label={t('treino:notifications')}>
             <Bell size={20} className="text-white" />
           </button>
         </div>
@@ -117,17 +117,15 @@ export function TreinosPage() {
             <Play size={16} className="text-white" fill="white" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-white text-rt-13 font-bold">Treino em andamento</div>
-            <div className="text-white/60 text-rt-11">Iniciado há {resumeMinutes()} min</div>
+            <div className="text-white text-rt-13 font-bold">{t('treino:inProgress')}</div>
+            <div className="text-white/60 text-rt-11">{t('treino:startedAgo', { n: resumeMinutes() })}</div>
           </div>
-          <button onClick={() => nav(`/aluno/treinos/${ongoing.id}/execucao`)} className="h-9 px-3 rounded-btn-pill bg-brand text-white text-rt-12 font-bold">
-            Retomar
-          </button>
-          <button onClick={discardOngoing} className="text-danger text-rt-11 font-semibold px-2">Descartar</button>
+          <button onClick={() => nav(`/aluno/treinos/${ongoing.id}/execucao`)} className="h-9 px-3 rounded-btn-pill bg-brand text-white text-rt-12 font-bold">{t('treino:resumeWorkout')}</button>
+          <button onClick={discardOngoing} className="text-danger text-rt-11 font-semibold px-2">{t('treino:discard')}</button>
         </div>
       )}
       {loading ? (
-        <div className="text-white/60 text-rt-13 py-8 text-center">Carregando…</div>
+        <div className="text-white/60 text-rt-13 py-8 text-center">{t('treino:loading')}</div>
       ) : items.length === 0 ? (
         <EmptyState icon={Dumbbell} title={t('aluno:noWorkouts')} body={t('aluno:noWorkoutsSub')} />
       ) : (

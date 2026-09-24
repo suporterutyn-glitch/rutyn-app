@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Share2, Dumbbell, Clock, Weight } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -12,6 +13,7 @@ type ExHecho = { name: string; muscle_group?: string | null; series?: SerieHecha
 export function TreinoResumoPage() {
   const [sp] = useSearchParams()
   const nav = useNavigate()
+  const { t } = useTranslation()
   const { profile } = useAuth()
 
   const dur = Number(sp.get('dur') ?? 0)
@@ -59,7 +61,7 @@ export function TreinoResumoPage() {
   const tiempo = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 
   async function compartir() {
-    const texto = `Finalizei mais um treino! ${ejercicios.length} exercícios, ${pesoTotal} kg movidos em ${tiempo}. — Rutyn`
+    const texto = t('treino:shareText', { n: ejercicios.length, kg: pesoTotal, time: tiempo })
     try {
       if (navigator.share) await navigator.share({ text: texto })
       else await navigator.clipboard.writeText(texto)
@@ -77,7 +79,7 @@ export function TreinoResumoPage() {
           <div className="w-[100px] h-[100px] rounded-full bg-brand flex items-center justify-center animate-pop-elastic">
             <span className="text-white text-5xl">✓</span>
           </div>
-          <h1 className="text-grey-900 text-rt-22 font-bold tracking-[1px] uppercase mt-5">Treino finalizado</h1>
+          <h1 className="text-grey-900 text-rt-22 font-bold tracking-[1px] uppercase mt-5">{t('treino:finished')}</h1>
         </div>
 
         {/* Tarjeta para compartir */}
@@ -89,7 +91,7 @@ export function TreinoResumoPage() {
                 : <span className="text-grey-600 text-rt-18 font-bold">{(profile?.full_name?.[0] ?? '?').toUpperCase()}</span>}
             </div>
             <div className="flex-1 text-grey-900 text-rt-15">
-              <em>Finalizei</em> mais um treino!
+              <em>{t('treino:finishedTitle')}</em> {t('treino:oneMore')}
             </div>
             <span className="text-2xl">🎉</span>
           </div>
@@ -100,7 +102,7 @@ export function TreinoResumoPage() {
                 <Dumbbell size={20} className="text-grey-900" />
                 <span className="text-grey-900 text-rt-29 font-bold leading-none">{ejercicios.length}</span>
               </div>
-              <div className="text-grey-700 text-rt-13 mt-3">Exercícios de hoje</div>
+              <div className="text-grey-700 text-rt-13 mt-3">{t('treino:todayExercises')}</div>
               {gruposMusculares.length > 0 && (
                 <div className="text-grey-500 text-rt-12 mt-1">{gruposMusculares.join(', ')}</div>
               )}
@@ -111,12 +113,12 @@ export function TreinoResumoPage() {
                 <Weight size={18} className="text-grey-900" />
                 <span className="text-grey-900 text-rt-22 font-bold italic">{pesoTotal} kg</span>
               </div>
-              <div className="text-grey-700 text-rt-12 mt-1">Peso total</div>
+              <div className="text-grey-700 text-rt-12 mt-1">{t('treino:totalWeight')}</div>
               <div className="flex items-center gap-2 mt-3">
                 <Clock size={18} className="text-grey-900" />
                 <span className="text-grey-900 text-rt-22 font-bold italic">{tiempo}</span>
               </div>
-              <div className="text-grey-700 text-rt-12 mt-1">Tempo total</div>
+              <div className="text-grey-700 text-rt-12 mt-1">{t('treino:totalTime')}</div>
             </div>
           </div>
 
@@ -131,14 +133,12 @@ export function TreinoResumoPage() {
             onClick={() => void compartir()}
             className="h-[52px] rounded-[12px] border border-grey-300 text-grey-900 text-rt-15 font-semibold flex items-center justify-center gap-2"
           >
-            <Share2 size={18} /> Compartilhar
+            <Share2 size={18} /> {t('treino:share')}
           </button>
           <button
             onClick={() => nav('/aluno/treinos', { replace: true })}
             className="h-[52px] rounded-[12px] bg-brand text-white text-rt-15 font-bold flex items-center justify-center gap-2"
-          >
-            Voltar para treinos
-          </button>
+          >{t('treino:backToWorkouts')}</button>
         </div>
 
         {error && <FeedbackDialog kind="error" message={error} onClose={() => setError(null)} />}
