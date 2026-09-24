@@ -22,6 +22,7 @@ export default textos({
       maxSize: 'Máximo 2MB', changePhoto: 'Alterar foto', learnMore: 'Saber mais', later: 'Depois', switchLang: 'Alternar idioma',
       back: 'Voltar', min: '{{label}} — mínimo', max: '{{label}} — máximo', copy: '{{name}} (cópia)', workoutName: 'TREINO - A',
     },
+    extra: { tapToChat: 'Toque para conversar', pricesIn: 'Preços na sua moeda ({{c}}). Cobrança mensal via provedor.', perMonth: 'mês', notes: 'Observações: (alguma coisa que queira me contar?)' },
   },
   es: {
     showPassword: 'Mostrar contraseña', acceptTerms: 'Aceptá los términos', chooseGender: 'Seleccioná el género',
@@ -43,6 +44,7 @@ export default textos({
       maxSize: 'Máximo 2MB', changePhoto: 'Cambiar foto', learnMore: 'Saber más', later: 'Después', switchLang: 'Cambiar idioma',
       back: 'Volver', min: '{{label}} — mínimo', max: '{{label}} — máximo', copy: '{{name}} (copia)', workoutName: 'ENTRENO - A',
     },
+    extra: { tapToChat: 'Tocá para conversar', pricesIn: 'Precios en tu moneda ({{c}}). Cobro mensual a través del proveedor.', perMonth: 'mes', notes: 'Observaciones: (¿algo que quieras contarme?)' },
   },
   en: {
     showPassword: 'Show password', acceptTerms: 'Please accept the terms', chooseGender: 'Please select a gender',
@@ -64,5 +66,6 @@ export default textos({
       maxSize: 'Max 2MB', changePhoto: 'Change photo', learnMore: 'Learn more', later: 'Later', switchLang: 'Switch language',
       back: 'Back', min: '{{label}} — minimum', max: '{{label}} — maximum', copy: '{{name}} (copy)', workoutName: 'WORKOUT - A',
     },
+    extra: { tapToChat: 'Tap to chat', pricesIn: 'Prices in your currency ({{c}}). Billed monthly through the provider.', perMonth: 'month', notes: 'Notes: (anything you want to tell me?)' },
   },
 })

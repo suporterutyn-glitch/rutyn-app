@@ -63,7 +63,7 @@ export function AssinaturaPage() {
       </div>
 
       <div className="text-white text-rt-22 font-bold mb-1">{t('prof:plan.choose')}</div>
-      <div className="text-white/70 text-rt-13 mb-6">Preços na sua moeda ({currency}). Cobrança mensal via provedor.</div>
+      <div className="text-white/70 text-rt-13 mb-6">{t('general:extra.pricesIn', { c: currency })}</div>
 
       <div className="flex flex-col gap-3 mb-6">
         <PlanCard plan="free" price={0} currency={currency} active={current === 'free'} onPick={() => selectPlan('free')} />
@@ -113,7 +113,7 @@ function PlanCard({
       </div>
       <div className="text-white text-rt-32 font-bold leading-none mb-1">
         {price === 0 ? t('prof:plan.free') : formatMoney(price, currency)}
-        {price > 0 && <span className="text-rt-13 text-white/70 font-normal"> /mês</span>}
+        {price > 0 && <span className="text-rt-13 text-white/70 font-normal"> /{t('general:extra.perMonth')}</span>}
       </div>
       <div className="text-white/80 text-rt-13 mb-3">{t('prof:plan.f_upTo', { n: PLAN_LIMITS[plan] })}</div>
       <ul className="flex flex-col gap-1 mb-4">

@@ -67,7 +67,7 @@ export function EsforcoPercebido({ onEnviar }: { onEnviar: (nivel: number, obs: 
         </p>
 
         <label className="block text-grey-600 text-rt-13 mt-8 mb-2">
-          Observações: (alguma coisa que queira me contar?)
+          {t('general:extra.notes')}
         </label>
         <div className="relative">
           <textarea

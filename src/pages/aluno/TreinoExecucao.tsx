@@ -376,6 +376,7 @@ export function TreinoExecucaoPage() {
         <ProgressaoCarga
           studentId={profile.id}
           nombreExercicio={exProgreso.name}
+          titulo={nombreEjercicio(exProgreso, i18n.language)}
           media={exProgreso}
           chips={[grupo(exProgreso.muscle_group), t('treino:series', { count: exProgreso.series.length }), exProgreso.series[0]?.reps ? t('treino:rep', { reps: exProgreso.series[0].reps }) : ''].filter(Boolean)}
           onCerrar={() => setVerProgresso(null)}

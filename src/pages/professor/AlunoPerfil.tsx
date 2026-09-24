@@ -12,6 +12,7 @@ import { ProgressaoCarga } from '@/components/ProgressaoCarga'
 import { RotinasAluno } from './aluno/RotinasAluno'
 import { DietsTab } from './projetos/DietsTab'
 import { aviso } from '@/lib/avisos'
+import { nombreEjercicio } from '@/lib/nombreEjercicio'
 
 type StudentProfile = {
   id: string
@@ -206,6 +207,7 @@ export function AlunoPerfilPage() {
         <ProgressaoCarga
           studentId={id}
           nombreExercicio={verProgresso}
+          titulo={nombreEjercicio(sesiones.flatMap((s) => s.data?.exercises ?? []).find((e) => e.name === verProgresso), i18n.language) || verProgresso}
           onCerrar={() => setVerProgresso(null)}
         />
       )}
@@ -258,7 +260,7 @@ const ETIQUETA_COBRANCA: Record<string, string> = {
 }
 
 type SerieHecha = { done?: boolean; load?: string; reps?: number }
-type ExHecho = { name: string; series?: SerieHecha[] }
+type ExHecho = { name: string; name_pt?: string | null; name_es?: string | null; name_en?: string | null; series?: SerieHecha[] }
 type Sesion = {
   id: string
   started_at: string
@@ -305,9 +307,9 @@ function DesempenhoAluno({ sesiones, onVerExercicio }: {
   }
 
   // Ejercicios distintos, para poder abrir la progresión de cada uno.
-  const exercicios = Array.from(new Set(
-    sesiones.flatMap((s) => (s.data?.exercises ?? []).map((e) => e.name)),
-  ))
+  // `name` es la clave estable del historial; se muestra en el idioma actual.
+  const exercicios = new Map<string, ExHecho>()
+  for (const s of sesiones) for (const e of s.data?.exercises ?? []) if (!exercicios.has(e.name)) exercicios.set(e.name, e)
 
   const volumeTotal = sesiones.reduce((n, s) => n + volumeDaSessao(s), 0)
 
@@ -324,19 +326,19 @@ function DesempenhoAluno({ sesiones, onVerExercicio }: {
         </div>
       </div>
 
-      {exercicios.length > 0 && (
+      {exercicios.size > 0 && (
         <div>
           <div className="text-white text-rt-15 font-bold mb-2">{t('alunos:perfil.loadProgress')}</div>
           <ul className="flex flex-col gap-2">
-            {exercicios.map((nombre) => (
+            {Array.from(exercicios, ([nombre, ex]) => (
               <li key={nombre}>
                 <button
                   onClick={() => onVerExercicio(nombre)}
                   className="w-full card-dark p-3 flex items-center gap-3 text-left active:scale-[0.99]"
                 >
                   <TrendingUp size={18} className="text-brand shrink-0" />
-                  <span className="flex-1 text-white text-rt-14 truncate">{nombre}</span>
-                  <span className="text-brand text-rt-12">ver</span>
+                  <span className="flex-1 text-white text-rt-14 truncate">{nombreEjercicio(ex, i18n.language)}</span>
+                  <span className="text-brand text-rt-12">{t('alunos:perfil.see')}</span>
                 </button>
               </li>
             ))}
@@ -361,7 +363,7 @@ function DesempenhoAluno({ sesiones, onVerExercicio }: {
                   )}
                 </div>
                 <div className="text-white/60 text-rt-12 mt-1">
-                  {min} min · {Math.round(volumeDaSessao(s))} kg movidos
+                  {t('alunos:perfil.sessionLine', { min, kg: Math.round(volumeDaSessao(s)) })}
                 </div>
                 {s.data?.effort_note && (
                   <p className="text-white/70 text-rt-12 italic mt-2 leading-[1.4]">“{s.data.effort_note}”</p>

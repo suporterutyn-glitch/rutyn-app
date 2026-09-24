@@ -11,7 +11,7 @@ export default textos({
       pending: 'Pendente', awaiting: 'Aguardando', paid: 'Pago', statusSuspended: 'Suspenso',
       effort1: 'Leve', effort2: 'Tranquilo', effort3: 'Moderado', effort4: 'Puxado', effort5: 'Muito intenso',
       noWorkouts: 'Sem treinos registrados', noWorkoutsBody: 'Quando o aluno concluir um treino, aparecem aqui as cargas e o esforço.',
-      workoutsDone: 'Treinos feitos', totalMoved: 'Peso total movido', loadProgress: 'Progressão de carga', lastWorkouts: 'Últimos treinos',
+      workoutsDone: 'Treinos feitos', totalMoved: 'Peso total movido', loadProgress: 'Progressão de carga', lastWorkouts: 'Últimos treinos', see: 'ver', sessionLine: '{{min}} min · {{kg}} kg movidos',
     },
   },
   es: {
@@ -24,7 +24,7 @@ export default textos({
       pending: 'Pendiente', awaiting: 'En espera', paid: 'Pagado', statusSuspended: 'Suspendido',
       effort1: 'Liviano', effort2: 'Tranquilo', effort3: 'Moderado', effort4: 'Exigente', effort5: 'Muy intenso',
       noWorkouts: 'Sin entrenos registrados', noWorkoutsBody: 'Cuando el alumno complete un entreno, acá aparecen las cargas y el esfuerzo.',
-      workoutsDone: 'Entrenos hechos', totalMoved: 'Peso total movido', loadProgress: 'Progresión de carga', lastWorkouts: 'Últimos entrenos',
+      workoutsDone: 'Entrenos hechos', totalMoved: 'Peso total movido', loadProgress: 'Progresión de carga', lastWorkouts: 'Últimos entrenos', see: 'ver', sessionLine: '{{min}} min · {{kg}} kg movidos',
     },
   },
   en: {
@@ -37,7 +37,7 @@ export default textos({
       pending: 'Pending', awaiting: 'Awaiting', paid: 'Paid', statusSuspended: 'Suspended',
       effort1: 'Light', effort2: 'Easy', effort3: 'Moderate', effort4: 'Hard', effort5: 'Very intense',
       noWorkouts: 'No workouts recorded', noWorkoutsBody: 'When the student completes a workout, loads and effort show up here.',
-      workoutsDone: 'Workouts done', totalMoved: 'Total weight moved', loadProgress: 'Load progression', lastWorkouts: 'Latest workouts',
+      workoutsDone: 'Workouts done', totalMoved: 'Total weight moved', loadProgress: 'Load progression', lastWorkouts: 'Latest workouts', see: 'view', sessionLine: '{{min}} min · {{kg}} kg lifted',
     },
   },
 })

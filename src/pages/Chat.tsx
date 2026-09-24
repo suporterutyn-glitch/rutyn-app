@@ -101,7 +101,7 @@ export function ConversasPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-white text-rt-14 font-bold truncate">{c.other?.full_name ?? '...'}</div>
-                  <div className="text-white/60 text-rt-11 truncate">{c.last_message ?? 'Toque para conversar'}</div>
+                  <div className="text-white/60 text-rt-11 truncate">{c.last_message ?? t('general:extra.tapToChat')}</div>
                 </div>
                 {c.last_message_at && (
                   <div className="text-grey-500 text-rt-10 self-start mt-1">

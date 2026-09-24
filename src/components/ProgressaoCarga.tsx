@@ -18,9 +18,12 @@ type Sesion = { started_at: string; data?: { exercises?: ExHecho[] } }
  * Sirve igual para el alumno (ve su progreso) y para el profesor (ve lo que
  * el alumno realmente hizo, que es lo que le permite ajustar la carga).
  */
-export function ProgressaoCarga({ studentId, nombreExercicio, media, chips, onCerrar }: {
+export function ProgressaoCarga({ studentId, nombreExercicio, titulo, media, chips, onCerrar }: {
   studentId: string
+  /** Clave del historial (el `name` guardado en cada sesión). */
   nombreExercicio: string
+  /** Nombre a mostrar, en el idioma actual. */
+  titulo?: string
   media?: Media
   chips?: string[]
   onCerrar: () => void
@@ -64,7 +67,7 @@ export function ProgressaoCarga({ studentId, nombreExercicio, media, chips, onCe
         <div className="w-16 h-1 rounded-full bg-grey-300 mx-auto mb-4" />
 
         <div className="flex items-start justify-between gap-3">
-          <h2 className="text-grey-900 text-rt-20 font-bold flex-1">{nombreExercicio}</h2>
+          <h2 className="text-grey-900 text-rt-20 font-bold flex-1">{titulo || nombreExercicio}</h2>
           <button onClick={onCerrar} className="w-9 h-9 rounded-full bg-grey-200 flex items-center justify-center shrink-0" aria-label={t('treino:close')}>
             <X size={18} className="text-grey-600" />
           </button>
