@@ -533,7 +533,7 @@ function DialogoPropagar({ usadoEn, onSoloTemplate, onTodas, onCerrar }: {
 }
 
 /** Sube un archivo al bucket exercise-media, en la carpeta del profesor, y devuelve su URL pública. */
-function SubirArchivo({ etiqueta, accept, url, textoActual, textoElegir, imagen, onSubiendo, onSubido, onError }: {
+export function SubirArchivo({ etiqueta, accept, url, textoActual, textoElegir, imagen, onSubiendo, onSubido, onError }: {
   etiqueta: string
   accept: string
   url: string
@@ -562,7 +562,7 @@ function SubirArchivo({ etiqueta, accept, url, textoActual, textoElegir, imagen,
 
   return (
     <div>
-      <label className="block text-white text-rt-15 font-bold mb-2">{etiqueta}</label>
+      {etiqueta && <label className="block text-white text-rt-15 font-bold mb-2">{etiqueta}</label>}
       <input
         ref={input}
         type="file"
