@@ -7,8 +7,9 @@ import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { EmptyState } from '@/pages/professor/projetos/RoutinesTab'
+import { objetivosDieta, etiquetaDe } from '@/lib/catalogos'
 
-type Food = { name: string; qty: number; unit: string; kcal: number; p: number; c: number; f: number }
+type Food = { name: string; name_es?: string | null; qty: number; unit: string; kcal: number; p: number; c: number; f: number }
 type Meal = { name: string; time?: string | null; foods: Food[] }
 type SD = { id: string; name: string; cycle_start: string; data: { meals?: Meal[]; goal?: string | null } }
 
@@ -22,7 +23,7 @@ export function NutricaoPage() {
   const [plegadas, setPlegadas] = useState<Record<string, boolean>>({})
   const [dietaListaAvisada, setDietaListaAvisada] = useState(false)
   const nav = useNavigate()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
 
   useEffect(() => {
     if (!profile?.id) return
@@ -166,7 +167,7 @@ export function NutricaoPage() {
                 <div className="text-white text-rt-16 font-bold">{todayDiet?.name}</div>
                 {todayDiet?.data?.goal && (
                   <span className="inline-block mt-1 text-rt-11 px-2.5 py-1 rounded-btn-pill bg-surface-raised text-white/70">
-                    {todayDiet.data.goal}
+                    {etiquetaDe(objetivosDieta, todayDiet.data.goal, i18n.language)}
                   </span>
                 )}
               </div>
@@ -223,7 +224,7 @@ export function NutricaoPage() {
                             }>
                               <div className="flex-1 min-w-0">
                                 <div className={'text-rt-14 font-semibold ' + (on ? 'text-grey-500 line-through' : 'text-white')}>
-                                  {f.name}
+                                  {i18n.language.startsWith('es') && f.name_es ? f.name_es : f.name}
                                 </div>
                                 {macrosOn && (
                                   <div className="text-rt-11 mt-0.5 flex flex-wrap gap-x-1">

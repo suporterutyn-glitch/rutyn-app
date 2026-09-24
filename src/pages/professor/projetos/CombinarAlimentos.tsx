@@ -8,24 +8,19 @@ import { objetivosDieta, tiposRefeicao, etiqueta } from '@/lib/catalogos'
 import { nombreEjercicio as nombreEnIdioma } from '@/lib/nombreEjercicio'
 import { FullScreenSheet } from './RoutinesTab'
 import type { Food } from './FoodsTab'
+import { filaAlimento } from './dietas/datos'
 
-type Comida = { id: string; name: string; time_of_day: string | null; meal_foods: { food_id: string | null; position: number }[] }
+type Comida = { id: string; name: string; time_of_day: string | null; meal_foods: { food_id: string | null; meal_recipe_id: string | null; position: number }[] }
 type Dieta = { id: string; name: string; meals: Comida[] }
 
 /** Agrega los alimentos que falten en la comida, con la porción base como cantidad. */
-async function agregarAComida(comida: Comida, alimentos: Food[], lang: string) {
-  const ya = new Set(comida.meal_foods.map((x) => x.food_id))
+async function agregarAComida(comida: Comida, alimentos: Food[]) {
+  const sueltos = comida.meal_foods.filter((x) => !x.meal_recipe_id)
+  const ya = new Set(sueltos.map((x) => x.food_id))
   const nuevos = alimentos.filter((f) => !ya.has(f.id))
   if (nuevos.length === 0) return 0
   const desde = comida.meal_foods.length
-  const { error } = await supabase.from('meal_foods').insert(nuevos.map((f, i) => ({
-    meal_id: comida.id,
-    food_id: f.id,
-    food_name_snapshot: nombreEnIdioma(f, lang),
-    quantity: Number(f.portion_qty ?? 100),
-    unit: f.unit ?? 'g',
-    position: desde + i,
-  })))
+  const { error } = await supabase.from('meal_foods').insert(nuevos.map((f, i) => filaAlimento(comida.id, f, Number(f.portion_qty ?? 100), desde + i)))
   if (error) throw error
   return nuevos.length
 }
@@ -113,16 +108,16 @@ function NuevaDieta({ alimentos, onCerrar, onListo, onError }: {
     setGuardando(true)
     try {
       const { data: dieta, error: e1 } = await supabase.from('diets')
-        .insert({ owner_id: profile.id, name: nombre.trim(), goal: objetivo }).select('id').single()
+        .insert({ owner_id: profile.id, name: nombre.trim(), goal: objetivo, position: 9999 }).select('id').single()
       if (e1) throw e1
       const ordenadas = tiposRefeicao.filter((t) => comidas.includes(t.id))
       const { data: filas, error: e2 } = await supabase.from('meals')
-        .insert(ordenadas.map((t, i) => ({ diet_id: dieta.id, name: etiqueta(t, lang), time_of_day: t.hora, position: i })))
+        .insert(ordenadas.map((t, i) => ({ diet_id: dieta.id, name: etiqueta(t, lang), time_of_day: t.hora, meal_type: t.id, position: i })))
         .select('id,name,time_of_day')
       if (e2) throw e2
       const receptora = (filas as { id: string; name: string; time_of_day: string }[])
         .find((f) => f.time_of_day === tiposRefeicao.find((t) => t.id === destino)!.hora)!
-      await agregarAComida({ ...receptora, meal_foods: [] }, alimentos, lang)
+      await agregarAComida({ ...receptora, meal_foods: [] }, alimentos)
       onListo(`Dieta "${nombre.trim()}" criada com sucesso!`)
     } catch (e) {
       setGuardando(false)
@@ -202,7 +197,7 @@ function DietaExistente({ alimentos, onCerrar, onListo, onError }: {
     if (!profile?.id) return
     void (async () => {
       const { data } = await supabase.from('diets')
-        .select('id,name,meals(id,name,time_of_day,meal_foods(food_id,position))')
+        .select('id,name,meals(id,name,time_of_day,meal_foods(food_id,meal_recipe_id,position))')
         .eq('owner_id', profile.id).order('name')
       setDietas(((data as Dieta[]) ?? []).map((d) => ({ ...d, meals: d.meals.slice().sort((a, b) => (a.time_of_day ?? '').localeCompare(b.time_of_day ?? '')) })))
     })()
@@ -217,7 +212,7 @@ function DietaExistente({ alimentos, onCerrar, onListo, onError }: {
       let total = 0
       const nombres: string[] = []
       for (const c of dieta.meals.filter((m) => marcadas.includes(m.id))) {
-        total += await agregarAComida(c, alimentos, lang)
+        total += await agregarAComida(c, alimentos)
         nombres.push(c.name)
       }
       onListo(total === 0
