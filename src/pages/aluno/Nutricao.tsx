@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Salad, MessageCircle, Bell, RefreshCw, ChevronUp, ChevronDown } from 'lucide-react'
+import { Salad, MessageCircle, Bell, RefreshCw, ChevronUp, ChevronDown, BookOpen } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { LanguageToggle } from '@/components/LanguageToggle'
@@ -8,9 +8,11 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { EmptyState } from '@/pages/professor/projetos/RoutinesTab'
 import { objetivosDieta, etiquetaDe } from '@/lib/catalogos'
+import { ModoDePreparo } from '@/pages/professor/projetos/dietas/EditorDietaInline'
 
-type Food = { name: string; name_es?: string | null; qty: number; unit: string; kcal: number; p: number; c: number; f: number }
-type Meal = { name: string; time?: string | null; foods: Food[] }
+type Food = { name: string; name_es?: string | null; qty: number; unit: string; kcal: number; p: number; c: number; f: number; recipe?: string | null }
+type Receta = { name: string; steps: string[]; tips: string | null; cover_url: string | null }
+type Meal = { name: string; time?: string | null; foods: Food[]; recipes?: Receta[] }
 type SD = { id: string; name: string; cycle_start: string; data: { meals?: Meal[]; goal?: string | null } }
 
 export function NutricaoPage() {
@@ -22,6 +24,7 @@ export function NutricaoPage() {
   const [macrosOn, setMacrosOn] = useState(true)
   const [plegadas, setPlegadas] = useState<Record<string, boolean>>({})
   const [dietaListaAvisada, setDietaListaAvisada] = useState(false)
+  const [preparo, setPreparo] = useState<Receta | null>(null)
   const nav = useNavigate()
   const { t, i18n } = useTranslation()
 
@@ -214,7 +217,9 @@ export function NutricaoPage() {
 
                     {!plegada && (
                       <ul className="flex flex-col gap-2 mt-3">
-                        {m.foods.map((f, fi) => {
+                        {(() => {
+                          // Mantiene el índice original: las marcas se guardan por posición.
+                          const fila = (f: Food, fi: number) => {
                           const key = `${todayIdx}-${mi}-${fi}`
                           const on = !!marked[key]
                           return (
@@ -253,7 +258,28 @@ export function NutricaoPage() {
                               </button>
                             </li>
                           )
-                        })}
+                          }
+                          const conIndice = m.foods.map((f, fi) => ({ f, fi }))
+                          return (
+                            <>
+                              {(m.recipes ?? []).map((r) => (
+                                <li key={'r' + r.name} className="rounded-card border border-brand/30 bg-brand/5 p-2.5">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <BookOpen size={16} className="text-brand shrink-0" />
+                                    <span className="flex-1 text-white text-rt-14 font-bold truncate">{r.name}</span>
+                                    <button onClick={() => setPreparo(r)} className="shrink-0 px-2.5 py-1 rounded-btn-pill border border-brand text-brand text-rt-11 font-semibold">
+                                      Modo de preparo
+                                    </button>
+                                  </div>
+                                  <ul className="flex flex-col gap-2">
+                                    {conIndice.filter((x) => x.f.recipe === r.name).map((x) => fila(x.f, x.fi))}
+                                  </ul>
+                                </li>
+                              ))}
+                              {conIndice.filter((x) => !x.f.recipe || !(m.recipes ?? []).some((r) => r.name === x.f.recipe)).map((x) => fila(x.f, x.fi))}
+                            </>
+                          )
+                        })()}
                       </ul>
                     )}
                   </li>
@@ -266,6 +292,7 @@ export function NutricaoPage() {
         <ComprasList diets={diets} />
       )}
 
+      {preparo && <ModoDePreparo r={preparo} onCerrar={() => setPreparo(null)} />}
       {dietaListaAvisada && (
         <FeedbackDialog
           kind="success"

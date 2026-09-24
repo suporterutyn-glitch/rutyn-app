@@ -52,7 +52,8 @@ export function AlunoHome() {
         supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', profile.id).is('read_at', null),
       ])
       setCharge((chargeRes.data as Charge) ?? null)
-      setHydration((hydRes.data as Hydration) ?? { ml: 0, target_ml: 2500 })
+      // Sin registro de hoy, la meta es la que definió el profesor.
+      setHydration((hydRes.data as Hydration) ?? { ml: 0, target_ml: profile.hydration_goal_ml ?? 2500 })
       setNewRoutines(srRes.count ?? 0)
       setUnread(notifRes.count ?? 0)
 

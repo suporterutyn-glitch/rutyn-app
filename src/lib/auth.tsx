@@ -38,6 +38,7 @@ export type Profile = {
   pix_key_type?: string | null
   avatar_url?: string | null
   phone?: string | null
+  hydration_goal_ml?: number | null
   created_at?: string | null
 }
 

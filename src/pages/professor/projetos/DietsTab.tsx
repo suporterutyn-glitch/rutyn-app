@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, Star, ChevronLeft, GripVertical, UtensilsCrossed, AlertCircle, X, Search, Check, PlusCircle, ChevronRight, Clock } from 'lucide-react'
+import { Droplet, Plus, Star, ChevronLeft, GripVertical, UtensilsCrossed, AlertCircle, X, Search, Check, PlusCircle, ChevronRight, Clock } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import type { Filtro } from '../MeusProjetos'
@@ -184,6 +184,7 @@ export function DietsTab({ query, filtro, alumno }: { query: string; filtro: Fil
           </button>
         </FixedBottomActions>
       )}
+      {alumno && <MetaHidratacao alumno={alumno} onAviso={setAviso} />}
       {agregando && alumno && (
         <AdicionarDieta
           alumno={alumno}
@@ -570,5 +571,80 @@ function AdicionarDieta({ alumno, onCerrar, onCrear, onListo, onError }: {
         </div>
       </div>
     </div>
+  )
+}
+
+/** Botón de la gota: el profesor define la meta diaria de agua del alumno. */
+function MetaHidratacao({ alumno, onAviso }: { alumno: AlumnoCtx; onAviso: (a: Aviso) => void }) {
+  const [abierto, setAbierto] = useState(false)
+  const [actual, setActual] = useState<number | null>(null)
+  const [valor, setValor] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [confirmando, setConfirmando] = useState<number | null>(null)
+
+  useEffect(() => {
+    void supabase.from('profiles').select('hydration_goal_ml').eq('id', alumno.id).single()
+      .then(({ data }) => setActual((data?.hydration_goal_ml as number | undefined) ?? 2500))
+  }, [alumno.id])
+
+  function pedir() {
+    const ml = Number(valor.replace(/\D/g, ''))
+    if (!ml || ml < 500 || ml > 10000) { setError('Entre 500 e 10.000 ml'); return }
+    setError(null)
+    setConfirmando(ml)
+  }
+
+  async function guardar(ml: number) {
+    setConfirmando(null)
+    const { error: e } = await supabase.rpc('definir_meta_hidratacao', { aluno_id: alumno.id, meta_ml: ml })
+    if (e) { onAviso({ kind: 'error', message: e.message }); return }
+    setActual(ml)
+    setAbierto(false)
+    setValor('')
+    onAviso({ kind: 'success', message: `Meta de hidratação atualizada para ${ml}ml` })
+  }
+
+  return (
+    <>
+      <div className="fixed inset-x-0 mx-auto w-full max-w-app px-4 z-30 flex items-center justify-end pointer-events-none [&>*]:pointer-events-auto" style={{ bottom: 'calc(env(safe-area-inset-bottom) + 100px)' }}>
+        {abierto && (
+          <div className="mr-[-28px] pr-9 pl-4 h-14 rounded-l-full bg-white flex items-center gap-2 shadow-lg">
+            <div className="flex flex-col">
+              <span className="text-[#1565C0] text-rt-11 font-semibold">Meta de Hidratação</span>
+              {error ? <span className="text-danger text-[10px]">{error}</span> : <span className="text-grey-500 text-[10px]">Atual: {actual ?? '…'} ml</span>}
+            </div>
+            <input
+              autoFocus
+              inputMode="numeric"
+              value={valor}
+              onChange={(e) => setValor(e.target.value.replace(/\D/g, ''))}
+              onKeyDown={(e) => { if (e.key === 'Enter') pedir() }}
+              placeholder={String(actual ?? 2500)}
+              className="w-[70px] h-9 px-2 rounded-[8px] border border-[#90CAF9] text-black text-rt-14 outline-none"
+            />
+            <span className="text-grey-500 text-rt-12">ml</span>
+            <button onClick={pedir} aria-label="Confirmar meta" className="w-9 h-9 rounded-full bg-[#1E88E5] flex items-center justify-center">
+              <Check size={18} className="text-white" />
+            </button>
+          </div>
+        )}
+        <button
+          onClick={() => { setAbierto((v) => !v); setError(null) }}
+          aria-label="Meta de hidratação"
+          className="relative w-14 h-14 rounded-full bg-white border-2 border-grey-300 flex items-center justify-center shadow-lg"
+        >
+          {abierto ? <X size={22} className="text-grey-600" /> : <Droplet size={26} className="text-[#1E88E5] fill-[#1E88E5]" />}
+        </button>
+      </div>
+      {confirmando !== null && (
+        <ConfirmDialog
+          message="Alterar Meta de Hidratação"
+          detail={`A meta diária de ${alumno.nombre} passa de ${actual ?? 2500}ml para ${confirmando}ml.`}
+          confirmLabel="Confirmar"
+          onConfirm={() => void guardar(confirmando)}
+          onCancel={() => setConfirmando(null)}
+        />
+      )}
+    </>
   )
 }

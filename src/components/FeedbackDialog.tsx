@@ -14,7 +14,7 @@ export function FeedbackDialog({
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 px-8" onClick={onClose}>
       <div
-        className="w-full rounded-[16px] bg-[#2D2D2D] border border-grey-700 px-6 pt-7 pb-5"
+        className="w-full max-w-[350px] rounded-[16px] bg-[#2D2D2D] border border-grey-700 px-6 pt-7 pb-5"
         onClick={(e) => e.stopPropagation()}
         role="alertdialog"
       >
