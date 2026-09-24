@@ -132,3 +132,90 @@ export const tiposMidia: Catalogo[] = [
 export function etiquetasDe(lista: Catalogo[], ids: string[] | null | undefined, lang: string): string[] {
   return (ids ?? []).map((id) => etiquetaDe(lista, id, lang)).filter(Boolean)
 }
+
+/** Categoría de un alimento (módulo 08): define el ícono y el color del card. */
+export const categoriasAlimento: Catalogo[] = [
+  { id: 'protein', pt: 'Proteína', es: 'Proteína' },
+  { id: 'carb', pt: 'Carboidrato', es: 'Carbohidrato' },
+  { id: 'fat', pt: 'Gordura', es: 'Grasa' },
+  { id: 'calories', pt: 'Calorias', es: 'Calorías' },
+  { id: 'none', pt: 'Sem Classificação', es: 'Sin Clasificación' },
+]
+
+/** Unidad de la porción base de un alimento. */
+export const unidadesAlimento: Catalogo[] = [
+  { id: 'g', pt: 'g (Gramas)', es: 'g (Gramos)' },
+  { id: 'kg', pt: 'Kg (Quilogramas)', es: 'Kg (Kilogramos)' },
+  { id: 'ml', pt: 'ml (Mililitros)', es: 'ml (Mililitros)' },
+  { id: 'l', pt: 'L (Litros)', es: 'L (Litros)' },
+  { id: 'uni', pt: 'Uni (Unidade)', es: 'Uni (Unidad)' },
+]
+
+/** Abreviatura que se muestra junto a la cantidad ('100g', '1 Uni'). */
+export function abreviaturaUnidad(id: string | null | undefined): string {
+  return id === 'kg' ? 'Kg' : id === 'l' ? 'L' : id === 'uni' ? ' Uni' : id ?? 'g'
+}
+
+export const categoriasReceita: Catalogo[] = [
+  { id: 'basicos', pt: 'Noções Básicas', es: 'Nociones Básicas' },
+  { id: 'carnesBrancas', pt: 'Carnes Brancas', es: 'Carnes Blancas' },
+  { id: 'carneVermelha', pt: 'Carne Vermelha', es: 'Carne Roja' },
+  { id: 'peixes', pt: 'Peixes e Frutos do Mar', es: 'Pescados y Mariscos' },
+  { id: 'massas', pt: 'Massas', es: 'Pastas' },
+  { id: 'arroz', pt: 'Arroz e Macarrão', es: 'Arroz y Fideos' },
+  { id: 'sopas', pt: 'Sopas', es: 'Sopas' },
+  { id: 'leguminosas', pt: 'Leguminosas', es: 'Legumbres' },
+  { id: 'sanduiches', pt: 'Sanduíches e Torradas', es: 'Sándwiches y Tostadas' },
+  { id: 'hamburgueres', pt: 'Hambúrgueres e Wraps', es: 'Hamburguesas y Wraps' },
+  { id: 'pizzas', pt: 'Pizzas', es: 'Pizzas' },
+  { id: 'ovos', pt: 'Ovos e Tortilhas', es: 'Huevos y Tortillas' },
+  { id: 'saladas', pt: 'Saladas', es: 'Ensaladas' },
+  { id: 'vegetariano', pt: 'Vegetariano', es: 'Vegetariano' },
+  { id: 'bowl', pt: 'Bowl', es: 'Bowl' },
+  { id: 'panquecas', pt: 'Panquecas e Waffles', es: 'Panqueques y Waffles' },
+  { id: 'smoothies', pt: 'Milkshakes e Smoothies', es: 'Batidos y Smoothies' },
+  { id: 'doces', pt: 'Doces e Sobremesas', es: 'Dulces y Postres' },
+  { id: 'outro', pt: 'Outro', es: 'Otro' },
+]
+
+export const tiposPreparo: Catalogo[] = [
+  { id: 'instantaneo', pt: 'Instantâneo', es: 'Instantáneo' },
+  { id: 'facil', pt: 'Fácil', es: 'Fácil' },
+  { id: 'medio', pt: 'Médio', es: 'Medio' },
+  { id: 'elaborado', pt: 'Elaborado', es: 'Elaborado' },
+]
+
+export const temposReceita: Catalogo[] = [
+  { id: 'lt5', pt: '< 5 min', es: '< 5 min' },
+  { id: 'lt10', pt: '< 10 min', es: '< 10 min' },
+  { id: 'lt15', pt: '< 15 min', es: '< 15 min' },
+  { id: 'lt30', pt: '< 30 min', es: '< 30 min' },
+  { id: 'lt45', pt: '< 45 min', es: '< 45 min' },
+  { id: 'lt60', pt: '< 1 h', es: '< 1 h' },
+  { id: 'gt60', pt: '> 1 h', es: '> 1 h' },
+]
+
+export const utensiliosReceita: Catalogo[] = [
+  { id: 'frigideira', pt: 'Frigideira', es: 'Sartén' },
+  { id: 'panela', pt: 'Panela/Caçarola', es: 'Olla/Cacerola' },
+  { id: 'forno', pt: 'Forno', es: 'Horno' },
+  { id: 'microondas', pt: 'Micro-ondas', es: 'Microondas' },
+  { id: 'grelha', pt: 'Sanduicheira/Grelha', es: 'Sandwichera/Parrilla' },
+  { id: 'torradeira', pt: 'Torradeira', es: 'Tostadora' },
+  { id: 'airfryer', pt: 'Fritadeira de Ar', es: 'Freidora de Aire' },
+  { id: 'liquidificador', pt: 'Liquidificador', es: 'Licuadora' },
+  { id: 'thermomix', pt: 'Thermomix', es: 'Thermomix' },
+  { id: 'wok', pt: 'Wok', es: 'Wok' },
+]
+
+/** Tipos de refeição do app com horário padrão (regra 6 do módulo 08). */
+export const tiposRefeicao: (Catalogo & { hora: string })[] = [
+  { id: 'cafe', pt: 'Café da Manhã', es: 'Desayuno', hora: '08:00' },
+  { id: 'lancheManha', pt: 'Lanche da Manhã', es: 'Merienda de la Mañana', hora: '10:00' },
+  { id: 'almoco', pt: 'Almoço', es: 'Almuerzo', hora: '12:00' },
+  { id: 'lancheTarde', pt: 'Lanche da Tarde', es: 'Merienda', hora: '14:00' },
+  { id: 'preTreino', pt: 'Pré-Treino', es: 'Pre-Entreno', hora: '16:00' },
+  { id: 'posTreino', pt: 'Pós-Treino', es: 'Post-Entreno', hora: '18:00' },
+  { id: 'jantar', pt: 'Jantar', es: 'Cena', hora: '20:00' },
+  { id: 'ceia', pt: 'Ceia', es: 'Colación Nocturna', hora: '21:00' },
+]
