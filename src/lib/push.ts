@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import i18n from './i18n'
+import { mensajeError } from './errores'
 
 const VAPID_PUBLIC = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined
 
@@ -37,7 +38,7 @@ export async function subscribeToPush(userId: string): Promise<{ ok: boolean; er
     ua: navigator.userAgent.slice(0, 200),
   }, { onConflict: 'endpoint' })
 
-  if (error) return { ok: false, error: error.message }
+  if (error) return { ok: false, error: mensajeError(error) }
   return { ok: true }
 }
 

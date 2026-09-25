@@ -16,6 +16,7 @@ import { EmptyState, FixedBottomActions, FullScreenSheet } from './RoutinesTab'
 import { type Food } from './FoodsTab'
 import { AdicionarAlimentos, type AlimentoElegido } from './AdicionarAlimentos'
 import { SubirArchivo } from './ExercisesTab'
+import { mensajeError } from '@/lib/errores'
 
 type Ingrediente = { id?: string; food_id: string | null; food_name_snapshot: string | null; quantity: number; unit: string | null; position: number; foods: Food | null }
 export type Receita = {
@@ -86,13 +87,13 @@ export function RecipesTab({ query, filtro }: { query: string; filtro: Filtro })
   async function favorito(r: Receita) {
     setItems((p) => p.map((x) => (x.id === r.id ? { ...x, is_favorite: !x.is_favorite } : x)))
     const { error } = await supabase.from('recipes').update({ is_favorite: !r.is_favorite }).eq('id', r.id)
-    if (error) { setAviso({ kind: 'error', message: error.message }); void load() }
+    if (error) { setAviso({ kind: 'error', message: mensajeError(error) }); void load() }
   }
 
   async function duplicar(r: Receita) {
     const { id: _id, recipe_ingredients, created_at: _c, is_favorite: _f, ...resto } = r
     const { data, error } = await supabase.from('recipes').insert({ ...resto, name: t('general:ui.copy', { name: r.name }), is_favorite: false }).select('id').single()
-    if (error) { setAviso({ kind: 'error', message: error.message }); return }
+    if (error) { setAviso({ kind: 'error', message: mensajeError(error) }); return }
     if (recipe_ingredients.length > 0) {
       await supabase.from('recipe_ingredients').insert(recipe_ingredients.map((i) => ({
         recipe_id: data.id, food_id: i.food_id, food_name_snapshot: i.food_name_snapshot, quantity: i.quantity, unit: i.unit, position: i.position,
@@ -107,7 +108,7 @@ export function RecipesTab({ query, filtro }: { query: string; filtro: Filtro })
     const ids = borrando.map((r) => r.id)
     const { error } = await supabase.from('recipes').delete().in('id', ids)
     setBorrando(null)
-    if (error) { setAviso({ kind: 'error', message: error.message }); return }
+    if (error) { setAviso({ kind: 'error', message: mensajeError(error) }); return }
     setSeleccion((p) => p.filter((x) => !ids.includes(x)))
     await load()
   }

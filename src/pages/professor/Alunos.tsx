@@ -13,6 +13,7 @@ import { countryByCode } from '@/lib/countries'
 import { currencyOf, formatMoney } from '@/lib/plans'
 import { aviso } from '@/lib/avisos'
 import { idiomaDe } from '@/lib/catalogos'
+import { mensajeError } from '@/lib/errores'
 
 type Student = {
   id: string
@@ -112,7 +113,7 @@ export function AlunosPage() {
     })
     if (error) {
       setGestionando(null)
-      setErrorAccion(error.message)
+      setErrorAccion(mensajeError(error))
       return
     }
     if (accion === 'desvincular') {
@@ -306,10 +307,10 @@ function NewStudentSheet({ profile, onClose, onCreated }: { profile: any; onClos
 
     try {
       const { data, error } = await supabase.functions.invoke('create-student', {
-        body: { email: email.trim(), full_name: name.trim(), teacher_id: profile?.id },
+        body: { email: email.trim(), full_name: name.trim(), teacher_id: profile?.id, language: countryByCode(countryCode)?.lang ?? lang },
       })
-      if (error) { setSaving(false); setError(error.message || t('prof:alunos.createError')); return }
-      if (data?.error) { setSaving(false); setError(data.error); return }
+      if (error) { setSaving(false); setError(mensajeError(error)); return }
+      if (data?.error) { setSaving(false); setError(mensajeError(data.error)); return }
 
       const studentId = data?.student_id
       if (studentId) {

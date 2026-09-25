@@ -9,6 +9,7 @@ import { nombreEjercicio as nombreEnIdioma } from '@/lib/nombreEjercicio'
 import { FullScreenSheet } from './RoutinesTab'
 import type { Food } from './FoodsTab'
 import { filaAlimento, nombreComida } from './dietas/datos'
+import { detalleError } from '@/lib/errores'
 
 type Comida = { id: string; name: string; time_of_day: string | null; meal_type: string | null; meal_foods: { food_id: string | null; meal_recipe_id: string | null; position: number }[] }
 type Dieta = { id: string; name: string; meals: Comida[] }
@@ -123,7 +124,7 @@ function NuevaDieta({ alimentos, onCerrar, onListo, onError }: {
       onListo(t('projetos:cal.created', { name: nombre.trim() }))
     } catch (e) {
       setGuardando(false)
-      onError(t('projetos:cal.createError', { msg: (e as Error).message }))
+      onError(t('projetos:cal.createError', { msg: detalleError((e as Error)) }))
     }
   }
 
@@ -222,7 +223,7 @@ function DietaExistente({ alimentos, onCerrar, onListo, onError }: {
         : t('projetos:cal.added', { n: total, meals: nombres.map((n) => `"${n}"`).join(', ') }))
     } catch (e) {
       setEnviando(false)
-      onError(t('projetos:cal.addError', { msg: (e as Error).message }))
+      onError(t('projetos:cal.addError', { msg: detalleError((e as Error)) }))
     }
   }
 

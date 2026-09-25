@@ -9,6 +9,7 @@ import { WhatsAppInput } from '@/components/WhatsAppInput'
 import { COUNTRIES, countryByCode, nombrePais } from '@/lib/countries'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { idiomaDe } from '@/lib/catalogos'
+import { detalleError } from '@/lib/errores'
 
 export function MeuPerfilPage() {
   const nav = useNavigate()
@@ -55,7 +56,7 @@ export function MeuPerfilPage() {
       country,
     }).eq('id', profile.id)
     setSaving(false)
-    if (error) { setAviso({ kind: 'error', msg: error.message }); return }
+    if (error) { setAviso({ kind: 'error', msg: detalleError(error) }); return }
     await refresh()
     setAviso({ kind: 'success', msg: t('settings:profileSaved') })
   }

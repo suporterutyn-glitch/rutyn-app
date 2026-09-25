@@ -12,6 +12,7 @@ import { sumarMacros, type Macros } from '@/lib/nutricion'
 import { AdicionarAlimentos, HojaCantidad, type AlimentoElegido } from '../AdicionarAlimentos'
 import { SELECT_RECEITA, macrosReceita, type Receita } from '../RecipesTab'
 import { SelecionarRefeicoes, type RefeicaoElegida } from './SelecionarRefeicoes'
+import { detalleError } from '@/lib/errores'
 import {
   ordenarComidas, nombreComida, macrosComida, macrosAlimento, nombreAlimento, filaAlimento, tocarDieta,
   type Dieta, type Comida, type AlimentoComida, type RecetaComida,
@@ -34,7 +35,7 @@ export function EditorDietaInline({ dieta, onRecargar }: { dieta: Dieta; onRecar
 
   async function hacer(fn: () => Promise<{ error: { message: string } | null } | void>) {
     const r = await fn()
-    if (r && r.error) { setError(t('projetos:ed.updateError', { msg: r.error.message })); return }
+    if (r && r.error) { setError(t('projetos:ed.updateError', { msg: detalleError(r.error) })); return }
     await tocarDieta(dieta.id)
     await onRecargar()
   }

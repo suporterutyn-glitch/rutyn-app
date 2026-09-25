@@ -15,6 +15,7 @@ import { gruposMusculares, categoriasExercicio, tiposMidia, etiquetasDe, etiquet
 import { useAuth } from '@/lib/auth'
 import { EmptyState, FixedBottomActions, FullScreenSheet } from './RoutinesTab'
 import { nombreEjercicio, type ConTraducciones } from '@/lib/nombreEjercicio'
+import { mensajeError, detalleError } from '@/lib/errores'
 
 type Exercise = {
   id: string
@@ -46,7 +47,7 @@ export function ExercisesTab({ query, filtro }: { query: string; filtro: Filtro 
   async function load() {
     setLoading(true)
     const { data, error } = await supabase.from('exercises').select('*').order('name')
-    if (error) setAviso({ kind: 'error', message: t('projetos:ex.loadError', { msg: error.message }) })
+    if (error) setAviso({ kind: 'error', message: t('projetos:ex.loadError', { msg: detalleError(error) }) })
     setItems((data as Exercise[]) ?? [])
     setLoading(false)
   }
@@ -101,12 +102,12 @@ export function ExercisesTab({ query, filtro }: { query: string; filtro: Filtro 
     const ids = borrando.propios.map((e) => e.id)
     if (borrando.enUso.length > 0) {
       const { error } = await supabase.from('routine_exercises').delete().in('exercise_id', ids)
-      if (error) { setBorrando(null); setAviso({ kind: 'error', message: error.message }); return }
+      if (error) { setBorrando(null); setAviso({ kind: 'error', message: mensajeError(error) }); return }
     }
     const { error } = await supabase.from('exercises').delete().in('id', ids)
     const ignorados = seleccion.length - ids.length
     setBorrando(null)
-    if (error) { setAviso({ kind: 'error', message: error.message }); return }
+    if (error) { setAviso({ kind: 'error', message: mensajeError(error) }); return }
     setSeleccion([])
     setAviso({
       kind: 'success',
@@ -348,7 +349,7 @@ export function NewExerciseSheet({ exercicio, onClose, onCreated }: {
     setSaving(true)
     const { data: creado, error: e } = await supabase.from('exercises').insert({ trainer_id: user.id, ...campos }).select('id').single()
     setSaving(false)
-    if (e) { setError(e.message); return }
+    if (e) { setError(mensajeError(e)); return }
     onCreated(creado.id)
   }
 
@@ -356,7 +357,7 @@ export function NewExerciseSheet({ exercicio, onClose, onCreated }: {
     if (!exercicio) return
     setSaving(true)
     const { error: e } = await supabase.from('exercises').update(campos).eq('id', exercicio.id)
-    if (e) { setSaving(false); setError(e.message); return }
+    if (e) { setSaving(false); setError(mensajeError(e)); return }
 
     if (propagar) {
       // El nombre viaja copiado a cada rutina: sin esto seguirían mostrando el viejo.
@@ -561,7 +562,7 @@ export function SubirArchivo({ etiqueta, accept, url, textoActual, textoElegir, 
     const ruta = `${user.id}/${crypto.randomUUID()}.${ext}`
     const { error } = await supabase.storage.from('exercise-media').upload(ruta, f, { contentType: f.type, upsert: false })
     setCargando(false); onSubiendo(false)
-    if (error) { onError(t('projetos:ex.uploadError', { msg: error.message })); return }
+    if (error) { onError(t('projetos:ex.uploadError', { msg: detalleError(error) })); return }
     onSubido(supabase.storage.from('exercise-media').getPublicUrl(ruta).data.publicUrl)
   }
 

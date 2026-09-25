@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { OfflineBanner } from '@/components/OfflineBanner'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { RecuperarSenhaDialog } from '@/components/RecuperarSenhaDialog'
+import { mensajeError } from '@/lib/errores'
 
 const CLAVE_EMAIL = 'rutyn.savedEmail'
 
@@ -62,8 +63,7 @@ export function LoginPage() {
     setLoading(false)
     if (error) {
       // Supabase responde siempre en ingles; el modulo pide el mensaje traducido.
-      const credencialesMal = /invalid login credentials/i.test(error.message)
-      setFeedback({ kind: 'error', message: credencialesMal ? t('login:invalidCredentials') : error.message })
+      setFeedback({ kind: 'error', message: mensajeError(error) })
       return
     }
     try {

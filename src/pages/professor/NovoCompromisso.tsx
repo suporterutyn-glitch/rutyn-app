@@ -7,6 +7,7 @@ import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { useAuth } from '@/lib/auth'
 import { Field } from './projetos/RoutinesTab'
 import { aviso } from '@/lib/avisos'
+import { mensajeError } from '@/lib/errores'
 
 const KINDS = [
   { v: 'training', l: 'prof:appt.training' },
@@ -61,7 +62,7 @@ export function NovoCompromissoPage() {
         user_id: studentId, type: 'info',
         ...aviso('appointment', { name: title.trim(), at: new Date(startsAt).toISOString() }),
       })
-      if (error) { setSaving(false); setErrorAviso(error.message); return }
+      if (error) { setSaving(false); setErrorAviso(mensajeError(error)); return }
     }
     setSaving(false)
     nav(-1)

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { supabase, errorDeLinkRecuperacion } from '@/lib/supabase'
+import { mensajeError } from '@/lib/errores'
 
 export function RedefinirSenhaPage() {
   const { t } = useTranslation()
@@ -34,7 +35,7 @@ export function RedefinirSenhaPage() {
     setSaving(true)
     const { error } = await supabase.auth.updateUser({ password: pw })
     setSaving(false)
-    if (error) { setError(error.message); return }
+    if (error) { setError(mensajeError(error)); return }
     setDone(true)
     setTimeout(() => nav('/', { replace: true }), 1500)
   }

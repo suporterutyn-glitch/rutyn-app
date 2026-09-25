@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
+import { errorDeEnvio } from '@/lib/errores'
 
 export function EsqueciSenhaPage() {
   const { t } = useTranslation()
@@ -10,12 +11,16 @@ export function EsqueciSenhaPage() {
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/redefinir-senha` })
+    setError(null)
+    const { error: fallo } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/redefinir-senha` })
     setLoading(false)
+    const aviso = errorDeEnvio(fallo)
+    if (aviso) { setError(aviso); return }
     setSent(true)
   }
 
@@ -33,6 +38,7 @@ export function EsqueciSenhaPage() {
             <form onSubmit={submit} className="flex flex-col gap-4">
               <label className="text-white text-rt-13 font-semibold">{t('email')}</label>
               <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="input-dark" />
+              {error && <div className="text-danger text-rt-12">{error}</div>}
               <button className="btn-save mt-4" disabled={loading}>
                 {loading ? t('loading') : t('recover:send')}
               </button>

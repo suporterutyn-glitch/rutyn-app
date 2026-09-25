@@ -18,6 +18,7 @@ import { EditorDietaInline } from './dietas/EditorDietaInline'
 import { SelecionarRefeicoes, type RefeicaoElegida } from './dietas/SelecionarRefeicoes'
 import { SELECT_DIETA, macrosDieta, duplicarDieta, type Dieta } from './dietas/datos'
 import { asignarDieta, crearDietaAlumno, sincronizarDietaAlumno } from '@/lib/asignacion'
+import { mensajeError, detalleError } from '@/lib/errores'
 
 type Aviso = { kind: 'error' | 'success'; message: string }
 
@@ -46,7 +47,7 @@ export function DietsTab({ query, filtro, alumno }: { query: string; filtro: Fil
     const base = supabase.from('diets').select(SELECT_DIETA).eq('owner_id', profile.id)
     const { data, error } = await (alumno ? base.eq('student_id', alumno.id) : base.is('student_id', null))
       .order('position', { ascending: true, nullsFirst: false }).order('created_at')
-    setErrorCarga(error ? error.message : null)
+    setErrorCarga(error ? mensajeError(error) : null)
     setItems((data as Dieta[]) ?? [])
     setLoading(false)
   }
@@ -98,7 +99,7 @@ export function DietsTab({ query, filtro, alumno }: { query: string; filtro: Fil
     const ids = borrando.map((d) => d.id)
     const { error } = await supabase.from('diets').delete().in('id', ids)
     setBorrando(null)
-    if (error) { setAviso({ kind: 'error', message: error.message }); return }
+    if (error) { setAviso({ kind: 'error', message: mensajeError(error) }); return }
     setSeleccion((p) => p.filter((x) => !ids.includes(x)))
     await load()
   }
@@ -301,7 +302,7 @@ function DietSheet({ dieta, alumno, posicion, onClose, onCreada, onEditada }: {
       const { error: e } = await supabase.from('diets').update({ name: nombre.trim(), goal: objetivo }).eq('id', dieta.id)
       if (!e && alumno) await sincronizarDietaAlumno(dieta.id)
       setGuardando(false)
-      if (e) { setError(t('projetos:die.saveError', { msg: e.message })); return }
+      if (e) { setError(t('projetos:die.saveError', { msg: detalleError(e) })); return }
       onEditada()
       return
     }
@@ -322,7 +323,7 @@ function DietSheet({ dieta, alumno, posicion, onClose, onCreada, onEditada }: {
       return
     }
     const { data, error: e } = await supabase.from('diets').insert({ owner_id: profile.id, name: nombre.trim(), goal: objetivo, position: posicion }).select('id').single()
-    if (e) { setGuardando(false); setError(t('projetos:die.saveError', { msg: e.message })); return }
+    if (e) { setGuardando(false); setError(t('projetos:die.saveError', { msg: detalleError(e) })); return }
     if (comidas.length > 0) {
       const { error: e2 } = await supabase.from('meals').insert(comidas.map((c, i) => ({ diet_id: data.id, name: c.name, time_of_day: c.time, meal_type: c.meal_type, position: i })))
       if (e2) { setGuardando(false); setError(t('projetos:die.saveMealsError', { msg: e2.message })); return }
@@ -520,7 +521,7 @@ function AdicionarDieta({ alumno, onCerrar, onCrear, onListo, onError }: {
       onListo(await asignarDieta({ dieta: d, alumnoId: alumno.id, profesorId: profile.id, profesorNombre: profile.full_name ?? null }))
     } catch (e) {
       setEnviando(false)
-      onError(t('projetos:die.addError', { msg: (e as Error).message }))
+      onError(t('projetos:die.addError', { msg: detalleError((e as Error)) }))
     }
   }
 
@@ -601,7 +602,7 @@ function MetaHidratacao({ alumno, onAviso }: { alumno: AlumnoCtx; onAviso: (a: A
   async function guardar(ml: number) {
     setConfirmando(null)
     const { error: e } = await supabase.rpc('definir_meta_hidratacao', { aluno_id: alumno.id, meta_ml: ml })
-    if (e) { onAviso({ kind: 'error', message: e.message }); return }
+    if (e) { onAviso({ kind: 'error', message: mensajeError(e) }); return }
     setActual(ml)
     setAbierto(false)
     setValor('')

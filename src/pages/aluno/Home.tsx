@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/lib/auth'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { aviso } from '@/lib/avisos'
+import { mensajeError } from '@/lib/errores'
 
 type Charge = { id: string; amount: number; due_date: string; status: string; format: string | null }
 type Hydration = { ml: number; target_ml: number }
@@ -333,7 +334,7 @@ export function AlunoHome() {
             // El vínculo va por función: la escritura directa sobre el perfil
             // la filtra RLS sin devolver error (ver migración 20260923060000).
             const { error } = await supabase.rpc('aceptar_convite', { convite_id: cur.id })
-            if (error) { setErrorConvite(error.message); return }
+            if (error) { setErrorConvite(mensajeError(error)); return }
             setCounter(null)
 
             const dueDate = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10)

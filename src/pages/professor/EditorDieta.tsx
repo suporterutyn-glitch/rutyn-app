@@ -6,6 +6,7 @@ import { objetivosDieta, etiquetaDe } from '@/lib/catalogos'
 import { FranjaMacros } from './projetos/RecipesTab'
 import { EditorDietaInline } from './projetos/dietas/EditorDietaInline'
 import { cargarDieta, macrosDieta, type Dieta } from './projetos/dietas/datos'
+import { mensajeError } from '@/lib/errores'
 
 /** Acceso directo por URL al mismo editor que vive dentro del card en Meus Projetos. */
 export function EditorDietaPage() {
@@ -17,7 +18,7 @@ export function EditorDietaPage() {
 
   async function recargar() {
     if (!id) return
-    try { setDieta(await cargarDieta(id)) } catch (e) { setError((e as Error).message) }
+    try { setDieta(await cargarDieta(id)) } catch (e) { setError(mensajeError((e as Error))) }
   }
   useEffect(() => { void recargar() }, [id])
 

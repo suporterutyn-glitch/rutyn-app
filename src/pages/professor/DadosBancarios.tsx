@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
+import { mensajeError } from '@/lib/errores'
 
 export function DadosBancariosPage() {
   const { t } = useTranslation()
@@ -42,7 +43,7 @@ export function DadosBancariosPage() {
       pix_key_type: isBR ? (pixType || null) : null,
     }).eq('id', profile.id)
     setSaving(false)
-    if (e) { setError(e.message); return }
+    if (e) { setError(mensajeError(e)); return }
     await refresh()
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)

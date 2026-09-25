@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { PLAN_LIMITS, PLAN_LABEL, PLAN_PRICES, currencyOf, formatMoney } from '@/lib/plans'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
+import { mensajeError } from '@/lib/errores'
 
 type Plan = 'free' | 'pro' | 'master' | 'elite'
 
@@ -31,7 +32,7 @@ export function AssinaturaPage() {
     if (!profile?.id) return
     setConfirmandoFree(false)
     const { error } = await supabase.from('profiles').update({ plan: 'free', plan_expires_at: null }).eq('id', profile.id)
-    if (error) { setErrorCheckout(error.message); return }
+    if (error) { setErrorCheckout(mensajeError(error)); return }
     await refresh()
     nav(-1)
   }
@@ -46,7 +47,7 @@ export function AssinaturaPage() {
     // Planos pagos → Stripe Checkout via Edge Function
     const { data, error } = await supabase.functions.invoke('stripe-create-checkout', { body: { plan: p } })
     if (error || (data as any)?.error) {
-      setErrorCheckout((data as any)?.error ?? error?.message ?? t('prof:plan.checkoutError'))
+      setErrorCheckout((data as any)?.error || error ? mensajeError((data as any)?.error ?? error) : t('prof:plan.checkoutError'))
       return
     }
     const url = (data as any)?.url as string | undefined

@@ -10,6 +10,7 @@ import { PLAN_LIMITS } from '@/lib/plans'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { aviso } from '@/lib/avisos'
 import { formatosTrabalho, etiquetaDe } from '@/lib/catalogos'
+import { mensajeError } from '@/lib/errores'
 
 type Invite = {
   id: string
@@ -66,7 +67,7 @@ export function ConvitesPage() {
     // El vínculo va por función: el alumno todavía no es suyo, así que la
     // escritura directa sobre su perfil la filtra RLS sin devolver error.
     const { error } = await supabase.rpc('aceptar_convite', { convite_id: inv.id })
-    if (error) { setErrorAccion(error.message); return }
+    if (error) { setErrorAccion(mensajeError(error)); return }
 
     await supabase.from('charges').insert({
       teacher_id: profile!.id, student_id: inv.student_id,
@@ -82,7 +83,7 @@ export function ConvitesPage() {
 
   async function reject(inv: Invite) {
     const { error } = await supabase.from('invites').update({ status: 'rejected' }).eq('id', inv.id)
-    if (error) { setErrorAccion(error.message); return }
+    if (error) { setErrorAccion(mensajeError(error)); return }
     await supabase.from('notifications').insert({
       user_id: inv.student_id, type: 'invite', ...aviso('inviteRejected', { who: profile!.full_name }),
     })

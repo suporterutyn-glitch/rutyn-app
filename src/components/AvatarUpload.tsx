@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Camera, User as UserIcon, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
+import { mensajeError } from '@/lib/errores'
 
 type Props = { size?: number; className?: string }
 
@@ -25,7 +26,7 @@ export function AvatarUpload({ size = 96, className = '' }: Props) {
     const { error: upErr } = await supabase.storage.from('avatars').upload(path, file, {
       cacheControl: '3600', upsert: false, contentType: file.type,
     })
-    if (upErr) { setError(upErr.message); setUploading(false); return }
+    if (upErr) { setError(mensajeError(upErr)); setUploading(false); return }
 
     const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path)
     const url = pub.publicUrl

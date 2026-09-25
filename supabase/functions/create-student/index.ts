@@ -22,7 +22,7 @@ Deno.serve(async (req: Request) => {
 
     // Parse body
     const body = await req.json()
-    const { email, full_name, teacher_id } = body
+    const { email, full_name, teacher_id, language } = body
 
     if (!email) return json({ ok: false, error: 'No email' }, 200)
     if (!teacher_id) return json({ ok: false, error: 'No teacher_id' }, 200)
@@ -42,7 +42,11 @@ Deno.serve(async (req: Request) => {
       email,
       password: Math.random().toString(36).slice(-8),
       email_confirm: false,
-      user_metadata: { role: 'student', full_name: full_name || email },
+      // El idioma del alumno (el de su país) decide en qué idioma le llegan los correos.
+      user_metadata: {
+        role: 'student', full_name: full_name || email,
+        language: ['pt', 'es', 'en'].includes(language) ? language : (teacher.language ?? 'pt'),
+      },
     })
 
     if (createErr) return json({ ok: false, error: `Create error: ${createErr.message}` }, 200)

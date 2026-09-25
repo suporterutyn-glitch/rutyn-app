@@ -1,0 +1,44 @@
+import { textos } from './textos'
+
+// Errores de Supabase y de nuestras funciones, en el idioma de la app (lib/errores.ts).
+export default textos({
+  pt: {
+    generic: 'Não foi possível concluir. Tente novamente.', genericDetail: 'Não foi possível concluir ({{msg}}).',
+    offline: 'Sem conexão. Verifique a internet e tente de novo.',
+    invalidCredentials: 'E-mail ou senha incorretos', emailInUse: 'Já existe uma conta com este e-mail.',
+    passwordShort: 'A senha precisa ter pelo menos 6 caracteres.', samePassword: 'A nova senha precisa ser diferente da atual.',
+    tooManyEmails: 'Muitos e-mails enviados. Espere alguns minutos e tente de novo.', waitSeconds: 'Por segurança, espere {{n}} segundos e tente de novo.',
+    emailNotConfirmed: 'Confirme seu e-mail antes de entrar.', invalidEmail: 'E-mail inválido.',
+    expiredLink: 'Este link expirou ou já foi usado. Peça um novo.', sessionExpired: 'Sua sessão expirou. Entre de novo.',
+    noPermission: 'Você não tem permissão para fazer isso.', notYourStudent: 'Este aluno não está vinculado a você.',
+    routineNotFound: 'A rotina não existe ou é de outro professor.', inviteGone: 'Este convite não existe mais ou já foi respondido.',
+    hydrationRange: 'A meta deve ficar entre 500 e 10.000 ml.', duplicate: 'Já existe um registro igual.',
+    inUse: 'Não dá para excluir: está sendo usado em outro lugar.', checkoutUnavailable: 'Este plano ainda não está disponível para pagamento.',
+  },
+  es: {
+    generic: 'No se pudo completar. Intentá de nuevo.', genericDetail: 'No se pudo completar ({{msg}}).',
+    offline: 'Sin conexión. Revisá internet e intentá de nuevo.',
+    invalidCredentials: 'Correo o contraseña incorrectos', emailInUse: 'Ya existe una cuenta con este correo.',
+    passwordShort: 'La contraseña debe tener al menos 6 caracteres.', samePassword: 'La nueva contraseña debe ser distinta de la actual.',
+    tooManyEmails: 'Se enviaron demasiados correos. Esperá unos minutos e intentá de nuevo.', waitSeconds: 'Por seguridad, esperá {{n}} segundos e intentá de nuevo.',
+    emailNotConfirmed: 'Confirmá tu correo antes de entrar.', invalidEmail: 'Correo inválido.',
+    expiredLink: 'Este enlace venció o ya se usó. Pedí uno nuevo.', sessionExpired: 'Tu sesión venció. Volvé a entrar.',
+    noPermission: 'No tenés permiso para hacer esto.', notYourStudent: 'Este alumno no está vinculado a vos.',
+    routineNotFound: 'La rutina no existe o es de otro profesor.', inviteGone: 'Esta invitación ya no existe o ya fue respondida.',
+    hydrationRange: 'La meta debe estar entre 500 y 10.000 ml.', duplicate: 'Ya existe un registro igual.',
+    inUse: 'No se puede eliminar: se está usando en otro lugar.', checkoutUnavailable: 'Este plan todavía no está disponible para pagar.',
+  },
+  en: {
+    generic: "Couldn't complete that. Please try again.", genericDetail: "Couldn't complete that ({{msg}}).",
+    offline: 'No connection. Check your internet and try again.',
+    invalidCredentials: 'Incorrect email or password', emailInUse: 'An account with this email already exists.',
+    passwordShort: 'Password must be at least 6 characters.', samePassword: 'The new password must be different from the current one.',
+    tooManyEmails: 'Too many emails sent. Wait a few minutes and try again.', waitSeconds: 'For security, wait {{n}} seconds and try again.',
+    emailNotConfirmed: 'Please confirm your email before logging in.', invalidEmail: 'Invalid email.',
+    expiredLink: 'This link has expired or was already used. Request a new one.', sessionExpired: 'Your session expired. Please log in again.',
+    noPermission: "You don't have permission to do this.", notYourStudent: 'This student is not linked to you.',
+    routineNotFound: "The routine doesn't exist or belongs to another trainer.", inviteGone: 'This invite no longer exists or was already answered.',
+    hydrationRange: 'The goal must be between 500 and 10,000 ml.', duplicate: 'An identical record already exists.',
+    inUse: "Can't delete it: it's being used somewhere else.", checkoutUnavailable: "This plan isn't available for payment yet.",
+  },
+})

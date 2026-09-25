@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
+import { errorDeEnvio } from '@/lib/errores'
 
 type Props = {
   emailInicial: string
@@ -22,10 +23,13 @@ export function RecuperarSenhaDialog({ emailInicial, onCancel, onEnviado }: Prop
     }
     setError(null)
     setLoading(true)
-    await supabase.auth.resetPasswordForEmail(limpio, {
+    const { error: e } = await supabase.auth.resetPasswordForEmail(limpio, {
       redirectTo: `${window.location.origin}/redefinir-senha`,
     })
     setLoading(false)
+    // El límite de envíos o la falta de conexión sí se avisan: no revelan nada.
+    const aviso = errorDeEnvio(e)
+    if (aviso) { setError(aviso); return }
     // Nunca se revela si el correo existe: seria un modo de descubrir cuentas.
     onEnviado(t('recover:sent'))
   }

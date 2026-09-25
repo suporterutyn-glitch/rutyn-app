@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { EsforcoPercebido } from './EsforcoPercebido'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
+import { mensajeError } from '@/lib/errores'
 
 type SerieHecha = { done?: boolean; load?: string; reps?: number }
 type ExHecho = { name: string; muscle_group?: string | null; series?: SerieHecha[] }
@@ -40,7 +41,7 @@ export function TreinoResumoPage() {
     const { error: e } = await supabase.from('workout_sessions')
       .update({ effort_1_5: nivel, data: { ...datos, effort_note: obs || null } })
       .eq('id', sid)
-    if (e) { setError(e.message); return }
+    if (e) { setError(mensajeError(e)); return }
     setEsforcoEnviado(true)
   }
 

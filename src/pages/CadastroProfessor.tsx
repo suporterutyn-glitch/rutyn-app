@@ -9,6 +9,7 @@ import { SelectSheet } from '@/components/SelectSheet'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { countryByCode } from '@/lib/countries'
 import { idiomaDe } from '@/lib/catalogos'
+import { mensajeError } from '@/lib/errores'
 
 export function CadastroProfessorPage() {
   const { t, i18n } = useTranslation()
@@ -49,7 +50,7 @@ export function CadastroProfessorPage() {
       },
     })
     setLoading(false)
-    if (error) { setError(error.message); return }
+    if (error) { setError(mensajeError(error)); return }
 
     // Ensure profile has teacher role
     if (data.user) {

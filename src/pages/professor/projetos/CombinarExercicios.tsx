@@ -7,6 +7,7 @@ import { CajaSelector, HojaRadio } from '@/components/professor/SelectorRadio'
 import { dificultades, objetivosTreino, etiquetaDe } from '@/lib/catalogos'
 import { nombreEjercicio, type ConTraducciones } from '@/lib/nombreEjercicio'
 import { FullScreenSheet } from './RoutinesTab'
+import { detalleError } from '@/lib/errores'
 
 type Ej = { id: string } & ConTraducciones
 type Rutina = { id: string; name: string; objective: string | null; is_favorite: boolean | null; routine_exercises: { exercise_id: string | null }[] }
@@ -107,7 +108,7 @@ function NuevaRutina({ ejercicios, onCerrar, onListo, onError }: {
       onListo(t('projetos:comb.created', { name: nombre.trim(), n }))
     } catch (e) {
       setGuardando(false)
-      onError(t('projetos:comb.createError', { msg: (e as Error).message }))
+      onError(t('projetos:comb.createError', { msg: detalleError((e as Error)) }))
     }
   }
 
@@ -199,7 +200,7 @@ function RutinaExistente({ ejercicios, onCerrar, onListo, onError }: {
       )
     } catch (e) {
       setEnviando(false)
-      onError(t('projetos:comb.addError', { msg: (e as Error).message }))
+      onError(t('projetos:comb.addError', { msg: detalleError((e as Error)) }))
     }
   }
 

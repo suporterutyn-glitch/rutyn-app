@@ -13,6 +13,7 @@ import { nombreEjercicio as nombreEnIdioma } from '@/lib/nombreEjercicio'
 import { useAuth } from '@/lib/auth'
 import { EmptyState, FixedBottomActions, FullScreenSheet } from './RoutinesTab'
 import { CombinarAlimentos } from './CombinarAlimentos'
+import { mensajeError, detalleError } from '@/lib/errores'
 
 export type Food = {
   id: string
@@ -70,7 +71,7 @@ export function FoodsTab({ query, filtro }: { query: string; filtro: Filtro }) {
   async function load() {
     setLoading(true)
     const { data, error } = await supabase.from('foods').select('*').order('name')
-    if (error) setAviso({ kind: 'error', message: t('projetos:al.loadError', { msg: error.message }) })
+    if (error) setAviso({ kind: 'error', message: t('projetos:al.loadError', { msg: detalleError(error) }) })
     setItems((data as Food[]) ?? [])
     setLoading(false)
   }
@@ -117,13 +118,13 @@ export function FoodsTab({ query, filtro }: { query: string; filtro: Filtro }) {
     const ids = borrando.propios.map((f) => f.id)
     if (borrando.enUso.length > 0) {
       const { error } = await supabase.from('meal_foods').delete().in('food_id', ids)
-      if (error) { setBorrando(null); setAviso({ kind: 'error', message: error.message }); return }
+      if (error) { setBorrando(null); setAviso({ kind: 'error', message: mensajeError(error) }); return }
     }
     const { error } = await supabase.from('foods').delete().in('id', ids)
     const ignorados = seleccion.length - ids.length
     const forzado = borrando.enUso.length > 0
     setBorrando(null)
-    if (error) { setAviso({ kind: 'error', message: error.message }); return }
+    if (error) { setAviso({ kind: 'error', message: mensajeError(error) }); return }
     setSeleccion([])
     setAviso({
       kind: 'success',
@@ -378,7 +379,7 @@ export function FoodSheet({ alimento, onClose, onSaved }: {
       ? await supabase.from('foods').update(campos).eq('id', alimento.id).select('*').single()
       : await supabase.from('foods').insert({ trainer_id: user.id, ...campos }).select('*').single()
     setGuardando(false)
-    if (error) { setErrores({ banner: t('projetos:al.saveError', { msg: error.message }) }); return }
+    if (error) { setErrores({ banner: t('projetos:al.saveError', { msg: detalleError(error) }) }); return }
     onSaved(data as Food)
   }
 

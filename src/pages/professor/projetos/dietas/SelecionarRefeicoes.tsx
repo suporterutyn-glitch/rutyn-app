@@ -4,6 +4,7 @@ import { X, Check, Ban, UtensilsCrossed, PlusCircle, Pencil, Trash2, Clock, Star
 import { supabase } from '@/lib/supabase'
 import { tiposRefeicao, etiqueta } from '@/lib/catalogos'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { mensajeError } from '@/lib/errores'
 
 export type RefeicaoElegida = { meal_type: string; name: string; time: string; personalizada: boolean }
 type Personalizada = { id: string; name: string; default_time: string }
@@ -46,7 +47,7 @@ export function SelecionarRefeicoes({ bloqueados, onCerrar, onElegir }: {
   async function crear() {
     if (!nuevoNombre.trim()) return
     const { data, error: e } = await supabase.from('custom_meals').insert({ name: nuevoNombre.trim(), default_time: nuevaHora }).select('id,name,default_time').single()
-    if (e) { setError(e.message); return }
+    if (e) { setError(mensajeError(e)); return }
     setPropias((p) => [...p, data as Personalizada])
     setMarcadas((p) => [...p, `custom:${data.id}`])
     setNuevoNombre('')
@@ -54,7 +55,7 @@ export function SelecionarRefeicoes({ bloqueados, onCerrar, onElegir }: {
 
   async function guardarEdicion(p: Personalizada) {
     const { error: e } = await supabase.from('custom_meals').update({ name: p.name, default_time: p.default_time }).eq('id', p.id)
-    if (e) { setError(e.message); return }
+    if (e) { setError(mensajeError(e)); return }
     // Las refeições de ese tipo ya en dietas toman el nombre nuevo.
     await supabase.from('meals').update({ name: p.name }).eq('meal_type', `custom:${p.id}`)
     setEditando(null)
@@ -65,7 +66,7 @@ export function SelecionarRefeicoes({ bloqueados, onCerrar, onElegir }: {
     await supabase.from('meals').delete().eq('meal_type', `custom:${p.id}`)
     const { error: e } = await supabase.from('custom_meals').delete().eq('id', p.id)
     setBorrando(null)
-    if (e) { setError(e.message); return }
+    if (e) { setError(mensajeError(e)); return }
     setMarcadas((m) => m.filter((x) => x !== `custom:${p.id}`))
     await cargar()
   }

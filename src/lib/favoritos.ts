@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
+import { mensajeError } from './errores'
 
 /**
  * Favoritos del catálogo compartido (exercícios, alimentos).
@@ -44,7 +45,7 @@ export function useFavoritos(tipo: 'exercise' | 'food') {
 
     // Si falla, se revierte y se dice por qué: un favorito que no se guarda
     // y no avisa es el tipo de silencio que ya nos costó caro.
-    if (e) { setError(e.message); setIds(ids) }
+    if (e) { setError(mensajeError(e)); setIds(ids) }
   }
 
   return { esFavorito, alternar, error, limpiarError: () => setError(null) }

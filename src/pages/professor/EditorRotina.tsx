@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next'
 import { asignarRutina, sincronizarRutinaAlumno } from '@/lib/asignacion'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { nombreEjercicio } from '@/lib/nombreEjercicio'
+import { mensajeError } from '@/lib/errores'
 
 type Routine = { id: string; name: string; objective: string | null; student_id?: string | null }
 type Ex = {
@@ -71,7 +72,7 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
     setExs((prev) => prev.map((x) => (x.id === re.id ? { ...x, series: nuevo.map((sr, n) => ({ ...sr, position: n })) } : x)))
     for (let n = 0; n < nuevo.length; n++) {
       const { error } = await supabase.from('series').update({ position: n }).eq('id', nuevo[n].id!)
-      if (error) { setErrorGuardado(error.message); return }
+      if (error) { setErrorGuardado(mensajeError(error)); return }
     }
   }
 
@@ -85,7 +86,7 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
     // Una escritura por fila: son pocas y así no hace falta una función nueva.
     for (let n = 0; n < nuevo.length; n++) {
       const { error } = await supabase.from('routine_exercises').update({ position: n }).eq('id', nuevo[n].id!)
-      if (error) { setErrorGuardado(error.message); return }
+      if (error) { setErrorGuardado(mensajeError(error)); return }
     }
   }
   const catalogo = useMediaDeExercicios(exs.map((e) => e.exercise_id))
@@ -105,14 +106,14 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
     const { error } = await supabase.from('routine_exercises')
       .update({ group_type: tipo, group_id: grupo })
       .in('id', seleccion)
-    if (error) { setErrorGuardado(error.message); return }
+    if (error) { setErrorGuardado(mensajeError(error)); return }
     setSeleccion([])
     await load()
   }
 
   async function borrarSeleccion() {
     const { error } = await supabase.from('routine_exercises').delete().in('id', seleccion)
-    if (error) { setErrorGuardado(error.message); return }
+    if (error) { setErrorGuardado(mensajeError(error)); return }
     setSeleccion([])
     await load()
   }
@@ -120,7 +121,7 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
   async function desagruparExercicio(exId: string) {
     const { error } = await supabase.from('routine_exercises')
       .update({ group_type: 'single', group_id: null }).eq('id', exId)
-    if (error) { setErrorGuardado(error.message); return }
+    if (error) { setErrorGuardado(mensajeError(error)); return }
     await load()
   }
 
@@ -156,7 +157,7 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
         position: exs.length + i,
         group_type: 'single',
       }).select('*').single()
-      if (error || !data) { setErrorGuardado(error?.message ?? t('projetos:rot.addError')); break }
+      if (error || !data) { setErrorGuardado(error ? mensajeError(error) : t('projetos:rot.addError')); break }
       await supabase.from('series').insert(Array.from({ length: 3 }, (_, n) => ({
         routine_exercise_id: data.id,
         position: n,
@@ -197,7 +198,7 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
       series: (ex.series ?? []).map((sr) => (sr.id === sId ? { ...sr, params } : sr)),
     })))
     const { error } = await supabase.from('series').update({ params }).eq('id', sId)
-    if (error) setErrorGuardado(error.message)
+    if (error) setErrorGuardado(mensajeError(error))
   }
 
   async function updateSerieNotas(sId: string, notes: string) {
@@ -206,7 +207,7 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
       series: (ex.series ?? []).map((sr) => (sr.id === sId ? { ...sr, notes } : sr)),
     })))
     const { error } = await supabase.from('series').update({ notes }).eq('id', sId)
-    if (error) setErrorGuardado(error.message)
+    if (error) setErrorGuardado(mensajeError(error))
   }
 
   /** Copia parámetros y observación al final, como pide el diseño. */
@@ -218,7 +219,7 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
       params: s.params ?? {},
       notes: s.notes ?? null,
     })
-    if (error) { setErrorGuardado(error.message); return }
+    if (error) { setErrorGuardado(mensajeError(error)); return }
     await load()
   }
 
@@ -467,7 +468,7 @@ function AssignSheet({ routine, onClose }: { routine: Routine; onClose: () => vo
       }
     } catch (e) {
       setSaving(false)
-      setError((e as Error).message)
+      setError(mensajeError((e as Error)))
       return
     }
     setSaving(false)

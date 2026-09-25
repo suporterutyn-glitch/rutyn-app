@@ -13,6 +13,7 @@ import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
 
 import type { Filtro } from '../MeusProjetos'
+import { mensajeError } from '@/lib/errores'
 
 type Routine = {
   id: string
@@ -67,19 +68,19 @@ export function RoutinesTab({ query, filtro }: { query: string; filtro: Filtro }
     // Optimista: la estrella responde al toque y se corrige si falla.
     setItems((prev) => prev.map((x) => (x.id === r.id ? { ...x, is_favorite: !x.is_favorite } : x)))
     const { error: e } = await supabase.from('routines').update({ is_favorite: !r.is_favorite }).eq('id', r.id)
-    if (e) { setError(e.message); void load() }
+    if (e) { setError(mensajeError(e)); void load() }
   }
 
   async function duplicar(r: Routine) {
     const { error: e } = await supabase.rpc('duplicar_rotina', { rotina_id: r.id })
-    if (e) { setError(e.message); return }
+    if (e) { setError(mensajeError(e)); return }
     await load()
   }
 
   async function excluir(ids: string[]) {
     setConfirmando(null)
     const { error: e } = await supabase.from('routines').delete().in('id', ids)
-    if (e) { setError(e.message); return }
+    if (e) { setError(mensajeError(e)); return }
     setSeleccion(new Set())
     await load()
   }
@@ -263,7 +264,7 @@ function NewRoutineSheet({ rotina, onClose, onCreated }: { rotina?: Routine; onC
       ? await supabase.from('routines').update(campos).eq('id', rotina.id)
       : await supabase.from('routines').insert({ owner_id: profile.id, ...campos })
     setSaving(false)
-    if (e) { setError(e.message); return }
+    if (e) { setError(mensajeError(e)); return }
     onCreated()
   }
 

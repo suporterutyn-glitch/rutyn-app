@@ -13,6 +13,7 @@ import { RotinasAluno } from './aluno/RotinasAluno'
 import { DietsTab } from './projetos/DietsTab'
 import { aviso } from '@/lib/avisos'
 import { nombreEjercicio } from '@/lib/nombreEjercicio'
+import { mensajeError } from '@/lib/errores'
 
 type StudentProfile = {
   id: string
@@ -78,14 +79,14 @@ export function AlunoPerfilPage() {
     if (!id) return
     setConfirmando(null)
     const { error } = await supabase.rpc('gestionar_vinculo_aluno', { aluno_id: id, accion: 'suspender', mensaje: null })
-    if (error) { setErrorAccion(error.message); return }
+    if (error) { setErrorAccion(mensajeError(error)); return }
     await supabase.from('notifications').insert({ user_id: id, type: 'warning', ...aviso('suspended') })
     await load(); setMenuOpen(false)
   }
   async function reactivate() {
     if (!id) return
     const { error } = await supabase.rpc('gestionar_vinculo_aluno', { aluno_id: id, accion: 'reactivar' })
-    if (error) { setErrorAccion(error.message); return }
+    if (error) { setErrorAccion(mensajeError(error)); return }
     await load(); setMenuOpen(false)
   }
   async function remove(reason: string) {
@@ -93,7 +94,7 @@ export function AlunoPerfilPage() {
     setConfirmando(null)
     // El motivo se guarda con el vínculo: es lo que el alumno ve al entrar.
     const { error } = await supabase.rpc('gestionar_vinculo_aluno', { aluno_id: id, accion: 'desvincular', mensaje: reason || null })
-    if (error) { setErrorAccion(error.message); return }
+    if (error) { setErrorAccion(mensajeError(error)); return }
     await supabase.from('notifications').insert({
       user_id: id, type: 'warning',
       ...aviso(reason ? 'removedReason' : 'removed', { who: me?.full_name, reason }),

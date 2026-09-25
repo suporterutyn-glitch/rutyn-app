@@ -13,6 +13,7 @@ import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { dificultades, objetivosTreino } from '@/lib/catalogos'
 import { asignarRutina, crearRutinaAlumno, estimarTreinos, periodoPorDefecto, sincronizarRutinaAlumno } from '@/lib/asignacion'
 import type { AlumnoCtx } from '@/pages/professor/projetos/DietsTab'
+import { mensajeError, detalleError } from '@/lib/errores'
 
 type Asignada = {
   id: string
@@ -51,7 +52,7 @@ export function RotinasAluno({ alumno }: { alumno: AlumnoCtx }) {
       .select('*,routines!student_routines_routine_id_fkey(id,name,objective,difficulty)')
       .eq('student_id', alumno.id).not('routine_id', 'is', null)
       .order('position').order('created_at')
-    if (error) setAviso({ kind: 'error', message: error.message })
+    if (error) setAviso({ kind: 'error', message: mensajeError(error) })
     setItems((data as Asignada[]) ?? [])
   }
   useEffect(() => { void load() }, [alumno.id])
@@ -71,7 +72,7 @@ export function RotinasAluno({ alumno }: { alumno: AlumnoCtx }) {
 
   async function guardarComoModelo(r: Asignada) {
     const { error } = await supabase.rpc('copiar_rotina', { rotina_id: r.routine_id, para_alumno: null, nuevo_nombre: r.name })
-    setAviso(error ? { kind: 'error', message: error.message } : { kind: 'success', message: t('projetos:ra.savedTemplate') })
+    setAviso(error ? { kind: 'error', message: mensajeError(error) } : { kind: 'success', message: t('projetos:ra.savedTemplate') })
   }
 
   async function duplicar(r: Asignada) {
@@ -82,7 +83,7 @@ export function RotinasAluno({ alumno }: { alumno: AlumnoCtx }) {
         nombre: t('projetos:ra.copyName', { name: r.name }), periodo: { starts_on: r.starts_on, ends_on: r.ends_on, weekdays: r.weekdays, frequency: r.frequency },
       })
       await load()
-    } catch (e) { setAviso({ kind: 'error', message: (e as Error).message }) }
+    } catch (e) { setAviso({ kind: 'error', message: mensajeError((e as Error)) }) }
   }
 
   async function borrar() {
@@ -90,7 +91,7 @@ export function RotinasAluno({ alumno }: { alumno: AlumnoCtx }) {
     // Borrar la rutina borra también su asignación (y lo que ve el alumno).
     const { error } = await supabase.from('routines').delete().in('id', borrando.map((r) => r.routine_id))
     setBorrando(null)
-    if (error) { setAviso({ kind: 'error', message: error.message }); return }
+    if (error) { setAviso({ kind: 'error', message: mensajeError(error) }); return }
     setSeleccion([])
     await load()
   }
@@ -217,7 +218,7 @@ function AdicionarRotina({ alumno, contrato, onCerrar, onCrear, onListo, onError
       onListo()
     } catch (e) {
       setEnviando(false)
-      onError(t('projetos:ra.addError', { msg: (e as Error).message }))
+      onError(t('projetos:ra.addError', { msg: detalleError((e as Error)) }))
     }
   }
 
@@ -330,7 +331,7 @@ function FormRotinaAluno({ alumno, asignada, contrato, posicion, onCerrar, onLis
       }
     } catch (e) {
       setGuardando(false)
-      setError(t('projetos:ra.saveError', { msg: (e as Error).message }))
+      setError(t('projetos:ra.saveError', { msg: detalleError((e as Error)) }))
     }
   }
 

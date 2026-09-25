@@ -954,6 +954,22 @@ export async function setLang(lang: 'pt' | 'es' | 'en') {
   } catch (err) {
     console.error('Failed to change language to', lang, err)
   }
+  void guardarIdiomaEnCuenta(lang)
+}
+
+/**
+ * Con sesión abierta, el idioma elegido queda también en la cuenta: los
+ * correos de Supabase (supabase/correos) salen en user_metadata.language.
+ */
+async function guardarIdiomaEnCuenta(lang: 'pt' | 'es' | 'en') {
+  const { supabase } = await import('./supabase')
+  const { data } = await supabase.auth.getSession()
+  const user = data.session?.user
+  if (!user || user.user_metadata?.language === lang) return
+  await Promise.all([
+    supabase.auth.updateUser({ data: { language: lang } }),
+    supabase.from('profiles').update({ language: lang }).eq('id', user.id),
+  ])
 }
 
 export default i18n
