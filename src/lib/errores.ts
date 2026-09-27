@@ -5,6 +5,9 @@ type ConCodigo = { message?: string; code?: string; error?: string } | string | 
 // Mensaje conocido -> clave en errores.ts. Supabase responde en inglés y
 // nuestras funciones SQL en portugués o español; el usuario lo ve en su idioma.
 const REGLAS: [RegExp, string][] = [
+  [/student_limit/i, 'studentLimit'],
+  [/stripe_not_configured/i, 'paymentsUnavailable'],
+  [/seats_below_active/i, 'seatsBelowActive'],
   [/failed to fetch|networkerror|load failed|network request failed/i, 'offline'],
   [/invalid login credentials/i, 'invalidCredentials'],
   [/already (been )?registered|user_already_exists|email_exists/i, 'emailInUse'],

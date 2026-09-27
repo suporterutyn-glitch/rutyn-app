@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { currencyOf, formatMoney } from '@/lib/plans'
 import { EmptyState, FullScreenSheet, Field } from './projetos/RoutinesTab'
-import { PLAN_LIMITS } from '@/lib/plans'
+import { limiteDePlan } from '@/lib/plans'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { aviso } from '@/lib/avisos'
 import { formatosTrabalho, etiquetaDe } from '@/lib/catalogos'
@@ -36,7 +36,7 @@ export function ConvitesPage() {
   const [errorAccion, setErrorAccion] = useState<string | null>(null)
   const [limiteAvisado, setLimiteAvisado] = useState(false)
 
-  const planLimit = PLAN_LIMITS[profile?.plan ?? 'free'] ?? 2
+  const planLimit = limiteDePlan(profile)
   const currency = currencyOf(profile?.country)
   const [counterOf, setCounterOf] = useState<Invite | null>(null)
 
@@ -54,7 +54,7 @@ export function ConvitesPage() {
   useEffect(() => { void load() }, [profile?.id])
 
   async function accept(inv: Invite) {
-    if (activeCount >= planLimit) {
+    if (planLimit !== null && activeCount >= planLimit) {
       setLimiteAvisado(true)
       return
     }
@@ -147,8 +147,8 @@ export function ConvitesPage() {
       {limiteAvisado && (
         <FeedbackDialog
           kind="error"
-          message={t('financeiro:conv.limit')}
-          onClose={() => { setLimiteAvisado(false); nav('/professor/assinatura') }}
+          message={t('planes:limitBody', { count: planLimit ?? 0 })}
+          onClose={() => { setLimiteAvisado(false); nav(`/professor/assinatura?seats=${activeCount + 1}`) }}
         />
       )}
 

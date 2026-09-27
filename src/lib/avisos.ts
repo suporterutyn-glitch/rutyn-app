@@ -2,6 +2,7 @@ import type { TFunction } from 'i18next'
 import i18n from './i18n'
 import avisos from '@/i18n/avisos'
 import { localeDe } from './fechas'
+import { planVisible } from './plans'
 
 type Textos = typeof avisos.pt
 export type ClaveAviso = { [K in keyof Textos]: Textos[K] extends { title: string } ? K : never }[keyof Textos]
@@ -13,6 +14,7 @@ const DEL_ALUMNO = new Set<ClaveAviso>(['changeAccepted', 'changeRejected', 'cou
 function completar(t: TFunction, clave: ClaveAviso, datos: DatosAviso, lang: string) {
   const p: Record<string, unknown> = { ...datos }
   if (!p.who) p.who = t(DEL_ALUMNO.has(clave) ? 'avisos:student' : 'avisos:teacher')
+  if (p.plan) p.plan = t(`planes:name.${planVisible(String(p.plan))}`)
   if (p.fmt) p.per = t(`avisos:per.${p.fmt === 'monthly' ? 'monthly' : 'hourly'}`)
   if (p.at) p.when = new Date(String(p.at)).toLocaleString(localeDe(lang), { dateStyle: 'short', timeStyle: 'short' })
   return { ...p, interpolation: { escapeValue: false } }

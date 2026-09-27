@@ -14,6 +14,7 @@ export default textos({
     routineNotFound: 'A rotina não existe ou é de outro professor.', inviteGone: 'Este convite não existe mais ou já foi respondido.',
     hydrationRange: 'A meta deve ficar entre 500 e 10.000 ml.', duplicate: 'Já existe um registro igual.',
     inUse: 'Não dá para excluir: está sendo usado em outro lugar.', checkoutUnavailable: 'Este plano ainda não está disponível para pagamento.',
+    studentLimit: 'Seu plano não permite mais alunos ativos. Aumente o plano.', paymentsUnavailable: 'Os pagamentos ainda não estão disponíveis. Tente mais tarde.', seatsBelowActive: 'Você tem mais alunos ativos do que esse plano permite. Suspenda alguns antes.',
   },
   es: {
     generic: 'No se pudo completar. Intentá de nuevo.', genericDetail: 'No se pudo completar ({{msg}}).',
@@ -27,6 +28,7 @@ export default textos({
     routineNotFound: 'La rutina no existe o es de otro profesor.', inviteGone: 'Esta invitación ya no existe o ya fue respondida.',
     hydrationRange: 'La meta debe estar entre 500 y 10.000 ml.', duplicate: 'Ya existe un registro igual.',
     inUse: 'No se puede eliminar: se está usando en otro lugar.', checkoutUnavailable: 'Este plan todavía no está disponible para pagar.',
+    studentLimit: 'Tu plan no permite más alumnos activos. Ampliá el plan.', paymentsUnavailable: 'Los pagos todavía no están disponibles. Probá más tarde.', seatsBelowActive: 'Tenés más alumnos activos de los que permite ese plan. Suspendé algunos antes.',
   },
   en: {
     generic: "Couldn't complete that. Please try again.", genericDetail: "Couldn't complete that ({{msg}}).",
@@ -40,5 +42,6 @@ export default textos({
     routineNotFound: "The routine doesn't exist or belongs to another trainer.", inviteGone: 'This invite no longer exists or was already answered.',
     hydrationRange: 'The goal must be between 500 and 10,000 ml.', duplicate: 'An identical record already exists.',
     inUse: "Can't delete it: it's being used somewhere else.", checkoutUnavailable: "This plan isn't available for payment yet.",
+    studentLimit: "Your plan doesn't allow more active students. Upgrade your plan.", paymentsUnavailable: "Payments aren't available yet. Try again later.", seatsBelowActive: 'You have more active students than that plan allows. Suspend some first.',
   },
 })

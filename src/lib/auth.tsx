@@ -17,8 +17,12 @@ export type Profile = {
   language: 'pt' | 'es' | 'en' | null
   profile_complete: boolean
   teacher_id: string | null
-  plan: 'free' | 'pro' | 'master' | 'elite' | null
+  plan: 'free' | 'basic' | 'pro' | 'master' | 'elite' | null
   plan_expires_at: string | null
+  plan_seats?: number | null
+  plan_status?: string | null
+  plan_cancel_at_period_end?: boolean | null
+  stripe_customer_id?: string | null
   marketplace_visible: boolean | null
   state?: string | null
   city?: string | null

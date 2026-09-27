@@ -1,18 +1,29 @@
-export const PLAN_LIMITS: Record<string, number> = { free: 2, pro: 25, master: 50, elite: 100 }
-export const PLAN_LABEL: Record<string, string> = { free: 'Free', pro: 'Pro', master: 'Master', elite: 'Elite' }
+import { localeDe } from './fechas'
 
-// [pro, master, elite] preços por moeda
-export const PLAN_PRICES: Record<string, [number, number, number]> = {
-  BRL: [99.99, 149.99, 199.99],
-  UYU: [699.99, 1199.99, 1399.99],
-  EUR: [19.99, 29.99, 39.99],
-  USD: [19.99, 29.99, 39.99],
-  ARS: [29399.99, 43999.99, 58699.99],
-  BOB: [221.99, 331.99, 442.99],
-  PYG: [118999, 177999, 236999],
-  CLP: [18399, 27599, 36799],
-  COP: [62699.99, 94099.99, 125999.99],
-  PEN: [66.99, 99.99, 132.99],
+// Planes del profesor, en USD para todos los países (mismos valores que
+// supabase/functions/_shared/stripe.ts y la función SQL limite_alumnos).
+export type PlanVisible = 'free' | 'basic' | 'pro'
+export const BASIC = { min: 5, max: 29, usdPorAlumno: 1 }
+export const PRO_USD = 29.99
+
+/** master/elite son planes viejos: cuentan como Pro. */
+export function planVisible(plan?: string | null): PlanVisible {
+  if (plan === 'basic') return 'basic'
+  if (plan === 'pro' || plan === 'master' || plan === 'elite') return 'pro'
+  return 'free'
+}
+
+/** Alumnos activos que permite el plan; null = sin límite. */
+export function limiteDePlan(p?: { plan?: string | null; plan_seats?: number | null } | null): number | null {
+  const v = planVisible(p?.plan)
+  if (v === 'pro') return null
+  if (v === 'basic') return Math.max(p?.plan_seats ?? BASIC.min, BASIC.min)
+  return 1
+}
+
+export function usd(v: number) {
+  const n = new Intl.NumberFormat(localeDe(), { minimumFractionDigits: v % 1 ? 2 : 0, maximumFractionDigits: 2 }).format(v)
+  return `US$ ${n}`
 }
 
 export const COUNTRY_CURRENCY: Record<string, string> = {

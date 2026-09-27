@@ -22,11 +22,18 @@ Deno.serve(async (req: Request) => {
 
     // Parse body
     const body = await req.json()
-    const { email, full_name, teacher_id, language } = body
+    const { email, full_name, language } = body
+    let teacher_id = body.teacher_id as string | undefined
 
     if (!email) return json({ ok: false, error: 'No email' }, 200)
-    if (!teacher_id) return json({ ok: false, error: 'No teacher_id' }, 200)
 
+    // El profesor es quien llama, no lo que venga en el body.
+    const jwt = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '')
+    const { data: { user: caller } } = await admin.auth.getUser(jwt)
+    if (!caller) return json({ ok: false, error: 'Invalid session' }, 401)
+    if (teacher_id && teacher_id !== caller.id) return json({ ok: false, error: 'permission denied' }, 403)
+
+    teacher_id = caller.id
     // Get teacher
     const { data: teacher, error: teachErr } = await admin
       .from('profiles')
@@ -35,7 +42,14 @@ Deno.serve(async (req: Request) => {
       .single()
 
     if (teachErr) return json({ ok: false, error: `Teacher fetch error: ${teachErr.message}` }, 200)
-    if (!teacher) return json({ ok: false, error: 'Teacher not found' }, 200)
+    if (!teacher || teacher.role !== 'teacher') return json({ ok: false, error: 'Only teachers' }, 403)
+
+    // Límite del plan antes de crear la cuenta, para no dejar alumnos huérfanos.
+    const [{ data: lim }, { data: act }] = await Promise.all([
+      admin.rpc('limite_alumnos', { p_teacher: teacher.id }),
+      admin.rpc('alumnos_activos', { p_teacher: teacher.id }),
+    ])
+    if (lim !== null && (act ?? 0) >= lim) return json({ ok: false, error: 'student_limit' }, 200)
 
     // Create user with auto-generate password
     const { data: created, error: createErr } = await admin.auth.admin.createUser({

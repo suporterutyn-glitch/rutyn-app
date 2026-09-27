@@ -14,6 +14,7 @@ import { currencyOf, formatMoney } from '@/lib/plans'
 import { aviso } from '@/lib/avisos'
 import { idiomaDe } from '@/lib/catalogos'
 import { mensajeError } from '@/lib/errores'
+import { limiteDePlan } from '@/lib/plans'
 
 type Student = {
   id: string
@@ -63,8 +64,6 @@ function colorDe(id: string) {
   return COLORES_INICIAL[suma % COLORES_INICIAL.length]
 }
 
-const PLAN_LIMITS: Record<string, number> = { free: 2, pro: 25, master: 50, elite: 100 }
-
 export function AlunosPage() {
   const { profile } = useAuth()
   const { t } = useTranslation()
@@ -78,7 +77,7 @@ export function AlunosPage() {
   const [errorAccion, setErrorAccion] = useState<string | null>(null)
   const nav = useNavigate()
 
-  const planLimit = PLAN_LIMITS[profile?.plan ?? 'free'] ?? 2
+  const planLimit = limiteDePlan(profile)
 
   async function load() {
     if (!profile?.id) return
@@ -135,9 +134,9 @@ export function AlunosPage() {
           (s.full_name ?? '').toLowerCase().includes(q) || (s.email ?? '').toLowerCase().includes(q),
       )
     : items
-  const pct = Math.min(100, Math.round((active / planLimit) * 100))
+  const pct = planLimit === null ? 0 : Math.min(100, Math.round((active / planLimit) * 100))
   const barColor = pct > 80 ? 'bg-danger-soft' : pct > 55 ? 'bg-warning' : pct > 35 ? 'bg-[#CDDC39]' : 'bg-brand-light'
-  const canAdd = active < planLimit
+  const canAdd = planLimit === null || active < planLimit
 
   return (
     <div className="pt-[calc(env(safe-area-inset-top)+16px)] px-4 pb-24">
@@ -148,7 +147,7 @@ export function AlunosPage() {
       {/* Barra de limite do plano */}
       <div className="mb-4">
         <div className="flex justify-between mb-1.5">
-          <span className="text-white/70 text-rt-11 font-semibold uppercase tracking-wide">{t('students:limit', { active, limit: planLimit })}</span>
+          <span className="text-white/70 text-rt-11 font-semibold uppercase tracking-wide">{planLimit === null ? t('planes:activeCount', { n: active }) : t('students:limit', { active, limit: planLimit })}</span>
         </div>
         <div className="w-full h-2 rounded-full bg-surface-raised overflow-hidden">
           <div className={'h-full ' + barColor} style={{ width: `${pct}%` }} />
@@ -269,10 +268,10 @@ export function AlunosPage() {
       {limiteAvisado && (
         <FeedbackDialog
           kind="error"
-          message={t('invites:limitReached')}
+          message={t('planes:limitBody', { count: planLimit ?? 0 })}
           onClose={() => {
             setLimiteAvisado(false)
-            nav('/professor/assinatura')
+            nav(`/professor/assinatura?seats=${active + 1}`)
           }}
         />
       )}

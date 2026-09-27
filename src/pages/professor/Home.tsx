@@ -8,6 +8,7 @@ import { LanguageToggle } from '@/components/LanguageToggle'
 import { AnnouncementModal } from '@/components/AnnouncementModal'
 import { WeekCalendar } from '@/components/WeekCalendar'
 import { localeDe } from '@/lib/fechas'
+import { limiteDePlan, planVisible } from '@/lib/plans'
 
 type Stats = {
   active_students: number
@@ -18,8 +19,6 @@ type Stats = {
 
 type Appt = { id: string; title: string; starts_at: string; kind: string; location?: string; student_name?: string }
 
-const PLAN_LIMITS: Record<string, number> = { free: 2, pro: 25, master: 50, elite: 100 }
-const PLAN_LABEL: Record<string, string> = { free: 'Free', pro: 'Pro', master: 'Master', elite: 'Elite' }
 
 function formatMoney(v: number, currency: string) {
   try {
@@ -43,8 +42,8 @@ export function ProfessorHome() {
   const [showMoreAppointments, setShowMoreAppointments] = useState(false)
 
   const currency = COUNTRY_CURRENCY[profile?.country ?? 'BR'] ?? 'BRL'
-  const plan = profile?.plan ?? 'free'
-  const planLimit = PLAN_LIMITS[plan] ?? 2
+  const plan = planVisible(profile?.plan)
+  const planLimit = limiteDePlan(profile)
   const firstName = profile?.full_name?.split(' ')[0] ?? t('prof:home.teacher')
 
   useEffect(() => {
@@ -150,11 +149,11 @@ export function ProfessorHome() {
           <div>
             <div className="text-white/80 text-rt-11 font-semibold uppercase tracking-wider">{t('professor:plan')}</div>
             <div className="text-white text-rt-20 font-bold mt-1">
-              {PLAN_LABEL[plan]}
+              {t(`planes:name.${plan}`)}
               {plan === 'free' ? '' : ' ✓'}
             </div>
             <div className="text-white/80 text-rt-11 mt-1">
-              {activeStudents} / {planLimit}
+              {planLimit === null ? t('planes:activeCount', { n: activeStudents }) : `${activeStudents} / ${planLimit}`}
             </div>
           </div>
           <div className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center">

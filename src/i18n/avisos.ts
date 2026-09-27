@@ -22,6 +22,9 @@ export default textos({
     counterAccepted: { title: 'Proposta aceita!', body: '{{who}} aceitou sua contraproposta.' },
     newInvite: { title: 'Novo convite de aluno', body: '{{who}} quer treinar com você.' },
     hydration: { title: 'Nova meta de hidratação', body: 'Sua meta diária agora é {{ml}} ml.' },
+    planActive: { title: 'Plano ativado', body: 'Seu plano {{plan}} está ativo.' },
+    paymentFailed: { title: 'Falha no pagamento', body: 'Não conseguimos cobrar seu plano. Atualize o cartão para não perder alunos.' },
+    planEnded: { title: 'Seu plano terminou', body: 'Voltou ao plano Grátis. {{n}} aluno(s) ficaram suspensos.' },
   },
   es: {
     teacher: 'Tu profesor', student: 'Alumno',
@@ -42,6 +45,9 @@ export default textos({
     counterAccepted: { title: '¡Propuesta aceptada!', body: '{{who}} aceptó tu contrapropuesta.' },
     newInvite: { title: 'Nueva invitación de alumno', body: '{{who}} quiere entrenar con vos.' },
     hydration: { title: 'Nueva meta de hidratación', body: 'Tu meta diaria ahora es {{ml}} ml.' },
+    planActive: { title: 'Plan activado', body: 'Tu plan {{plan}} está activo.' },
+    paymentFailed: { title: 'Falló el pago', body: 'No pudimos cobrar tu plan. Actualizá la tarjeta para no perder alumnos.' },
+    planEnded: { title: 'Tu plan terminó', body: 'Volviste al plan Gratis. {{n}} alumno(s) quedaron suspendidos.' },
   },
   en: {
     teacher: 'Your trainer', student: 'Student',
@@ -62,5 +68,8 @@ export default textos({
     counterAccepted: { title: 'Proposal accepted!', body: '{{who}} accepted your counter-proposal.' },
     newInvite: { title: 'New student invite', body: '{{who}} wants to train with you.' },
     hydration: { title: 'New hydration goal', body: 'Your daily goal is now {{ml}} ml.' },
+    planActive: { title: 'Plan activated', body: 'Your {{plan}} plan is active.' },
+    paymentFailed: { title: 'Payment failed', body: "We couldn't charge your plan. Update your card so you don't lose students." },
+    planEnded: { title: 'Your plan ended', body: 'You are back on the Free plan. {{n}} student(s) were suspended.' },
   },
 })
