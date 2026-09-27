@@ -153,12 +153,6 @@ export function CadastroProfessorPage() {
             </div>
 
             <div className="mt-2 flex flex-col gap-3">
-              <div className="h-[23px] rounded-[10px] bg-gradient-to-r from-[#91C145] to-[#7CB342] flex items-center justify-center px-3">
-                <span className="text-black text-rt-12 font-semibold whitespace-nowrap">
-                  {t('signupTeacher:freePlan')}
-                </span>
-              </div>
-
               <button type="submit" disabled={loading} className="btn-primary-pill">
                 {loading ? t('loading') : t('signupTeacher:register')}
               </button>
