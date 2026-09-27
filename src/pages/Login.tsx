@@ -75,10 +75,6 @@ export function LoginPage() {
     nav('/', { replace: true })
   }
 
-  async function signInWith(provider: 'google' | 'apple') {
-    await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.origin } })
-  }
-
   const lineaError = 'border-b-2 border-danger'
 
   return (
@@ -89,17 +85,6 @@ export function LoginPage() {
           <RutynLogo size={90} />
           <div className="text-white font-black text-rt-22 tracking-tight text-center">
             {t('identification:welcome')}
-          </div>
-
-          <div className="w-full flex flex-col gap-3 mt-4">
-            <button type="button" className="btn-google" onClick={() => signInWith('google')}>
-              <span className="text-lg font-bold">G</span>
-              <span>{t('login:google')}</span>
-            </button>
-            <button type="button" className="btn-apple" onClick={() => signInWith('apple')}>
-              <span className="text-xl"></span>
-              <span>{t('login:apple')}</span>
-            </button>
           </div>
         </div>
 
