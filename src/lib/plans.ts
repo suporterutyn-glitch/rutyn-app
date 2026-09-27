@@ -1,10 +1,21 @@
 import { localeDe } from './fechas'
 
-// Planes del profesor, en USD para todos los países (mismos valores que
-// supabase/functions/_shared/stripe.ts y la función SQL limite_alumnos).
+// Planes del profesor: Brasil paga en reales (Stripe BR solo cobra tarjetas
+// brasileñas en BRL) y el resto en dólares. Mismos valores que
+// supabase/functions/_shared/stripe.ts y la función SQL limite_alumnos.
 export type PlanVisible = 'free' | 'basic' | 'pro'
-export const BASIC = { min: 5, max: 29, usdPorAlumno: 1 }
-export const PRO_USD = 29.99
+export const BASIC = { min: 5, max: 29 }
+export type MonedaPlan = 'usd' | 'brl'
+export const PRECIO_PLAN: Record<MonedaPlan, { alumno: number; pro: number }> = {
+  usd: { alumno: 1, pro: 29.99 },
+  brl: { alumno: 5.9, pro: 149.9 },
+}
+export function monedaPlan(pais?: string | null): MonedaPlan {
+  return (pais ?? '').toUpperCase() === 'BR' ? 'brl' : 'usd'
+}
+export function precioPlan(v: number, moneda: MonedaPlan) {
+  return moneda === 'brl' ? formatMoney(v, 'BRL') : usd(v)
+}
 
 /** master/elite son planes viejos: cuentan como Pro. */
 export function planVisible(plan?: string | null): PlanVisible {

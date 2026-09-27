@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Check, Minus, Plus, Sparkles } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
-import { BASIC, PRO_USD, planVisible, usd, type PlanVisible } from '@/lib/plans'
+import { BASIC, PRECIO_PLAN, monedaPlan, precioPlan, planVisible, type PlanVisible } from '@/lib/plans'
 import { localeDe } from '@/lib/fechas'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
@@ -17,6 +17,9 @@ export function AssinaturaPage() {
   const nav = useNavigate()
   const [params, setParams] = useSearchParams()
   const { profile, refresh } = useAuth()
+  const moneda = monedaPlan(profile?.country)
+  const P = PRECIO_PLAN[moneda]
+  const fmt = (v: number) => precioPlan(v, moneda)
   const actual = planVisible(profile?.plan)
   const pago = actual !== 'free'
   const [activos, setActivos] = useState(0)
@@ -92,8 +95,8 @@ export function AssinaturaPage() {
           <div className="text-white/80 text-rt-11 font-semibold uppercase tracking-wider">{t('planes:current')}</div>
           <div className="text-white text-rt-20 font-bold mt-1">
             {t(`planes:name.${actual}`)}
-            {actual === 'basic' && <span className="text-white/80 text-rt-14 font-normal"> · {t('planes:basic.total', { n: profile?.plan_seats ?? BASIC.min, price: usd(profile?.plan_seats ?? BASIC.min) })}</span>}
-            {actual === 'pro' && <span className="text-white/80 text-rt-14 font-normal"> · {usd(PRO_USD)}{t('planes:perMonth')}</span>}
+            {actual === 'basic' && <span className="text-white/80 text-rt-14 font-normal"> · {t('planes:basic.total', { n: profile?.plan_seats ?? BASIC.min, price: fmt((profile?.plan_seats ?? BASIC.min) * P.alumno) })}</span>}
+            {actual === 'pro' && <span className="text-white/80 text-rt-14 font-normal"> · {fmt(P.pro)}{t('planes:perMonth')}</span>}
           </div>
           <div className="text-white/80 text-rt-12 mt-1">{t('planes:activeNow', { count: activos })}</div>
           {profile?.plan_status === 'past_due'
@@ -128,7 +131,7 @@ export function AssinaturaPage() {
         </Tarjeta>
 
         <Tarjeta plan="basic" actual={actual} titulo={t('planes:name.basic')} bajada={t('planes:basic.tagline')}
-          precio={<>{usd(BASIC.usdPorAlumno)} <span className="text-rt-13 text-white/70 font-normal">{t('planes:perStudent')}{t('planes:perMonth')}</span></>}
+          precio={<>{fmt(P.alumno)} <span className="text-rt-13 text-white/70 font-normal">{t('planes:perStudent')}{t('planes:perMonth')}</span></>}
           rasgos={[t('planes:basic.min', { n: BASIC.min }), t('planes:basic.f1'), t('planes:basic.f2')]}>
           <div className="rounded-[14px] bg-black/25 p-3 mb-3">
             <div className="text-white/80 text-rt-12 mb-2">{t('planes:basic.howMany')}</div>
@@ -139,7 +142,7 @@ export function AssinaturaPage() {
               </button>
               <div className="text-center">
                 <div className="text-white text-rt-29 font-bold leading-none">{seats}</div>
-                <div className="text-brand-light text-rt-13 font-semibold mt-1">{usd(seats * BASIC.usdPorAlumno)}{t('planes:perMonth')}</div>
+                <div className="text-brand-light text-rt-13 font-semibold mt-1">{fmt(seats * P.alumno)}{t('planes:perMonth')}</div>
               </div>
               <button onClick={() => setSeats((s) => Math.min(BASIC.max, s + 1))} disabled={seats >= BASIC.max}
                 className="w-10 h-10 rounded-full bg-white/15 text-white flex items-center justify-center disabled:opacity-30" aria-label="+">
@@ -149,7 +152,7 @@ export function AssinaturaPage() {
             {seats >= 25 && (
               <div className="mt-3 flex items-center gap-2 rounded-[10px] bg-tone-purple-tag/40 px-3 py-2 text-white text-rt-12">
                 <Sparkles size={16} className="shrink-0" />
-                <span>{t('planes:proHint', { price: usd(PRO_USD) })}</span>
+                <span>{t('planes:proHint', { price: fmt(P.pro) })}</span>
               </div>
             )}
           </div>
@@ -159,15 +162,15 @@ export function AssinaturaPage() {
         </Tarjeta>
 
         <Tarjeta plan="pro" actual={actual} destacado={t('planes:bestValue')} titulo={t('planes:name.pro')} bajada={t('planes:pro.tagline')}
-          precio={<>{usd(PRO_USD)}<span className="text-rt-13 text-white/70 font-normal">{t('planes:perMonth')}</span></>}
-          rasgos={[t('planes:pro.f1'), t('planes:pro.f2'), t('planes:pro.f3')]}>
+          precio={<>{fmt(P.pro)}<span className="text-rt-13 text-white/70 font-normal">{t('planes:perMonth')}</span></>}
+          rasgos={[t('planes:pro.f1'), t('planes:pro.f2', { price: fmt(P.alumno) }), t('planes:pro.f3')]}>
           <Boton activo={actual === 'pro'} deshabilitado={enviando || actual === 'pro'}
             texto={actual === 'pro' ? t('planes:currentPlan') : pago ? t('planes:switchTo', { plan: t('planes:name.pro') }) : t('planes:subscribe')}
             onClick={() => elegir('pro')} />
         </Tarjeta>
       </div>
 
-      <div className="text-white/50 text-rt-11 text-center">{t('planes:note')}</div>
+      <div className="text-white/50 text-rt-11 text-center">{t('planes:note', { currency: t(moneda === 'brl' ? 'planes:currencyBrl' : 'planes:currencyUsd') })}</div>
 
       {confirmar && (
         <ConfirmDialog

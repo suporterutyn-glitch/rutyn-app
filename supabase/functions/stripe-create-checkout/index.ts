@@ -13,7 +13,7 @@
 // deno-lint-ignore-file
 // @ts-ignore
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
-import { stripe, precioDe, cors, json, MIN_BASIC, MAX_BASIC, type PlanPago } from '../_shared/stripe.ts'
+import { stripe, precioDe, monedaDePais, cors, json, MIN_BASIC, MAX_BASIC, type PlanPago, type Moneda } from '../_shared/stripe.ts'
 
 // @ts-ignore
 Deno.serve(async (req: Request) => {
@@ -28,7 +28,7 @@ Deno.serve(async (req: Request) => {
     if (!user) return json({ error: 'Invalid session' }, 401)
 
     const { data: prof } = await admin.from('profiles')
-      .select('id,role,email,full_name,plan,plan_seats,stripe_customer_id,stripe_subscription_id')
+      .select('id,role,email,full_name,country,plan,plan_seats,stripe_customer_id,stripe_subscription_id')
       .eq('id', user.id).single()
     if (!prof || prof.role !== 'teacher') return json({ error: 'Only teachers' }, 403)
 
@@ -64,7 +64,9 @@ Deno.serve(async (req: Request) => {
       if (seats < MIN_BASIC || seats > MAX_BASIC) return json({ error: 'bad_seats' }, 400)
       if (seats < (activos ?? 0)) return json({ error: 'seats_below_active', active: activos }, 400)
     }
-    const price = await precioDe(s, plan)
+    // Una suscripción no cambia de moneda: si ya existe, se sigue en la suya.
+    const moneda: Moneda = subViva ? (subViva.currency as Moneda) : monedaDePais(prof.country)
+    const price = await precioDe(s, plan, moneda)
     const meta = { user_id: prof.id, plan }
 
     if (subViva) {
