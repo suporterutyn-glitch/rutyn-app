@@ -64,6 +64,7 @@ const CATEGORIA_ALIMENTO_EXTRA: Record<string, string> = {
   protein: 'proteinas proteins',
   carb: 'carboidratos carbohidratos carbs hidratos',
   fat: 'gorduras grasas fats lipidos',
+  supplement: 'suplementos supplements whey',
   calories: 'caloricos energia',
   none: 'verdura verduras legumes vegetales vegetables',
 }

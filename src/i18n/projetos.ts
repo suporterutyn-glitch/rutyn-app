@@ -60,6 +60,7 @@ export default textos({
       saveParams: 'Salvar Parâmetros', useRange: 'Usar intervalo (ex: 10-12)', save: 'Salvar', removeField: 'Remover Campo', done: 'Pronto', close: 'Fechar',
     },
     al: {
+      allCategories: 'Todas',
       loadError: 'Erro ao carregar alimentos: {{msg}}', cantDeleteApp: 'Os alimentos do catálogo do app não podem ser excluídos. Selecione alimentos criados por você.',
       deletedOk: '{{n}} alimento(s) excluído(s) com sucesso.', deletedForced: '{{n}} alimento(s) excluído(s) e removido(s) das dietas.', kept: ' {{n}} do catálogo do app foram mantidos.',
       notFound: 'Nenhum alimento encontrado', tryOther: 'Tente buscar com outro termo', noFav: 'Nenhum alimento favoritado', noFavBody: 'Favorite alimentos para vê-los aqui',
@@ -215,6 +216,7 @@ export default textos({
       saveParams: 'Guardar Parámetros', useRange: 'Usar intervalo (ej: 10-12)', save: 'Guardar', removeField: 'Quitar Campo', done: 'Listo', close: 'Cerrar',
     },
     al: {
+      allCategories: 'Todas',
       loadError: 'Error al cargar alimentos: {{msg}}', cantDeleteApp: 'Los alimentos del catálogo de la app no se pueden eliminar. Seleccioná alimentos creados por vos.',
       deletedOk: '{{n}} alimento(s) eliminado(s) con éxito.', deletedForced: '{{n}} alimento(s) eliminado(s) y quitado(s) de las dietas.', kept: ' {{n}} del catálogo de la app se mantuvieron.',
       notFound: 'No se encontró ningún alimento', tryOther: 'Probá buscar con otro término', noFav: 'Ningún alimento favorito', noFavBody: 'Marcá alimentos como favoritos para verlos acá',
@@ -370,6 +372,7 @@ export default textos({
       saveParams: 'Save Parameters', useRange: 'Use range (e.g.: 10-12)', save: 'Save', removeField: 'Remove Field', done: 'Done', close: 'Close',
     },
     al: {
+      allCategories: 'All',
       loadError: 'Error loading foods: {{msg}}', cantDeleteApp: "The app's catalog foods can't be deleted. Select foods you created.",
       deletedOk: '{{n}} food(s) deleted successfully.', deletedForced: '{{n}} food(s) deleted and removed from diets.', kept: ' {{n}} from the app catalog were kept.',
       notFound: 'No foods found', tryOther: 'Try searching for something else', noFav: 'No favorite foods', noFavBody: 'Favorite foods to see them here',

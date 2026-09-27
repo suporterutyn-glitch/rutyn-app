@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { coincide, textosAlimento } from '@/lib/busqueda'
-import { Plus, Star, Pencil, Egg, Wheat, Droplet, Leaf, Ban, UtensilsCrossed } from 'lucide-react'
+import { Plus, Star, Pencil, Egg, Wheat, Droplet, Leaf, Ban, Pill, UtensilsCrossed } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import type { Filtro } from '../MeusProjetos'
@@ -36,6 +36,7 @@ export const ESTILO_CATEGORIA: Record<string, { icono: typeof Egg; color: string
   protein: { icono: Egg, color: '#E57373', textoBadge: 'text-white' },
   carb: { icono: Wheat, color: '#FFD54F', textoBadge: 'text-black' },
   fat: { icono: Droplet, color: '#81C784', textoBadge: 'text-white' },
+  supplement: { icono: Pill, color: '#BA68C8', textoBadge: 'text-white' },
   calories: { icono: Leaf, color: '#64B5F6', textoBadge: 'text-white' },
   none: { icono: Ban, color: '#4B5D73', textoBadge: 'text-white' },
 }
@@ -63,6 +64,7 @@ export function FoodsTab({ query, filtro }: { query: string; filtro: Filtro }) {
   const [showNew, setShowNew] = useState(false)
   const [editando, setEditando] = useState<Food | null>(null)
   const [seleccion, setSeleccion] = useState<string[]>([])
+  const [categoria, setCategoria] = useState('')
   const [combinando, setCombinando] = useState(false)
   const [borrando, setBorrando] = useState<{ propios: Food[]; enUso: { food: Food; dietas: string[] }[] } | null>(null)
   const [aviso, setAviso] = useState<{ kind: 'error' | 'success'; message: string } | null>(null)
@@ -80,9 +82,11 @@ export function FoodsTab({ query, filtro }: { query: string; filtro: Filtro }) {
   const filtered = items
     .filter((f) => (filtro === 'favoritos' ? esFavorito(f.id) : true))
     .filter((f) => (filtro === 'minhas' ? f.trainer_id === profile?.id : true))
+    .filter((f) => !categoria || (f.category ?? 'none') === categoria)
     .filter((f) => coincideBusqueda(f, query))
     .sort((a, b) => nombreEnIdioma(a, lang).localeCompare(nombreEnIdioma(b, lang)))
 
+  const categoriasPresentes = categoriasAlimento.map((c) => c.id).filter((id) => items.some((f) => (f.category ?? 'none') === id))
   const enSeleccion = seleccion.length > 0
   const todosMarcados = filtered.length > 0 && filtered.every((f) => seleccion.includes(f.id))
 
@@ -145,6 +149,21 @@ export function FoodsTab({ query, filtro }: { query: string; filtro: Filtro }) {
           </button>
         </div>
       )}
+
+      <div className="-mx-4 px-4 mb-3 flex gap-2 overflow-x-auto no-scrollbar">
+        {[{ id: '', etiqueta: t('projetos:al.allCategories') }, ...categoriasPresentes.map((id) => ({ id, etiqueta: etiquetaDe(categoriasAlimento, id, lang) }))].map((c) => (
+          <button
+            key={c.id || 'todas'}
+            type="button"
+            onClick={() => { setCategoria(c.id); setSeleccion([]) }}
+            aria-pressed={categoria === c.id}
+            className={'shrink-0 px-3.5 py-1.5 rounded-[16px] text-rt-12 font-semibold border transition ' +
+              (categoria === c.id ? 'bg-brand border-brand text-white' : 'bg-[#1E1E1E] border-[#424242] text-grey-400')}
+          >
+            {c.etiqueta}
+          </button>
+        ))}
+      </div>
 
       {loading ? (
         <div className="py-10 flex justify-center"><span className="w-8 h-8 rounded-full border-2 border-brand/30 border-t-brand animate-spin" /></div>

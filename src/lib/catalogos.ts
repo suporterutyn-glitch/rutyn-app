@@ -147,6 +147,7 @@ export const categoriasAlimento: Catalogo[] = [
   { id: 'protein', pt: 'Proteína', es: 'Proteína', en: 'Protein' },
   { id: 'carb', pt: 'Carboidrato', es: 'Carbohidrato', en: 'Carbohydrate' },
   { id: 'fat', pt: 'Gordura', es: 'Grasa', en: 'Fat' },
+  { id: 'supplement', pt: 'Suplemento', es: 'Suplemento', en: 'Supplement' },
   { id: 'calories', pt: 'Calorias', es: 'Calorías', en: 'Calories' },
   { id: 'none', pt: 'Sem Classificação', es: 'Sin Clasificación', en: 'Unclassified' },
 ]
