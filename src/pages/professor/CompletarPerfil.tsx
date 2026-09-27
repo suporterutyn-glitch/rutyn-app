@@ -1,187 +1,70 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/lib/auth'
-import { PRICE_RANGES, currencyOf, formatMoney } from '@/lib/plans'
-import { DarkSelectSheet, DarkMultiSheet } from '@/components/DarkSheets'
-import { COUNTRIES, nombrePais } from '@/lib/countries'
-import { InputInterno, CampoInterno } from '@/components/CampoInterno'
-import { FeedbackDialog } from '@/components/FeedbackDialog'
-import { atuacoes, especialidades, formatosTrabalho, clientesIdeais, etiqueta } from '@/lib/catalogos'
+import { X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-
+import { supabase } from '@/lib/supabase'
+import { useAuth, type Profile } from '@/lib/auth'
+import { FeedbackDialog } from '@/components/FeedbackDialog'
+import { CamposProfesionales, CamposUbicacion, usePerfilProfesional } from '@/components/professor/PerfilProfesional'
+import { detalleError } from '@/lib/errores'
 
 export function CompletarPerfilPage() {
+  const { profile } = useAuth()
+  if (!profile) return null
+  return <Formulario key={profile.id} profile={profile} />
+}
+
+function Formulario({ profile }: { profile: Profile }) {
   const nav = useNavigate()
   const [params] = useSearchParams()
   const volver = params.get('volver')?.startsWith('/professor/') ? params.get('volver')! : '/professor'
-  const { t, i18n } = useTranslation()
-  const lang = i18n.language
-  const [feedback, setFeedback] = useState<{ kind: 'error' | 'success'; message: string } | null>(null)
-  const { profile, refresh } = useAuth()
-  const [country, setCountry] = useState(profile?.country ?? 'BR')
-  const range = PRICE_RANGES[country] ?? PRICE_RANGES.BR
-  const currency = currencyOf(country)
-
-  const [state, setState] = useState(profile?.state ?? '')
-  const [city, setCity] = useState(profile?.city ?? '')
-  const [occupation, setOccupation] = useState(profile?.occupation ?? '')
-  const [specialties, setSpecialties] = useState<string[]>(profile?.specialties ?? [])
-  const [ideal, setIdeal] = useState<string[]>(profile?.ideal_clients ?? [])
-  const [formats, setFormats] = useState<string[]>(profile?.work_formats ?? [])
-  const [hourlyMin, setHourlyMin] = useState<number | null>(null)
-  const [hourlyMax, setHourlyMax] = useState<number | null>(null)
-  const [monthlyMin, setMonthlyMin] = useState<number | null>(null)
-  const [monthlyMax, setMonthlyMax] = useState<number | null>(null)
-  const [bio, setBio] = useState(profile?.bio ?? '')
-  const [marketVisible, setMarketVisible] = useState(profile?.marketplace_visible ?? true)
+  const { t } = useTranslation()
+  const { refresh } = useAuth()
+  const [country, setCountry] = useState(profile.country ?? 'BR')
+  const f = usePerfilProfesional(profile, country)
   const [saving, setSaving] = useState(false)
+  const [feedback, setFeedback] = useState<{ kind: 'error' | 'success'; message: string } | null>(null)
 
-  useEffect(() => {
-    setHourlyMin((profile as any)?.price_hourly_min ?? range.hourly.min)
-    setHourlyMax((profile as any)?.price_hourly_max ?? range.hourly.max)
-    setMonthlyMin((profile as any)?.price_monthly_min ?? range.monthly.min)
-    setMonthlyMax((profile as any)?.price_monthly_max ?? range.monthly.max)
-  }, [profile?.id])
-
-  // Cada pais tiene su moneda y su rango: al cambiarlo, los valores del pais
-  // anterior quedarian fuera de escala (ej. 20 BRL dentro de un rango uruguayo
-  // que arranca en 300). Se reencuadran, salvo en el primer render.
-  const primerRender = useRef(true)
-  useEffect(() => {
-    if (primerRender.current) { primerRender.current = false; return }
-    const r = PRICE_RANGES[country] ?? PRICE_RANGES.BR
-    setHourlyMin(r.hourly.min)
-    setHourlyMax(r.hourly.max)
-    setMonthlyMin(r.monthly.min)
-    setMonthlyMax(r.monthly.max)
-  }, [country])
-
-  const complete = !!(state && city && occupation && specialties.length && ideal.length)
-
-  async function save() {
-    if (!profile?.id) return
-    if (!complete) {
-      setFeedback({
-        kind: 'error',
-        message: t('completeProfile:missing'),
-      })
-      return
-    }
+  async function save(extra?: { marketplace_visible?: boolean }) {
+    if (!f.completo) { setFeedback({ kind: 'error', message: t('completeProfile:missing') }); return }
     setSaving(true)
-    await supabase.from('profiles').update({
-      country, state, city, occupation,
-      specialties, ideal_clients: ideal, work_formats: formats,
-      price_hourly_min: hourlyMin, price_hourly_max: hourlyMax,
-      price_monthly_min: monthlyMin, price_monthly_max: monthlyMax,
-      bio: bio || null,
-      marketplace_visible: marketVisible,
-      profile_complete: complete,
-    }).eq('id', profile.id)
-    await refresh()
+    const { error } = await supabase.from('profiles').update(f.datos(extra)).eq('id', profile.id)
     setSaving(false)
+    if (error) { setFeedback({ kind: 'error', message: detalleError(error) }); return }
+    await refresh()
     setFeedback({ kind: 'success', message: t('completeProfile:saved') })
   }
 
   return (
-    <div className="pt-[calc(env(safe-area-inset-top)+16px)] px-4 pb-24">
-      <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => nav(-1)} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white">
-          <ArrowLeft size={20} />
+    // Hoja a pantalla completa sobre la app (tapa la barra inferior), como en el diseño.
+    <div className="fixed inset-0 z-40 bg-[#1E1E1E] overflow-y-auto">
+      <div className="max-w-app mx-auto px-5 pt-[calc(env(safe-area-inset-top)+24px)] pb-[calc(env(safe-area-inset-bottom)+32px)]">
+        <div className="flex items-center justify-between gap-3 mb-6">
+          <h1 className="text-white text-rt-24 font-bold">{t('completeProfile:title')}</h1>
+          <button onClick={() => nav(-1)} aria-label={t('close')} className="w-11 h-11 shrink-0 rounded-full bg-[#333333] flex items-center justify-center text-white">
+            <X size={22} />
+          </button>
+        </div>
+
+        <div className="flex flex-col gap-5">
+          <p className="text-white/70 text-rt-14 leading-relaxed">{t('completeProfile:subtitle')}</p>
+
+          <h2 className="text-brand text-rt-16 font-semibold mt-2">{t('completeProfile:sectionLocation')}</h2>
+          <CamposUbicacion f={f} onCountry={setCountry} />
+
+          <h2 className="text-brand text-rt-16 font-semibold mt-2">{t('completeProfile:sectionProfessional')}</h2>
+          <CamposProfesionales f={f} />
+        </div>
+
+        <button className="btn-save mt-8" disabled={saving} onClick={() => void save()}>{saving ? t('loading') : t('save')}</button>
+        <button
+          type="button"
+          disabled={saving}
+          onClick={() => { f.setMarketVisible(false); void save({ marketplace_visible: false }) }}
+          className="w-full text-center text-white/60 text-rt-13 underline mt-5"
+        >
+          {t('completeProfile:notInSearch')}
         </button>
-        <h1 className="text-white text-rt-20 font-bold">{t('completeProfile:title')}</h1>
-      </div>
-
-      <div className="flex flex-col gap-6">
-        <p className="text-white/70 text-rt-14 leading-relaxed -mt-2">
-          {t('completeProfile:subtitle')}
-        </p>
-
-        <h2 className="text-brand text-rt-16 font-semibold">{t('completeProfile:sectionLocation')}</h2>
-
-        <DarkSelectSheet
-          labelInside
-          label={t('completeProfile:country')}
-          title={t('completeProfile:country')}
-          value={country}
-          onChange={setCountry}
-          searchable
-          options={COUNTRIES.map((c) => ({
-            id: c.code,
-            label: `${c.flag}  ${nombrePais(c, lang)}`,
-          }))}
-        />
-
-        <InputInterno label={t('completeProfile:state')} value={state} onChange={setState} />
-        <InputInterno label={t('completeProfile:city')} value={city} onChange={setCity} />
-
-        <h2 className="text-brand text-rt-16 font-semibold mt-2">{t('completeProfile:sectionProfessional')}</h2>
-
-        <DarkSelectSheet
-          labelInside
-          label={t('completeProfile:occupation')}
-          title={t('completeProfile:occupation')}
-          value={occupation}
-          onChange={setOccupation}
-          searchable
-          options={atuacoes.map((c) => ({ id: c.id, label: etiqueta(c, lang) }))}
-        />
-
-        <DarkMultiSheet
-          labelInside
-          label={t('completeProfile:specialties')}
-          title={t('completeProfile:specialtyTitle')}
-          values={specialties}
-          onChange={setSpecialties}
-          confirmLabel={t('confirm')}
-          options={especialidades.map((c) => ({ id: c.id, label: etiqueta(c, lang) }))}
-        />
-
-        <DarkMultiSheet
-          labelInside
-          label={t('completeProfile:workFormat')}
-          title={t('completeProfile:workFormatTitle')}
-          values={formats}
-          onChange={setFormats}
-          confirmLabel={t('confirm')}
-          options={formatosTrabalho.map((c) => ({ id: c.id, label: etiqueta(c, lang) }))}
-        />
-
-        <DarkMultiSheet
-          labelInside
-          label={t('completeProfile:idealClients')}
-          title={t('completeProfile:idealClientsTitle')}
-          values={ideal}
-          onChange={setIdeal}
-          confirmLabel={t('confirm')}
-          options={clientesIdeais.map((c) => ({ id: c.id, label: etiqueta(c, lang) }))}
-        />
-
-        <RangeField label={t('completeProfile:hourlyPrice')} min={range.hourly.min} max={range.hourly.max} step={range.hourly.step} currency={currency} valueMin={hourlyMin ?? range.hourly.min} valueMax={hourlyMax ?? range.hourly.max} onChange={(a, b) => { setHourlyMin(a); setHourlyMax(b) }} />
-        <RangeField label={t('completeProfile:monthlyPrice')} min={range.monthly.min} max={range.monthly.max} step={range.monthly.step} currency={currency} valueMin={monthlyMin ?? range.monthly.min} valueMax={monthlyMax ?? range.monthly.max} onChange={(a, b) => { setMonthlyMin(a); setMonthlyMax(b) }} />
-
-        <CampoInterno label={t('completeProfile:bio')} filled={!!bio}>
-          <textarea
-            className="w-full h-24 bg-transparent outline-none resize-none text-white text-rt-15 placeholder:text-grey-500"
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            placeholder={bio ? '' : t('completeProfile:bioHint')}
-          />
-        </CampoInterno>
-
-        <label className="flex items-center justify-between card-dark p-3">
-          <div>
-            <div className="text-white text-rt-13 font-semibold">{t('completeProfile:marketplace')}</div>
-            <div className="text-white/60 text-rt-11">{t('completeProfile:marketplaceSub')}</div>
-          </div>
-          <input type="checkbox" checked={marketVisible} onChange={(e) => setMarketVisible(e.target.checked)} className="w-6 h-6 accent-brand" />
-        </label>
-
-      </div>
-
-      <div className="mt-8">
-        <button className="btn-save" disabled={saving} onClick={save}>{saving ? t('loading') : t('save')}</button>
       </div>
 
       {feedback && (
@@ -198,43 +81,3 @@ export function CompletarPerfilPage() {
     </div>
   )
 }
-
-function RangeField({
-  label, min, max, step, currency, valueMin, valueMax, onChange,
-}: {
-  label: string; min: number; max: number; step: number; currency: string
-  valueMin: number; valueMax: number; onChange: (a: number, b: number) => void
-}) {
-  const { t } = useTranslation()
-  const pct = (v: number) => ((v - min) / (max - min)) * 100
-  return (
-    <div>
-      <div className="flex justify-between items-baseline mb-3">
-        <label className="text-white text-rt-13 font-semibold">{label}</label>
-        <span className="text-brand text-rt-12 font-semibold">
-          {formatMoney(valueMin, currency)} — {formatMoney(valueMax, currency)}
-        </span>
-      </div>
-      <div className="relative h-6 flex items-center">
-        <div className="absolute inset-x-0 h-1.5 rounded-full bg-surface-line" />
-        <div
-          className="absolute h-1.5 rounded-full bg-brand"
-          style={{ left: `${pct(valueMin)}%`, right: `${100 - pct(valueMax)}%` }}
-        />
-        <input
-          type="range" min={min} max={max} step={step} value={valueMin}
-          aria-label={t('general:ui.min', { label })}
-          onChange={(e) => onChange(Math.min(Number(e.target.value), valueMax - step), valueMax)}
-          className="rango-doble"
-        />
-        <input
-          type="range" min={min} max={max} step={step} value={valueMax}
-          aria-label={t('general:ui.max', { label })}
-          onChange={(e) => onChange(valueMin, Math.max(Number(e.target.value), valueMin + step))}
-          className="rango-doble"
-        />
-      </div>
-    </div>
-  )
-}
-

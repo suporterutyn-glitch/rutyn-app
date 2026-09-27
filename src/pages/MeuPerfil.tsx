@@ -3,57 +3,65 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, ChevronDown, Lock } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/lib/auth'
+import { useAuth, type Profile } from '@/lib/auth'
 import { AvatarUpload } from '@/components/AvatarUpload'
 import { WhatsAppInput } from '@/components/WhatsAppInput'
 import { COUNTRIES, countryByCode, nombrePais } from '@/lib/countries'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { idiomaDe } from '@/lib/catalogos'
 import { detalleError } from '@/lib/errores'
+import { CamposProfesionales, CamposUbicacion, usePerfilProfesional } from '@/components/professor/PerfilProfesional'
 
 export function MeuPerfilPage() {
+  const { profile } = useAuth()
+  if (!profile) return null
+  return <Formulario key={profile.id} profile={profile} />
+}
+
+/** El teléfono se guarda con el prefijo pegado ("+59899..."): el prefijo sale del número, no del país del perfil. */
+function separarTelefono(tel: string | null | undefined, paisPerfil: string) {
+  const t = tel ?? ''
+  const pais = [...COUNTRIES].sort((a, b) => b.dial.length - a.dial.length).find((c) => t.startsWith(c.dial))
+  if (pais) return { pais: pais.code, numero: t.slice(pais.dial.length) }
+  return { pais: paisPerfil, numero: t }
+}
+
+function Formulario({ profile }: { profile: Profile }) {
   const nav = useNavigate()
   const { t, i18n } = useTranslation()
-  const { profile, refresh } = useAuth()
+  const { refresh } = useAuth()
   const lang = idiomaDe(i18n.language)
-  const esAluno = profile?.role === 'student'
+  const esAluno = profile.role === 'student'
+  const esProfe = profile.role === 'teacher'
+  const tel = separarTelefono(profile.phone, profile.country ?? 'BR')
 
-  const [name, setName] = useState('')
-  const [country, setCountry] = useState('BR')
-  const [phone, setPhone] = useState('')
+  const [name, setName] = useState(profile.full_name ?? '')
+  const [country, setCountry] = useState(profile.country ?? 'BR')
+  const [phoneCountry, setPhoneCountry] = useState(tel.pais)
+  const [phone, setPhone] = useState(tel.numero)
   const [teacherName, setTeacherName] = useState<string | null>(null)
   const [paisAbierto, setPaisAbierto] = useState(false)
   const [saving, setSaving] = useState(false)
   const [aviso, setAviso] = useState<{ kind: 'success' | 'error'; msg: string } | null>(null)
-
-  // El teléfono se guarda con el prefijo pegado ("+5511987654321"); en pantalla
-  // el prefijo es del selector, así que se separa al entrar y se junta al salir.
-  useEffect(() => {
-    const pais = profile?.country ?? 'BR'
-    setName(profile?.full_name ?? '')
-    setCountry(pais)
-    const dial = countryByCode(pais)?.dial ?? ''
-    const tel = profile?.phone ?? ''
-    setPhone(dial && tel.startsWith(dial) ? tel.slice(dial.length) : tel)
-  }, [profile?.id])
+  const f = usePerfilProfesional(profile, country)
 
   useEffect(() => {
-    if (!esAluno || !profile?.teacher_id) { setTeacherName(null); return }
+    if (!esAluno || !profile.teacher_id) { setTeacherName(null); return }
     void (async () => {
       const { data } = await supabase.from('profiles').select('full_name').eq('id', profile.teacher_id!).maybeSingle()
       setTeacherName((data as { full_name: string | null } | null)?.full_name ?? null)
     })()
-  }, [esAluno, profile?.teacher_id])
+  }, [esAluno, profile.teacher_id])
 
   async function save() {
-    if (!profile?.id) return
     setSaving(true)
-    const dial = countryByCode(country)?.dial ?? ''
+    const dial = countryByCode(phoneCountry)?.dial ?? ''
     const limpio = phone.replace(/\D/g, '')
     const { error } = await supabase.from('profiles').update({
       full_name: name.trim() || null,
       phone: limpio ? `${dial}${limpio}` : null,
       country,
+      ...(esProfe ? f.datos() : {}),
     }).eq('id', profile.id)
     setSaving(false)
     if (error) { setAviso({ kind: 'error', msg: detalleError(error) }); return }
@@ -78,8 +86,8 @@ export function MeuPerfilPage() {
         <div className="flex-1 min-w-0 flex flex-col gap-5">
           <CampoSubrayado label={t('settings:fullName')} value={name} onChange={setName} />
           <WhatsAppInput
-            countryCode={country}
-            onCountry={setCountry}
+            countryCode={phoneCountry}
+            onCountry={setPhoneCountry}
             value={phone}
             onChange={setPhone}
             lang={lang}
@@ -89,7 +97,7 @@ export function MeuPerfilPage() {
       </div>
 
       <div className="flex flex-col gap-5">
-        <CampoBloqueado label={t('email')} value={profile?.email ?? ''} />
+        <CampoBloqueado label={t('email')} value={profile.email ?? ''} />
 
         <div>
           <label className="block text-white/60 text-rt-11 mb-1">{t('settings:country')}</label>
@@ -108,6 +116,15 @@ export function MeuPerfilPage() {
           <CampoBloqueado label={t('settings:teacherField')} value={teacherName ?? t('settings:noTeacher')} />
         )}
       </div>
+
+      {esProfe && (
+        <div className="flex flex-col gap-5 mt-8">
+          <h2 className="text-brand text-rt-16 font-semibold">{t('completeProfile:sectionLocation')}</h2>
+          <CamposUbicacion f={f} />
+          <h2 className="text-brand text-rt-16 font-semibold mt-2">{t('completeProfile:sectionProfessionalProfile')}</h2>
+          <CamposProfesionales f={f} />
+        </div>
+      )}
 
       <div className="flex gap-3 mt-8">
         <button

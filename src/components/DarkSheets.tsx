@@ -5,6 +5,10 @@ import { CampoInterno } from './CampoInterno'
 
 type Opcion = { id: string; label: string }
 
+function normalizar(s: string) {
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+}
+
 function Manija() {
   return (
     <div className="flex justify-center pt-3">
@@ -23,6 +27,7 @@ export function DarkSelectSheet({
   searchable = false,
   placeholder,
   labelInside = false,
+  disabled = false,
 }: {
   label: string
   title: string
@@ -31,6 +36,7 @@ export function DarkSelectSheet({
   onChange: (id: string) => void
   searchable?: boolean
   placeholder?: string
+  disabled?: boolean
   /** Etiqueta dentro de la caja en vez de encima (modulo 04). */
   labelInside?: boolean
 }) {
@@ -39,7 +45,7 @@ export function DarkSelectSheet({
   const [q, setQ] = useState('')
   const selected = options.find((o) => o.id === value)
   const visibles = q.trim()
-    ? options.filter((o) => o.label.toLowerCase().includes(q.trim().toLowerCase()))
+    ? options.filter((o) => normalizar(o.label).includes(normalizar(q.trim())))
     : options
 
   return (
@@ -48,9 +54,10 @@ export function DarkSelectSheet({
         <label className="block text-rt-11 text-grey-400 font-semibold mb-1">{label}</label>
       )}
       {labelInside ? (
-        <CampoInterno label={label} filled={!!selected}>
+        <CampoInterno label={label} filled={!!selected} className={disabled ? 'opacity-50' : ''}>
           <button
             type="button"
+            disabled={disabled}
             onClick={() => { setQ(''); setOpen(true) }}
             className="w-full flex items-center justify-between text-left"
           >
