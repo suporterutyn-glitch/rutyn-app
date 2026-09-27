@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
@@ -14,6 +14,8 @@ import { useTranslation } from 'react-i18next'
 
 export function CompletarPerfilPage() {
   const nav = useNavigate()
+  const [params] = useSearchParams()
+  const volver = params.get('volver')?.startsWith('/professor/') ? params.get('volver')! : '/professor'
   const { t, i18n } = useTranslation()
   const lang = i18n.language
   const [feedback, setFeedback] = useState<{ kind: 'error' | 'success'; message: string } | null>(null)
@@ -189,7 +191,7 @@ export function CompletarPerfilPage() {
           onClose={() => {
             const exito = feedback.kind === 'success'
             setFeedback(null)
-            if (exito) nav('/professor', { replace: true })
+            if (exito) nav(volver, { replace: true })
           }}
         />
       )}

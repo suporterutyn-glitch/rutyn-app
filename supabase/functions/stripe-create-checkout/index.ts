@@ -28,7 +28,7 @@ Deno.serve(async (req: Request) => {
     if (!user) return json({ error: 'Invalid session' }, 401)
 
     const { data: prof } = await admin.from('profiles')
-      .select('id,role,email,full_name,country,plan,plan_seats,stripe_customer_id,stripe_subscription_id')
+      .select('id,role,email,full_name,country,profile_complete,plan,plan_seats,stripe_customer_id,stripe_subscription_id')
       .eq('id', user.id).single()
     if (!prof || prof.role !== 'teacher') return json({ error: 'Only teachers' }, 403)
 
@@ -55,6 +55,8 @@ Deno.serve(async (req: Request) => {
     }
     if (action !== 'checkout') return json({ error: 'bad_action' }, 400)
 
+    // El país (y con él la moneda) sale del perfil: sin registro completo no se cobra.
+    if (!prof.profile_complete || !prof.country) return json({ error: 'profile_incomplete' }, 400)
     const plan = body.plan as PlanPago
     if (plan !== 'basic' && plan !== 'pro') return json({ error: 'bad_plan' }, 400)
     const { data: activos } = await admin.rpc('alumnos_activos', { p_teacher: prof.id })

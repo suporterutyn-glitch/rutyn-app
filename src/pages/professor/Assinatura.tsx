@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, Check, Minus, Plus, Sparkles } from 'lucide-react'
+import { ArrowLeft, Check, Minus, Plus, Sparkles, UserPen } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
 import { BASIC, PRECIO_PLAN, monedaPlan, precioPlan, planVisible, type PlanVisible } from '@/lib/plans'
@@ -72,7 +72,11 @@ export function AssinaturaPage() {
     setAviso({ kind: 'success', message: t('planes:changed') })
   }
 
+  const perfilIncompleto = !profile?.profile_complete
+  const irACompletar = () => nav('/professor/perfil/completar?volver=/professor/assinatura')
+
   function elegir(plan: 'basic' | 'pro') {
+    if (perfilIncompleto) { irACompletar(); return }
     const accion: Accion = { action: 'checkout', plan, ...(plan === 'basic' ? { seats } : {}) }
     if (pago) setConfirmar({ accion, titulo: t('planes:changeQ'), detalle: t('planes:changeDetail') })
     else void ejecutar(accion)
@@ -89,6 +93,16 @@ export function AssinaturaPage() {
         </button>
         <h1 className="text-white text-rt-20 font-bold">{t('planes:title')}</h1>
       </div>
+
+      {perfilIncompleto && (
+        <button onClick={irACompletar} className="w-full mb-5 rounded-card bg-warning-card p-4 flex items-center gap-3 text-left">
+          <span className="w-10 h-10 rounded-lg bg-white/25 flex items-center justify-center shrink-0"><UserPen size={20} className="text-black" /></span>
+          <span className="flex-1">
+            <span className="block text-black text-rt-14 font-bold">{t('planes:completeTitle')}</span>
+            <span className="block text-black/75 text-rt-12 mt-0.5">{t('planes:completeBody')}</span>
+          </span>
+        </button>
+      )}
 
       {pago && (
         <div className="rounded-card p-4 mb-5 bg-plan-premium border border-brand">

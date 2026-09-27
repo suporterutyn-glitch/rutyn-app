@@ -3,6 +3,7 @@ import { textos } from './textos'
 // Planes del profesor: Gratis (1 alumno), Básico (US$ 1 o R$ 5,90 por alumno, mín. 5), Pro (ilimitado).
 export default textos({
   pt: {
+    completeTitle: 'Termine seu cadastro para assinar', completeBody: 'Seu país define a moeda do pagamento: reais (R$) no Brasil e dólares (US$) nos outros países.',
     title: 'Meu plano', choose: 'Escolha seu plano',
     name: { free: 'Grátis', basic: 'Básico', pro: 'Pro' },
     perMonth: '/mês', perStudent: 'por aluno', students_one: '{{count}} aluno', students_other: '{{count}} alunos',
@@ -24,6 +25,7 @@ export default textos({
     upgrade: 'Aumentar plano',
   },
   es: {
+    completeTitle: 'Terminá tu registro para suscribirte', completeBody: 'Tu país define la moneda del pago: reales (R$) en Brasil y dólares (US$) en los demás países.',
     title: 'Mi plan', choose: 'Elegí tu plan',
     name: { free: 'Gratis', basic: 'Básico', pro: 'Pro' },
     perMonth: '/mes', perStudent: 'por alumno', students_one: '{{count}} alumno', students_other: '{{count}} alumnos',
@@ -45,6 +47,7 @@ export default textos({
     upgrade: 'Ampliar plan',
   },
   en: {
+    completeTitle: 'Finish your profile to subscribe', completeBody: 'Your country sets the payment currency: Brazilian reais (R$) in Brazil and US dollars (US$) everywhere else.',
     title: 'My plan', choose: 'Choose your plan',
     name: { free: 'Free', basic: 'Basic', pro: 'Pro' },
     perMonth: '/mo', perStudent: 'per student', students_one: '{{count}} student', students_other: '{{count}} students',
