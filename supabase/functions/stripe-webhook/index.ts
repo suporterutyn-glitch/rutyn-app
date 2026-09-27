@@ -38,7 +38,11 @@ Deno.serve(async (req: Request) => {
 
   // Configuración inicial (solo con la service key): endpoint del webhook y portal.
   if (body.action === 'setup') {
-    if ((req.headers.get('Authorization') ?? '') !== `Bearer ${SERVICE}`) return json({ error: 'forbidden' }, 403)
+    // Solo con una service key real: se prueba contra la API de admin.
+    const clave = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '')
+    // @ts-ignore
+    const prueba = await createClient(Deno.env.get('SUPABASE_URL')!, clave).auth.admin.listUsers({ perPage: 1 })
+    if (!clave || prueba.error) return json({ error: 'forbidden' }, 403)
     // @ts-ignore
     const url = `${Deno.env.get('SUPABASE_URL')}/functions/v1/stripe-webhook`
     const { data: eps } = await s.webhookEndpoints.list({ limit: 100 })
@@ -89,13 +93,15 @@ async function sincronizar(admin: any, sub: any, refId?: string | null) {
   const viva = ['active', 'trialing', 'past_due'].includes(sub.status)
 
   if (viva && plan) {
+    // Stripe manda varios eventos a la vez: solo el que efectivamente cambia el plan avisa.
+    const { data: cambio } = await admin.from('profiles').update({ plan }).eq('id', prof.id).neq('plan', plan).select('id')
     await admin.from('profiles').update({
       plan, plan_seats: plan === 'basic' ? item.quantity : null, plan_status: sub.status,
       plan_expires_at: sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null,
       plan_cancel_at_period_end: !!sub.cancel_at_period_end,
       stripe_customer_id: sub.customer, stripe_subscription_id: sub.id,
     }).eq('id', prof.id)
-    if (prof.plan !== plan) {
+    if (cambio?.length) {
       await admin.from('notifications').insert({ user_id: prof.id, ...aviso('planActive', { plan }) })
       await admin.from('subscriptions').insert({ teacher_id: prof.id, plan, provider: 'stripe', status: sub.status,
         expires_at: sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null })
