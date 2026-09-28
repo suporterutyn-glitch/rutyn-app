@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronDown, X } from 'lucide-react'
+import { hoyLocal } from '@/lib/fechas'
 import { supabase } from '@/lib/supabase'
 import { detalleError } from '@/lib/errores'
 import { leerNumero } from '@/lib/assessment'
 import { HojaRadio } from '@/components/professor/SelectorRadio'
 import type { Catalogo } from '@/lib/catalogos'
 import type { Ficha } from './Evaluacion'
+import { Campo, ModalEdicion, Numero, Selector, Texto } from './ui'
 
 const TRABAJOS = ['remote', 'office', 'field', 'physical', 'mixed']
 const NIVELES = ['sedentary', 'light', 'moderate', 'very', 'extreme']
@@ -36,7 +37,7 @@ export function ModalFicha({ ficha, autor, onCerrar, onGuardado }: {
   const [hoja, setHoja] = useState<'sexo' | 'trabajo' | 'nivel' | null>(null)
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
-  const hoy = new Date().toISOString().slice(0, 10)
+  const hoy = hoyLocal()
 
   const cat = (id: string, texto: string): Catalogo => ({ id, pt: texto, es: texto, en: texto })
 
@@ -64,16 +65,27 @@ export function ModalFicha({ ficha, autor, onCerrar, onGuardado }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#1E1E1E] flex flex-col">
-      <div className="max-w-app w-full mx-auto flex items-center justify-between gap-3 px-6 pt-[calc(env(safe-area-inset-top)+20px)] pb-4">
-        <h2 className="text-white text-rt-20 font-bold">{t('evaluacion:sec.perfil')}</h2>
-        <button onClick={onCerrar} aria-label={t('close')} className="w-9 h-9 rounded-full bg-[#333333] flex items-center justify-center text-white">
-          <X size={20} />
-        </button>
-      </div>
-
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-app mx-auto px-6 pb-6 flex flex-col gap-4">
+    <ModalEdicion
+      titulo={t('evaluacion:sec.perfil')}
+      guardando={guardando}
+      error={error}
+      onGuardar={() => void guardar()}
+      onCerrar={onCerrar}
+      extra={<>
+      {hoja === 'sexo' && (
+        <HojaRadio lista={[cat('M', t('evaluacion:male')), cat('F', t('evaluacion:female'))]} valor={sexo} lang={lang}
+          onElegir={(id) => { setSexo(id as 'M' | 'F'); setHoja(null) }} onCerrar={() => setHoja(null)} />
+      )}
+      {hoja === 'trabajo' && (
+        <HojaRadio lista={TRABAJOS.map((id) => cat(id, t(`evaluacion:work.${id}`)))} valor={trabajo} lang={lang}
+          onElegir={(id) => { setTrabajo(id); setHoja(null) }} onCerrar={() => setHoja(null)} />
+      )}
+      {hoja === 'nivel' && (
+        <HojaRadio lista={NIVELES.map((id) => cat(id, t(`evaluacion:level.${id}`)))} valor={nivel} lang={lang}
+          onElegir={(id) => { setNivel(id); setHoja(null) }} onCerrar={() => setHoja(null)} />
+      )}
+      </>}
+    >
           <Campo etiqueta={t('evaluacion:birthDate')}>
             <input type="date" value={nacimiento} min="1920-01-01" max={hoy} onChange={(e) => setNacimiento(e.target.value)}
               className="w-full h-12 px-4 rounded-[12px] bg-[#252525] border border-[#333333] focus:border-[#7CB342] text-white text-rt-14 outline-none [color-scheme:dark]" />
@@ -109,67 +121,7 @@ export function ModalFicha({ ficha, autor, onCerrar, onGuardado }: {
               <span className={'block w-6 h-6 rounded-full bg-white transition-transform ' + (fuma ? 'translate-x-5' : '')} />
             </button>
           </label>
-          {error && <p className="text-[#EF5350] text-rt-13" role="alert">{error}</p>}
-        </div>
-      </div>
-
-      <div className="border-t border-[#2D2D2D] px-6 pt-3 pb-[calc(env(safe-area-inset-bottom)+16px)]">
-        <div className="max-w-app mx-auto">
-          <button onClick={() => void guardar()} disabled={guardando}
-            className="w-full h-[54px] rounded-[27px] bg-gradient-to-b from-[#91C145] to-[#5A8F2F] shadow-[0_4px_12px_rgba(124,179,66,0.3)] text-white text-rt-16 font-bold flex items-center justify-center">
-            {guardando ? <span className="w-5 h-5 rounded-full border-2 border-white/40 border-t-white animate-spin" /> : t('evaluacion:save')}
-          </button>
-        </div>
-      </div>
-
-      {hoja === 'sexo' && (
-        <HojaRadio lista={[cat('M', t('evaluacion:male')), cat('F', t('evaluacion:female'))]} valor={sexo} lang={lang}
-          onElegir={(id) => { setSexo(id as 'M' | 'F'); setHoja(null) }} onCerrar={() => setHoja(null)} />
-      )}
-      {hoja === 'trabajo' && (
-        <HojaRadio lista={TRABAJOS.map((id) => cat(id, t(`evaluacion:work.${id}`)))} valor={trabajo} lang={lang}
-          onElegir={(id) => { setTrabajo(id); setHoja(null) }} onCerrar={() => setHoja(null)} />
-      )}
-      {hoja === 'nivel' && (
-        <HojaRadio lista={NIVELES.map((id) => cat(id, t(`evaluacion:level.${id}`)))} valor={nivel} lang={lang}
-          onElegir={(id) => { setNivel(id); setHoja(null) }} onCerrar={() => setHoja(null)} />
-      )}
-    </div>
+    </ModalEdicion>
   )
 }
 
-function Campo({ etiqueta, children }: { etiqueta: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <div className="text-white text-rt-13 font-semibold mb-1.5">{etiqueta}</div>
-      {children}
-    </div>
-  )
-}
-
-function Texto({ valor, onChange, placeholder }: { valor: string; onChange: (v: string) => void; placeholder: string }) {
-  return (
-    <input value={valor} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
-      className="w-full h-12 px-4 rounded-[12px] bg-[#252525] border border-[#333333] focus:border-[#7CB342] text-white text-rt-14 outline-none placeholder:text-grey-600" />
-  )
-}
-
-function Numero({ valor, onChange, sufijo, placeholder, entero = false }: { valor: string; onChange: (v: string) => void; sufijo?: string; placeholder: string; entero?: boolean }) {
-  return (
-    <div className="flex items-center h-12 px-4 rounded-[12px] bg-[#252525] border border-[#333333] focus-within:border-[#7CB342]">
-      <input inputMode={entero ? 'numeric' : 'decimal'} value={valor} placeholder={placeholder}
-        onChange={(e) => onChange(e.target.value.replace(entero ? /[^\d]/g : /[^\d.,]/g, ''))}
-        className="flex-1 min-w-0 bg-transparent text-white text-rt-14 outline-none placeholder:text-grey-600" />
-      {sufijo && <span className="text-white/50 text-rt-13 ml-2">{sufijo}</span>}
-    </div>
-  )
-}
-
-function Selector({ valor, placeholder, onClick }: { valor: string; placeholder?: string; onClick: () => void }) {
-  return (
-    <button type="button" onClick={onClick} className="w-full h-12 px-4 rounded-[12px] bg-[#252525] border border-[#333333] flex items-center justify-between text-left">
-      <span className={valor ? 'text-white text-rt-14' : 'text-grey-600 text-rt-14'}>{valor || placeholder}</span>
-      <ChevronDown size={20} className="text-white/60" />
-    </button>
-  )
-}

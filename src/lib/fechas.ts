@@ -16,3 +16,9 @@ export function diasCortos(lang: string | undefined | null): string[] {
     return d.charAt(0).toUpperCase() + d.slice(1)
   })
 }
+
+/** Fecha de hoy "aaaa-mm-dd" en la hora del usuario (toISOString daría el día UTC). */
+export function hoyLocal() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}

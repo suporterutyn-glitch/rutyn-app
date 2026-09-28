@@ -8,15 +8,16 @@ import {
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
-import { localeDe } from '@/lib/fechas'
+import { localeDe, hoyLocal } from '@/lib/fechas'
 import { detalleError } from '@/lib/errores'
 import { bmi, bmiClass, maxHR, edadDesde } from '@/lib/assessment'
 import { ModalFicha } from './ModalFicha'
+import { SeccionRM, ModalRM, BorrarRM, SeccionAerobica, ModalAerobico, SeccionMuscular, ModalMuscular, type PruebaRM, type PruebaAerobica, type PruebaMusc } from './Pruebas'
 
 export const SECCIONES = ['perfil', 'rm', 'aerobica', 'muscular', 'perimetria', 'fotos', 'gordura', 'carga', 'anamnese'] as const
 export type Seccion = typeof SECCIONES[number]
 // Las secciones aparecen a medida que se construyen (ver moreSoon).
-const IMPLEMENTADAS: Seccion[] = ['perfil', 'anamnese']
+const IMPLEMENTADAS: Seccion[] = ['perfil', 'rm', 'aerobica', 'muscular', 'anamnese']
 const SOLO_LECTURA: Seccion[] = ['carga']
 const SIN_EDITAR: Seccion[] = ['fotos', 'carga']
 
@@ -60,6 +61,11 @@ export function Evaluacion({ studentId, teacherId, modo }: { studentId: string; 
   const [error, setError] = useState('')
   const [abiertas, setAbiertas] = useState<Seccion[]>([])
   const [editando, setEditando] = useState<Seccion | null>(null)
+  const [rms, setRms] = useState<PruebaRM[]>([])
+  const [rmEditando, setRmEditando] = useState<PruebaRM | null>(null)
+  const [rmBorrando, setRmBorrando] = useState<PruebaRM | null>(null)
+  const [aerobica, setAerobica] = useState<PruebaAerobica | null>(null)
+  const [muscular, setMuscular] = useState<PruebaMusc | null>(null)
   const [anamnesis, setAnamnesis] = useState<Anamnesis[]>([])
   const esProfe = modo === 'profesor'
 
@@ -71,7 +77,7 @@ export function Evaluacion({ studentId, teacherId, modo }: { studentId: string; 
       // El profesor abre la ficha por primera vez: se crea vacía (todo visible, nada editable).
       // "Crear si no existe": dos cargas simultáneas no chocan contra el índice único.
       const c = await supabase.from('assessments').upsert(
-        { student_id: studentId, teacher_id: teacherId, taken_at: new Date().toISOString().slice(0, 10) },
+        { student_id: studentId, teacher_id: teacherId, taken_at: hoyLocal() },
         { onConflict: 'student_id,teacher_id', ignoreDuplicates: true },
       )
       const r = c.error ? c : await supabase.from('assessments').select('*').eq('student_id', studentId).eq('teacher_id', teacherId).maybeSingle()
@@ -81,9 +87,18 @@ export function Evaluacion({ studentId, teacherId, modo }: { studentId: string; 
     if (!data) { setEstado('sin'); return }
     setFicha(data as Ficha)
     setEstado('listo')
-    const { data: an } = await supabase.from('anamnesis_answers').select('id,created_at,submitted_at,anamnesis_templates(name,name_es,name_en)')
-      .eq('student_id', studentId).eq('teacher_id', teacherId).order('created_at', { ascending: false })
-    setAnamnesis((an as unknown as Anamnesis[]) ?? [])
+    const f = (tabla: string) => supabase.from(tabla).select('*').eq('student_id', studentId).eq('teacher_id', teacherId)
+    const [an, rm, ae, mu] = await Promise.all([
+      supabase.from('anamnesis_answers').select('id,created_at,submitted_at,anamnesis_templates(name,name_es,name_en)')
+        .eq('student_id', studentId).eq('teacher_id', teacherId).order('created_at', { ascending: false }),
+      f('assessment_rm_tests').order('created_at'),
+      f('assessment_aerobic_tests').order('tested_on', { ascending: false }).order('created_at', { ascending: false }).limit(1),
+      f('assessment_muscular_tests').order('tested_on', { ascending: false }).order('created_at', { ascending: false }).limit(1),
+    ])
+    setAnamnesis((an.data as unknown as Anamnesis[]) ?? [])
+    setRms((rm.data as PruebaRM[]) ?? [])
+    setAerobica(((ae.data as PruebaAerobica[]) ?? [])[0] ?? null)
+    setMuscular(((mu.data as PruebaMusc[]) ?? [])[0] ?? null)
   }
   useEffect(() => { void cargar() }, [studentId, teacherId])
 
@@ -116,6 +131,7 @@ export function Evaluacion({ studentId, teacherId, modo }: { studentId: string; 
     if (err) { setFicha({ ...ficha }); setError(detalleError(err)) }
   }
 
+  const base = { studentId, teacherId, fichaId: ficha.id, autor: { nombre: profile?.full_name ?? null, rol: (esProfe ? 'teacher' : 'student') as 'teacher' | 'student' } }
   const fecha = ficha.updated_by_role && ficha.updated_at ? new Date(ficha.updated_at).toLocaleDateString(localeDe(i18n.language)) : null
   const autor = ficha.updated_by_name || (ficha.updated_by_role === 'student' ? t('evaluacion:student') : t('evaluacion:teacher'))
 
@@ -151,11 +167,15 @@ export function Evaluacion({ studentId, teacherId, modo }: { studentId: string; 
             visibleAlumno={ficha.student_visible_sections.includes(s)}
             alumnoEdita={ficha.student_editable_sections.includes(s)}
             puedeEditar={puedeEditar(s)}
-            onEditar={s === 'perfil' ? () => setEditando('perfil') : undefined}
+            subtitulo={s === 'rm' ? 'Epley' : s === 'aerobica' && aerobica ? t(`evaluacion:proto.${aerobica.protocol}`) : undefined}
+            onEditar={['perfil', 'rm', 'aerobica', 'muscular'].includes(s) ? () => { setRmEditando(null); setEditando(s) } : undefined}
             onPermisoEditar={() => void cambiarPermiso(s, 'student_editable_sections')}
             onPermisoVer={() => void cambiarPermiso(s, 'student_visible_sections')}
           >
             {s === 'perfil' && <SeccionPerfil ficha={ficha} puedeEditar={puedeEditar('perfil')} onEditar={() => setEditando('perfil')} />}
+            {s === 'rm' && <SeccionRM pruebas={rms} puedeEditar={puedeEditar('rm')} onNueva={() => { setRmEditando(null); setEditando('rm') }} onEditar={(p) => { setRmEditando(p); setEditando('rm') }} onBorrar={setRmBorrando} />}
+            {s === 'aerobica' && <SeccionAerobica prueba={aerobica} ficha={ficha} puedeEditar={puedeEditar('aerobica')} onEditar={() => setEditando('aerobica')} />}
+            {s === 'muscular' && <SeccionMuscular prueba={muscular} ficha={ficha} puedeEditar={puedeEditar('muscular')} onEditar={() => setEditando('muscular')} />}
             {s === 'anamnese' && <SeccionAnamnesis lista={anamnesis} esProfe={esProfe} studentId={studentId} />}
           </TarjetaSeccion>
         ))}
@@ -163,6 +183,18 @@ export function Evaluacion({ studentId, teacherId, modo }: { studentId: string; 
 
       <p className="text-white/40 text-rt-11 text-center mt-6 px-4">{t('evaluacion:moreSoon')}</p>
 
+      {editando === 'rm' && (
+        <ModalRM prueba={rmEditando} base={base} onCerrar={() => setEditando(null)} onGuardado={() => { setEditando(null); void cargar() }} />
+      )}
+      {editando === 'aerobica' && (
+        <ModalAerobico prueba={aerobica} ficha={ficha} base={base} onCerrar={() => setEditando(null)} onGuardado={() => { setEditando(null); void cargar() }} />
+      )}
+      {editando === 'muscular' && (
+        <ModalMuscular prueba={muscular} base={base} onCerrar={() => setEditando(null)} onGuardado={() => { setEditando(null); void cargar() }} />
+      )}
+      {rmBorrando && (
+        <BorrarRM prueba={rmBorrando} fichaId={ficha.id} autor={base.autor} onCerrar={() => setRmBorrando(null)} onBorrado={() => { setRmBorrando(null); void cargar() }} />
+      )}
       {editando === 'perfil' && (
         <ModalFicha
           ficha={ficha}
@@ -176,9 +208,9 @@ export function Evaluacion({ studentId, teacherId, modo }: { studentId: string; 
 }
 
 function TarjetaSeccion({
-  seccion, esProfe, abierta, onAlternar, visibleAlumno, alumnoEdita, puedeEditar, onEditar, onPermisoEditar, onPermisoVer, children,
+  seccion, esProfe, abierta, onAlternar, visibleAlumno, alumnoEdita, puedeEditar, onEditar, onPermisoEditar, onPermisoVer, children, subtitulo,
 }: {
-  seccion: Seccion; esProfe: boolean; abierta: boolean; onAlternar: () => void
+  seccion: Seccion; esProfe: boolean; abierta: boolean; onAlternar: () => void; subtitulo?: string
   visibleAlumno: boolean; alumnoEdita: boolean; puedeEditar: boolean
   onEditar?: () => void; onPermisoEditar: () => void; onPermisoVer: () => void; children: ReactNode
 }) {
@@ -258,7 +290,10 @@ function TarjetaSeccion({
             <Icono size={20} className="text-[#8BC34A]" />
           </span>
           <span className="flex-1 min-w-0 flex items-center gap-2 flex-wrap">
-            <span className="text-white text-rt-16 font-semibold">{t(`evaluacion:sec.${seccion}`)}</span>
+            <span className="flex flex-col">
+              <span className="text-white text-rt-16 font-semibold">{t(`evaluacion:sec.${seccion}`)}</span>
+              {subtitulo && <span className="text-[#8BC34A]/80 text-rt-12">{subtitulo}</span>}
+            </span>
             {esProfe && alumnoEdita && (
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[6px] bg-[#8BC34A]/15 text-[#8BC34A] text-[9px] font-semibold"><Users size={12} />{t('evaluacion:badgeEdits')}</span>
             )}
