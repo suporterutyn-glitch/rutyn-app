@@ -17,6 +17,7 @@ export type EjercicioCatalogo = {
   muscle_group: string | null
   muscle_groups: string[] | null
   category: string | null
+  extra_categories?: string[] | null
   media_type: string | null
   video_url: string | null
   thumbnail_url: string | null
@@ -65,7 +66,7 @@ export function AdicionarExercicios({ yaEnRutina, onCerrar, onAgregar }: {
     return gruposMusculares.filter((g) => usados.has(g.id))
   }, [items])
   const categoriasConEjercicios = useMemo(() => {
-    const usadas = new Set((items ?? []).map((e) => e.category))
+    const usadas = new Set((items ?? []).flatMap((e) => [e.category, ...(e.extra_categories ?? [])]))
     return categoriasExercicio.filter((c) => usadas.has(c.id))
   }, [items])
 
@@ -73,7 +74,7 @@ export function AdicionarExercicios({ yaEnRutina, onCerrar, onAgregar }: {
     return (items ?? [])
       .filter((e) => (pestana === 'favoritos' ? esFavorito(e.id) : pestana === 'meus' ? e.trainer_id === profile?.id : true))
       .filter((e) => !grupo || (e.muscle_groups?.length ? e.muscle_groups : [e.muscle_group]).includes(grupo))
-      .filter((e) => !categoria || e.category === categoria)
+      .filter((e) => !categoria || e.category === categoria || !!e.extra_categories?.includes(categoria))
       .filter((e) => coincide(busca, textosEjercicio(e)))
       .sort((a, b) => nombreEjercicio(a, lang).localeCompare(nombreEjercicio(b, lang)))
   }, [items, pestana, grupo, categoria, busca, esFavorito, profile?.id, lang])

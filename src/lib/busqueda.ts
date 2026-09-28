@@ -50,12 +50,12 @@ export function terminosGrupos(ids: (string | null | undefined)[] | null | undef
 type EjercicioBuscable = {
   name?: string | null; name_pt?: string | null; name_es?: string | null; name_en?: string | null
   muscle_group?: string | null; muscle_groups?: string[] | null
-  category?: string | null; equipment?: string | null
+  category?: string | null; extra_categories?: string[] | null; equipment?: string | null
 }
 
 export function textosEjercicio(e: EjercicioBuscable): (string | null | undefined)[] {
   const grupos = e.muscle_groups?.length ? e.muscle_groups : [e.muscle_group]
-  return [e.name, e.name_pt, e.name_es, e.name_en, ...terminosGrupos(grupos), ...terminos(categoriasExercicio, [e.category]), ...terminos(equipamentos, [e.equipment])]
+  return [e.name, e.name_pt, e.name_es, e.name_en, ...terminosGrupos(grupos), ...terminos(categoriasExercicio, [e.category, ...(e.extra_categories ?? [])]), ...terminos(equipamentos, [e.equipment])]
 }
 
 type AlimentoBuscable = { name?: string | null; name_pt?: string | null; name_es?: string | null; name_en?: string | null; category?: string | null }
