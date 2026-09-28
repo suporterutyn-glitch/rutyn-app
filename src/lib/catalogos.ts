@@ -246,4 +246,5 @@ export const equipamentos: Catalogo[] = [
   { id: 'vitruvian', pt: 'Vitruvian', es: 'Vitruvian', en: 'Vitruvian' },
   { id: 'cardio', pt: 'Cardio', es: 'Cardio', en: 'Cardio' },
   { id: 'bosu', pt: 'Bosu', es: 'Bosu', en: 'Bosu' },
+  { id: 'medicineBall', pt: 'Medicine ball', es: 'Balón medicinal', en: 'Medicine ball' },
 ]

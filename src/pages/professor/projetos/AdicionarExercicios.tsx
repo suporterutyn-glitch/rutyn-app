@@ -59,6 +59,16 @@ export function AdicionarExercicios({ yaEnRutina, onCerrar, onAgregar }: {
 
   const ya = useMemo(() => new Set(yaEnRutina), [yaEnRutina])
 
+  // En los filtros solo aparecen grupos y categorías que tienen ejercicios.
+  const gruposConEjercicios = useMemo(() => {
+    const usados = new Set((items ?? []).flatMap((e) => (e.muscle_groups?.length ? e.muscle_groups : [e.muscle_group])))
+    return gruposMusculares.filter((g) => usados.has(g.id))
+  }, [items])
+  const categoriasConEjercicios = useMemo(() => {
+    const usadas = new Set((items ?? []).map((e) => e.category))
+    return categoriasExercicio.filter((c) => usadas.has(c.id))
+  }, [items])
+
   const lista = useMemo(() => {
     return (items ?? [])
       .filter((e) => (pestana === 'favoritos' ? esFavorito(e.id) : pestana === 'meus' ? e.trainer_id === profile?.id : true))
@@ -208,10 +218,10 @@ export function AdicionarExercicios({ yaEnRutina, onCerrar, onAgregar }: {
       </div>
 
       {abriendo === 'grupo' && (
-        <HojaRadio lista={gruposMusculares} valor={grupo} lang={lang} onElegir={(id) => { setGrupo(id); setAbriendo(null) }} onCerrar={() => setAbriendo(null)} />
+        <HojaRadio lista={gruposConEjercicios} valor={grupo} lang={lang} onElegir={(id) => { setGrupo(id); setAbriendo(null) }} onCerrar={() => setAbriendo(null)} />
       )}
       {abriendo === 'categoria' && (
-        <HojaRadio lista={categoriasExercicio} valor={categoria} lang={lang} onElegir={(id) => { setCategoria(id); setAbriendo(null) }} onCerrar={() => setAbriendo(null)} />
+        <HojaRadio lista={categoriasConEjercicios} valor={categoria} lang={lang} onElegir={(id) => { setCategoria(id); setAbriendo(null) }} onCerrar={() => setAbriendo(null)} />
       )}
       {creando && (
         <NewExerciseSheet
