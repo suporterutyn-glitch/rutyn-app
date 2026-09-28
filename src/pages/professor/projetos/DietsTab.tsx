@@ -144,7 +144,7 @@ export function DietsTab({ query, filtro, alumno }: { query: string; filtro: Fil
               ? <EmptyState icon={UtensilsCrossed} title={t('projetos:die.noAssigned')} body={t('projetos:die.addFor', { name: alumno.nombre })} />
               : <EmptyState icon={UtensilsCrossed} title={t('projetos:die.none')} body={t('projetos:die.createFirst')} />
       ) : (
-        <ul className="grid grid-cols-1 lg:grid-cols-2 items-start gap-3">
+        <ul className="grid grid-cols-1 items-start gap-3">
           {filtered.map((d) => (
             <li
               key={d.id}

@@ -134,7 +134,7 @@ export function RecipesTab({ query, filtro }: { query: string; filtro: Filtro })
       ) : filtered.length === 0 ? (
         <EmptyState icon={BookOpen} title={t('projetos:rec.notFound')} body={t('projetos:rec.createFirst')} />
       ) : (
-        <ul className="grid grid-cols-1 lg:grid-cols-2 items-start gap-3">
+        <ul className="grid grid-cols-1 items-start gap-3">
           {filtered.map((r) => (
             <TarjetaReceita
               key={r.id}

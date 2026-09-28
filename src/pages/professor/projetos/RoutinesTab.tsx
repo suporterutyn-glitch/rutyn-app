@@ -123,7 +123,7 @@ export function RoutinesTab({ query, filtro }: { query: string; filtro: Filtro }
           }
         />
       ) : (
-        <ul className="grid grid-cols-1 lg:grid-cols-2 items-start gap-3">
+        <ul className="grid grid-cols-1 items-start gap-3">
           {filtered.map((r) => (
             <li key={r.id} className="flex flex-col gap-0">
             <RoutineCard
