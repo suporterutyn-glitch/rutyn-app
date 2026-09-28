@@ -404,11 +404,10 @@ function ReportesTab() {
   const [retencionData, setRetencionData] = useState<any[]>([])
   const [ltv, setLtv] = useState({ avgPerTeacher: 0, avgPerStudent: 0 })
   const [loading, setLoading] = useState(true)
-  const [mes, setMes] = useState(new Date().toISOString().slice(0, 7))
 
   useEffect(() => {
     void loadReportes()
-  }, [mes])
+  }, [])
 
   async function loadReportes() {
     setLoading(true)
@@ -605,7 +604,7 @@ function AnalyticsTab() {
             <Tooltip
               contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
               labelStyle={{ color: '#fff' }}
-              formatter={(value) => `$${value}`}
+              formatter={(value: any) => `$${value}`}
             />
             <Legend />
             <Line
