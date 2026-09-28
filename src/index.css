@@ -196,6 +196,10 @@ input[type="datetime-local"] {
   .fixed.inset-0.items-end > * { max-width: 560px; border-radius: 20px; }
 }
 @media (min-width: 1024px) {
+  /* Acceso en escritorio: marca a la izquierda (PanelMarca) y formulario a la derecha. */
+  body.con-marca { --acceso-w: 500px; }
+  body.con-marca #root { justify-content: flex-end; }
+  body.con-marca .app-shell { max-width: var(--acceso-w); box-shadow: -20px 0 60px rgba(0,0,0,.5); }
   .fixed.inset-0[class*="bg-[#1E1E1E]"],
   .fixed.inset-0.bg-surface-card { left: var(--lado-w); }
   .fixed.bottom-0.left-1\/2 { left: calc(var(--lado-w) + (100vw - var(--lado-w)) / 2); max-width: 520px; }

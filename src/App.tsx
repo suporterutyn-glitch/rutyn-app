@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from '@/lib/auth'
+import { PanelMarca } from '@/components/PanelMarca'
 import { SplashPage } from '@/pages/Splash'
 import { IdentificacaoPage } from '@/pages/Identificacao'
 import { LoginPage } from '@/pages/Login'
@@ -47,6 +48,7 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter basename={import.meta.env.BASE_URL}>
+        <PanelMarca />
         <Routes>
           <Route path="/" element={<SplashPage />} />
           <Route path="/identificacao" element={<IdentificacaoPage />} />
