@@ -141,16 +141,39 @@ function PropostaSheet({ teacher, onClose, onSent }: { teacher: Teacher; onClose
   async function send() {
     if (!profile?.id || !amount) return
     setSaving(true)
-    await supabase.from('invites').insert({
-      student_id: profile.id, teacher_id: teacher.id,
-      format, amount: Number(amount), frequency: freq, weekdays: days.slice(0, freq),
-      model, objectives: objectives.split(',').map((s) => s.trim()).filter(Boolean),
-      last_offer_by: 'student', status: 'pending',
-    })
-    // Marca link_status = pending
-    await supabase.from('profiles').update({ link_status: 'pending' }).eq('id', profile.id)
-    setSaving(false)
-    onSent()
+    try {
+      // Crear la invitación
+      const { data: inviteData, error: inviteError } = await supabase.from('invites').insert({
+        student_id: profile.id, teacher_id: teacher.id,
+        format, amount: Number(amount), frequency: freq, weekdays: days.slice(0, freq),
+        model, objectives: objectives.split(',').map((s) => s.trim()).filter(Boolean),
+        last_offer_by: 'student', status: 'pending',
+      }).select()
+      
+      if (inviteError) throw inviteError
+
+      // Actualizar link_status
+      await supabase.from('profiles').update({ link_status: 'pending' }).eq('id', profile.id)
+
+      // Enviar email de invitación
+      if (inviteData && inviteData.length > 0) {
+        const invite = inviteData[0]
+        await supabase.functions.invoke('send-invitation-email', {
+          body: {
+            invite_id: invite.id,
+            student_email: profile.email,
+            student_name: profile.full_name || 'Student',
+            teacher_name: teacher.full_name || 'Teacher',
+            language: i18n.language,
+          },
+        })
+      }
+    } catch (err) {
+      console.error('Error sending invitation:', err)
+    } finally {
+      setSaving(false)
+      onSent()
+    }
   }
 
   return (
