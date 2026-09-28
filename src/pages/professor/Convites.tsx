@@ -58,22 +58,12 @@ export function ConvitesPage() {
       setLimiteAvisado(true)
       return
     }
-    // Vincula aluno + cria 1ª mensalidade
-    const dueDay = 5
-    const today = new Date()
-    const due = new Date(today.getFullYear(), today.getMonth(), dueDay)
-    if (due <= today) due.setMonth(due.getMonth() + 1)
-
+    // aceptar_convite vincula al alumno y crea la 1ª mensualidad.
     // El vínculo va por función: el alumno todavía no es suyo, así que la
     // escritura directa sobre su perfil la filtra RLS sin devolver error.
     const { error } = await supabase.rpc('aceptar_convite', { convite_id: inv.id })
     if (error) { setErrorAccion(mensajeError(error)); return }
 
-    await supabase.from('charges').insert({
-      teacher_id: profile!.id, student_id: inv.student_id,
-      format: (inv.format ?? 'monthly'), amount: Number(inv.amount ?? 0),
-      due_date: due.toISOString().slice(0, 10), status: 'pending',
-    })
     await supabase.from('notifications').insert({
       user_id: inv.student_id, type: 'invite', ...aviso('inviteAccepted', { who: profile!.full_name }),
     })

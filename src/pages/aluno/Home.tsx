@@ -337,11 +337,6 @@ export function AlunoHome() {
             if (error) { setErrorConvite(mensajeError(error)); return }
             setCounter(null)
 
-            const dueDate = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10)
-            await supabase.from('charges').insert({
-              teacher_id: inv.teacher_id, student_id: profile.id,
-              format: cur.format, amount: cur.amount, due_date: dueDate, status: 'pending',
-            })
             await supabase.from('notifications').insert({
               user_id: inv.teacher_id, type: 'invite',
               ...aviso('counterAccepted', { who: profile.full_name }),
