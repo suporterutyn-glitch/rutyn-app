@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, User as UserIcon, MessageCircle, MoreVertical, Pause, Play, UserMinus, FileText, TrendingUp } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
+import { Evaluacion } from '@/components/evaluacion/Evaluacion'
 import { currencyOf, formatMoney } from '@/lib/plans'
 import { ConfirmDialog, ConfirmConMotivo } from '@/components/ConfirmDialog'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
@@ -213,15 +214,8 @@ export function AlunoPerfilPage() {
         />
       )}
 
-      {tab === 'avaliacoes' && (
-        <div className="flex flex-col gap-2">
-          <button onClick={() => nav(`/professor/avaliacoes/${id}`)} className="btn-primary-pill">
-            {t('alunos:perfil.openAssessment')}
-          </button>
-          <button onClick={() => nav(`/professor/anamnese/${id}`)} className="btn-outline-white h-11 rounded-btn-pill">
-            {t('alunos:perfil.anamneses')}
-          </button>
-        </div>
+      {tab === 'avaliacoes' && id && me?.id && (
+        <Evaluacion studentId={id} teacherId={me.id} modo="profesor" />
       )}
 
       {confirmando === 'suspender' && (

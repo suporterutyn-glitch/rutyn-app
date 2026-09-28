@@ -8,12 +8,12 @@ export function bmi(weightKg?: number | null, heightCm?: number | null) {
 
 /** label es una clave de traducción. */
 export function bmiClass(imc: number) {
-  if (imc < 18.5) return { label: 'avaliacao:under', color: '#42A5F5' }
-  if (imc < 25) return { label: 'avaliacao:normal', color: '#7CB342' }
-  if (imc < 30) return { label: 'avaliacao:over', color: '#E6A23C' }
-  if (imc < 35) return { label: 'avaliacao:ob1', color: '#FF7043' }
-  if (imc < 40) return { label: 'avaliacao:ob2', color: '#F44336' }
-  return { label: 'avaliacao:ob3', color: '#B71C1C' }
+  if (imc < 18.5) return { label: 'avaliacao:under', color: '#FFA726' }
+  if (imc < 25) return { label: 'avaliacao:normal', color: '#8BC34A' }
+  if (imc < 30) return { label: 'avaliacao:over', color: '#FFA726' }
+  if (imc < 35) return { label: 'avaliacao:ob1', color: '#EF5350' }
+  if (imc < 40) return { label: 'avaliacao:ob2', color: '#EF5350' }
+  return { label: 'avaliacao:ob3', color: '#EF5350' }
 }
 
 // FC máxima estimada — Tanaka (2001)
@@ -54,4 +54,22 @@ export function whr(waist?: number | null, hips?: number | null, isMale = true) 
 export function leanMass(weightKg?: number | null, fatPct?: number | null) {
   if (!weightKg || fatPct == null) return null
   return Math.round(weightKg * (1 - fatPct / 100) * 10) / 10
+}
+
+/** Años cumplidos a hoy desde una fecha "aaaa-mm-dd". */
+export function edadDesde(nacimiento?: string | null) {
+  if (!nacimiento) return null
+  const [a, m, d] = nacimiento.split('-').map(Number)
+  const hoy = new Date()
+  let edad = hoy.getFullYear() - a
+  if (hoy.getMonth() + 1 < m || (hoy.getMonth() + 1 === m && hoy.getDate() < d)) edad--
+  return edad >= 0 ? edad : null
+}
+
+/** Número escrito por el usuario: acepta coma decimal. Vacío = null; inválido = NaN. */
+export function leerNumero(txt: string) {
+  const s = txt.trim().replace(',', '.')
+  if (!s) return null
+  const n = Number(s)
+  return Number.isFinite(n) ? n : NaN
 }
