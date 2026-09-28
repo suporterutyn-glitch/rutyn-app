@@ -1,44 +1,75 @@
-// Edge Function: enviar emails vía Gmail SMTP
+// Edge Function: enviar emails vía Postfix en VPS (relay Gmail)
 // Deploy: supabase functions deploy send-email --no-verify-jwt
 
 // deno-lint-ignore-file
 // @ts-ignore
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
-// @ts-ignore
-import { SmtpClient } from 'https://deno.land/x/smtp@v0.16.0/mod.ts'
 
-const SMTP_HOST = 'smtp.gmail.com'
-const SMTP_PORT = 465
-const SMTP_USER = 'suporte.rutyn@gmail.com'
-const SMTP_PASS = Deno.env.get('GMAIL_PASSWORD')!
-const FROM = 'suporte.rutyn@gmail.com'
+const VPS_SMTP = Deno.env.get('VPS_SMTP_HOST') || '179.197.67.10'
+const VPS_PORT = 25
+const FROM = 'suporte@rutyn.com.br'
 const FROM_NAME = 'Rutyn'
 
-interface EmailOpts {
-  to: string
-  toName: string
-  subject: string
-  html: string
-}
+async function enviarSMTP(opts: { to: string; subject: string; html: string }): Promise<void> {
+  // Construir email SMTP manualmente
+  const headers = [
+    `From: ${FROM_NAME} <${FROM}>`,
+    `To: ${opts.to}`,
+    `Subject: ${opts.subject}`,
+    'MIME-Version: 1.0',
+    'Content-Type: text/html; charset=utf-8',
+    'Content-Transfer-Encoding: quoted-printable',
+    '',
+  ].join('\r\n')
 
-async function enviar(opts: EmailOpts): Promise<void> {
-  const client = new SmtpClient()
-  try {
-    await client.connectTLS({ hostname: SMTP_HOST, port: SMTP_PORT })
-    await client.authenticate(SMTP_USER, SMTP_PASS)
-    await client.send({
-      from: `${FROM_NAME} <${FROM}>`,
-      to: `${opts.toName} <${opts.to}>`,
-      subject: opts.subject,
-      content: opts.html,
-      html: true,
-    })
-    await client.close()
-    console.log('📧 enviado a', opts.to)
-  } catch (e) {
-    console.error('SMTP error:', e)
-    throw e
+  const body = headers + '\r\n' + opts.html
+
+  // Conectar a Postfix en el VPS
+  const conn = await Deno.connect({ hostname: VPS_SMTP, port: VPS_PORT })
+  const encoder = new TextEncoder()
+  const decoder = new TextDecoder()
+
+  const read = async () => {
+    const buf = new Uint8Array(1024)
+    const n = await conn.read(buf)
+    if (n === null) throw new Error('connection closed')
+    return decoder.decode(buf.slice(0, n))
   }
+
+  const write = (s: string) => conn.writeSync(encoder.encode(s + '\r\n'))
+
+  try {
+    // SMTP handshake
+    let res = await read()
+    if (!res.startsWith('220')) throw new Error('SMTP: ' + res)
+
+    write(`EHLO rutyn-app`)
+    res = await read()
+
+    write(`MAIL FROM:<${FROM}>`)
+    res = await read()
+    if (!res.startsWith('250')) throw new Error('MAIL FROM: ' + res)
+
+    write(`RCPT TO:<${opts.to}>`)
+    res = await read()
+    if (!res.startsWith('250')) throw new Error('RCPT TO: ' + res)
+
+    write(`DATA`)
+    res = await read()
+    if (!res.startsWith('354')) throw new Error('DATA: ' + res)
+
+    write(body)
+    write('.')
+    res = await read()
+    if (!res.startsWith('250')) throw new Error('send: ' + res)
+
+    write(`QUIT`)
+    await read()
+  } finally {
+    conn.close()
+  }
+
+  console.log('📧 enviado a', opts.to)
 }
 
 // @ts-ignore
@@ -57,51 +88,22 @@ Deno.serve(async (req: Request) => {
   if (!prof) return new Response(JSON.stringify({ error: 'profile not found' }), { status: 404 })
 
   try {
+    let subject = ''
+    let html = ''
+
     if (action === 'payment_confirmed') {
       const moneda = currency === 'BRL' ? 'R$' : '$'
       const monto = (amount / 100).toFixed(2)
-      await enviar({
-        to: prof.email,
-        toName: prof.full_name || 'Profesor',
-        subject: `Pago confirmado - Rutyn ${plan.toUpperCase()}`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #445B21;">¡Hola ${prof.full_name}!</h2>
-            <p>Tu pago fue procesado correctamente.</p>
-            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
-              <p><strong>Plan:</strong> ${plan.toUpperCase()}</p>
-              <p><strong>Monto:</strong> ${moneda} ${monto}</p>
-            </div>
-            <p>Tu plan está activo y listo para usar.</p>
-            <p><a href="https://app.rutyn.com.br" style="background: #7CB342; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; display: inline-block;">Ir a Rutyn</a></p>
-            <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
-            <p style="font-size: 12px; color: #666;">© 2025 Rutyn. Todos los derechos reservados.</p>
-          </div>
-        `,
-      })
+      subject = `Pago confirmado - Rutyn ${plan.toUpperCase()}`
+      html = `<div style="font-family: Arial, sans-serif; max-width: 600px;"><h2 style="color: #445B21;">¡Hola ${prof.full_name}!</h2><p>Tu pago fue procesado correctamente.</p><div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;"><p><strong>Plan:</strong> ${plan.toUpperCase()}</p><p><strong>Monto:</strong> ${moneda} ${monto}</p></div><p><a href="https://app.rutyn.com.br" style="background: #7CB342; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; display: inline-block;">Ir a Rutyn</a></p></div>`
     } else if (action === 'payment_failed') {
-      await enviar({
-        to: prof.email,
-        toName: prof.full_name || 'Profesor',
-        subject: '⚠️ Falló el pago de tu plan Rutyn',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #D32F2F;">Hola ${prof.full_name}</h2>
-            <p>No pudimos cobrar tu plan este mes.</p>
-            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107;">
-              <p><strong>Posibles razones:</strong></p>
-              <ul>
-                <li>Tu tarjeta expiró</li>
-                <li>Fondos insuficientes</li>
-                <li>Tu banco rechazó la transacción</li>
-              </ul>
-            </div>
-            <p>Por favor, <a href="https://app.rutyn.com.br/professor/assinatura" style="color: #7CB342; font-weight: bold;">actualiza tu método de pago</a> para no perder acceso.</p>
-            <p style="font-size: 12px; color: #666;">Si el problema persiste, contactanos a suporte.rutyn@gmail.com</p>
-          </div>
-        `,
-      })
+      subject = '⚠️ Falló el pago de tu plan Rutyn'
+      html = `<div style="font-family: Arial, sans-serif; max-width: 600px;"><h2 style="color: #D32F2F;">Hola ${prof.full_name}</h2><p>No pudimos cobrar tu plan este mes.</p><div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107;"><p><strong>Posibles razones:</strong></p><ul><li>Tu tarjeta expiró</li><li>Fondos insuficientes</li><li>Tu banco rechazó la transacción</li></ul></div><p><a href="https://app.rutyn.com.br/professor/assinatura" style="color: #7CB342; font-weight: bold;">Actualiza tu método de pago</a> para no perder acceso.</p></div>`
     }
+
+    if (!subject || !html) return new Response(JSON.stringify({ error: 'invalid action' }), { status: 400 })
+
+    await enviarSMTP({ to: prof.email, subject, html })
     return new Response(JSON.stringify({ ok: true }))
   } catch (e) {
     console.error('send-email', action, e)
