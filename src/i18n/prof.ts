@@ -20,6 +20,7 @@ export default textos({
     appt: {
       training: 'Treino', assessment: 'Avaliação', meeting: 'Reunião', other: 'Outro', title: 'Novo Compromisso', name: 'Título', namePh: 'Ex: Treino de peito', type: 'Tipo',
       date: 'Data', time: 'Hora', studentOpt: 'Aluno (opcional)', none: 'Nenhum', notify: 'Notificar aluno', notes: 'Observações', save: 'Salvar Compromisso', saving: 'Salvando…',
+      nameRequired: 'Por favor, preencha o título do compromisso', errorSaving: 'Erro ao salvar compromisso',
     },
     notif: {
       title: 'Nova notificação', name: 'Título', namePh: 'Ex: Aula cancelada', message: 'Mensagem', messagePh: 'Detalhes...', clear: 'Limpar', selectAll: 'Selecionar todos',
@@ -46,6 +47,7 @@ export default textos({
     appt: {
       training: 'Entreno', assessment: 'Evaluación', meeting: 'Reunión', other: 'Otro', title: 'Nuevo Compromiso', name: 'Título', namePh: 'Ej: Entreno de pecho', type: 'Tipo',
       date: 'Fecha', time: 'Hora', studentOpt: 'Alumno (opcional)', none: 'Ninguno', notify: 'Notificar al alumno', notes: 'Observaciones', save: 'Guardar Compromiso', saving: 'Guardando…',
+      nameRequired: 'Por favor, rellena el título del compromiso', errorSaving: 'Error al guardar el compromiso',
     },
     notif: {
       title: 'Nueva notificación', name: 'Título', namePh: 'Ej: Clase cancelada', message: 'Mensaje', messagePh: 'Detalles...', clear: 'Limpiar', selectAll: 'Seleccionar todos',
@@ -72,6 +74,7 @@ export default textos({
     appt: {
       training: 'Workout', assessment: 'Assessment', meeting: 'Meeting', other: 'Other', title: 'New Appointment', name: 'Title', namePh: 'E.g.: Chest workout', type: 'Type',
       date: 'Date', time: 'Time', studentOpt: 'Student (optional)', none: 'None', notify: 'Notify student', notes: 'Notes', save: 'Save Appointment', saving: 'Saving…',
+      nameRequired: 'Please fill in the appointment title', errorSaving: 'Error saving appointment',
     },
     notif: {
       title: 'New notification', name: 'Title', namePh: 'E.g.: Class canceled', message: 'Message', messagePh: 'Details...', clear: 'Clear', selectAll: 'Select all',

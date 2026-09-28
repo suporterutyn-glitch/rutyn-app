@@ -31,6 +31,7 @@ export function NovoCompromissoPage() {
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const [errorAviso, setErrorAviso] = useState<string | null>(null)
+  const [validationError, setValidationError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!profile?.id) return
@@ -42,7 +43,18 @@ export function NovoCompromissoPage() {
   }, [profile?.id])
 
   async function save() {
-    if (!profile?.id || !title.trim()) return
+    setValidationError(null)
+
+    if (!title.trim()) {
+      setValidationError(t('prof:appt.nameRequired'))
+      return
+    }
+
+    if (!profile?.id) {
+      setValidationError(t('prof:appt.errorSaving'))
+      return
+    }
+
     setSaving(true)
     const startsAt = new Date(`${date}T${time}:00`).toISOString()
     const { data } = await supabase.from('appointments').insert({
@@ -109,6 +121,12 @@ export function NovoCompromissoPage() {
           <textarea className="input-dark h-24 py-3 resize-none" value={notes} onChange={(e) => setNotes(e.target.value)} />
         </Field>
       </div>
+
+      {validationError && (
+        <div className="mt-4 p-3 bg-danger/10 border border-danger rounded-lg text-danger text-rt-13 font-semibold">
+          {validationError}
+        </div>
+      )}
 
       <div className="mt-8">
         <button className="btn-save" disabled={saving || !title.trim()} onClick={save}>
