@@ -25,6 +25,7 @@ export default textos({
     notif: {
       title: 'Nova notificação', name: 'Título', namePh: 'Ex: Aula cancelada', message: 'Mensagem', messagePh: 'Detalhes...', clear: 'Limpar', selectAll: 'Selecionar todos',
       noActive: 'Nenhum aluno ativo.', send: 'Enviar', sending: 'Enviando…', recipients: 'Destinatários ({{n}}/{{total}})', sentN: '{{n}} enviadas ✓',
+      nameRequired: 'Por favor, preencha o título da notificação', selectStudents: 'Por favor, selecione pelo menos um aluno', errorSaving: 'Erro ao enviar notificação',
     },
     alunos: { addStudent: 'Adicionar aluno', clear: 'Limpar', createError: 'Erro ao criar aluno' },
   },
@@ -52,6 +53,7 @@ export default textos({
     notif: {
       title: 'Nueva notificación', name: 'Título', namePh: 'Ej: Clase cancelada', message: 'Mensaje', messagePh: 'Detalles...', clear: 'Limpiar', selectAll: 'Seleccionar todos',
       noActive: 'Ningún alumno activo.', send: 'Enviar', sending: 'Enviando…', recipients: 'Destinatarios ({{n}}/{{total}})', sentN: '{{n}} enviadas ✓',
+      nameRequired: 'Por favor, rellena el título de la notificación', selectStudents: 'Por favor, selecciona al menos un alumno', errorSaving: 'Error al enviar la notificación',
     },
     alunos: { addStudent: 'Agregar alumno', clear: 'Limpiar', createError: 'Error al crear el alumno' },
   },
@@ -79,6 +81,7 @@ export default textos({
     notif: {
       title: 'New notification', name: 'Title', namePh: 'E.g.: Class canceled', message: 'Message', messagePh: 'Details...', clear: 'Clear', selectAll: 'Select all',
       noActive: 'No active students.', send: 'Send', sending: 'Sending…', recipients: 'Recipients ({{n}}/{{total}})', sentN: '{{n}} sent ✓',
+      nameRequired: 'Please fill in the notification title', selectStudents: 'Please select at least one student', errorSaving: 'Error sending notification',
     },
     alunos: { addStudent: 'Add student', clear: 'Clear', createError: 'Error creating student' },
   },

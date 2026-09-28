@@ -18,6 +18,7 @@ export function CriarNotificacaoPage() {
   const [body, setBody] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [validationError, setValidationError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!profile?.id) return
@@ -37,7 +38,23 @@ export function CriarNotificacaoPage() {
   }
 
   async function send() {
-    if (!profile?.id || !title.trim() || selected.size === 0) return
+    setValidationError(null)
+
+    if (!title.trim()) {
+      setValidationError(t('prof:notif.nameRequired'))
+      return
+    }
+
+    if (selected.size === 0) {
+      setValidationError(t('prof:notif.selectStudents'))
+      return
+    }
+
+    if (!profile?.id) {
+      setValidationError(t('prof:notif.errorSaving'))
+      return
+    }
+
     setSaving(true)
     await supabase.from('notifications').insert(Array.from(selected).map((uid) => ({
       user_id: uid, type: 'info', title: title.trim(), body: body.trim() || null,
@@ -94,6 +111,12 @@ export function CriarNotificacaoPage() {
           )}
         </div>
       </div>
+
+      {validationError && (
+        <div className="mt-4 p-3 bg-danger/10 border border-danger rounded-lg text-danger text-rt-13 font-semibold">
+          {validationError}
+        </div>
+      )}
 
       <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-app px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+16px+80px*var(--con-nav))] bg-surface-app/95 backdrop-blur">
         <button onClick={send} disabled={saving || !title.trim() || selected.size === 0} className="btn-save disabled:opacity-50">
