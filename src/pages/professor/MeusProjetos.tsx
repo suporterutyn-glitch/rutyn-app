@@ -43,57 +43,58 @@ export function MeusProjetosPage() {
   const props = { query, filtro }
 
   return (
-    <div className="pt-[calc(env(safe-area-inset-top)+16px)]">
-      <div className="px-4 flex items-center justify-between mb-4">
+    <div className="pt-[calc(env(safe-area-inset-top)+16px)] px-4 pb-24 md:max-w-form md:mx-auto w-full">
+      {/* Header */}
+      <div className="mb-6">
         <h1 className="text-white text-rt-20 font-bold">{t('projects:title')}</h1>
       </div>
 
-      <div className="overflow-x-auto no-scrollbar mb-4">
-        <div className="flex gap-2 px-4 pb-1">
-          {FILTROS.map((f) => (
-            <button
-              key={f.key}
-              onClick={() => setFiltro(f.key)}
-              className={
-                'shrink-0 px-5 h-10 rounded-btn-pill border text-rt-13 font-semibold transition ' +
-                (filtro === f.key
-                  ? 'bg-brand border-brand text-white'
-                  : 'bg-transparent border-grey-700 text-white/80')
-              }
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
+      {/* Filtros: Todos / Favoritos / Mis Creaciones */}
+      <div className="flex flex-wrap gap-2 mb-5 md:justify-center">
+        {FILTROS.map((f) => (
+          <button
+            key={f.key}
+            onClick={() => setFiltro(f.key)}
+            className={
+              'px-5 h-10 rounded-btn-pill border text-rt-13 font-semibold transition ' +
+              (filtro === f.key
+                ? 'bg-brand border-brand text-white'
+                : 'bg-transparent border-grey-700 text-white/80')
+            }
+          >
+            {f.label}
+          </button>
+        ))}
       </div>
 
-      <div className="px-4">
+      {/* Buscador */}
+      <div className="mb-5">
         <SearchBar value={query} onChange={setQuery} placeholder={placeholders[tab]} />
       </div>
 
-      <div className="overflow-x-auto no-scrollbar mb-4">
-        <div className="flex gap-2 px-4 pb-1">
-          {TABS.map((x) => {
-            const on = tab === x.key
-            return (
-              <button
-                key={x.key}
-                onClick={() => setTab(x.key)}
-                className={
-                  'shrink-0 px-4 h-9 rounded-card border text-rt-12 font-semibold transition ' +
-                  (on
-                    ? 'bg-brand border-brand text-white'
-                    : 'bg-surface-raised border-grey-700 text-grey-400')
-                }
-              >
-                {x.label}
-              </button>
-            )
-          })}
-        </div>
+      {/* Categorías: Rutinas / Ejercicios / Dietas / etc */}
+      <div className="flex flex-wrap gap-2 mb-6 md:justify-center">
+        {TABS.map((x) => {
+          const on = tab === x.key
+          return (
+            <button
+              key={x.key}
+              onClick={() => setTab(x.key)}
+              className={
+                'px-4 h-9 rounded-card border text-rt-12 font-semibold transition ' +
+                (on
+                  ? 'bg-brand border-brand text-white'
+                  : 'bg-surface-raised border-grey-700 text-grey-400')
+              }
+            >
+              {x.label}
+            </button>
+          )
+        })}
       </div>
 
-      <div className="px-4">
+      {/* Contenido */}
+      <div>
         {tab === 'rotinas' && <RoutinesTab {...props} />}
         {tab === 'exercicios' && <ExercisesTab {...props} />}
         {tab === 'dietas' && <DietsTab {...props} />}
