@@ -46,8 +46,11 @@ export function etiquetaCorte(k: string, g: Granularidad, locale: string) {
     : d.toLocaleDateString(locale, { day: '2-digit', month: 'short' }).replace('.', '')
 }
 
-/** Agrupa filas por corte: dentro de cada corte vale la medición más reciente (las filas deben venir en orden de fecha). */
-export function agrupar<T extends Record<string, unknown>>(filas: T[], campoFecha: keyof T, campo: keyof T, p: Periodo) {
+/**
+ * Agrupa filas por corte: dentro de cada corte vale la medición más reciente (filas en orden de fecha)
+ * o, con modo 'max', el valor más alto.
+ */
+export function agrupar<T extends Record<string, unknown>>(filas: T[], campoFecha: keyof T, campo: keyof T, p: Periodo, modo: 'ultimo' | 'max' = 'ultimo') {
   const g = granularidad(p)
   const cortes = cortesDe(p, g)
   const pos = new Map(cortes.map((k, i) => [k, i]))
@@ -58,7 +61,7 @@ export function agrupar<T extends Record<string, unknown>>(filas: T[], campoFech
     const v = f[campo]
     if (v == null) continue
     const i = pos.get(corteDe(fecha, g))
-    if (i != null) porCorte.set(i, Number(v))
+    if (i != null) porCorte.set(i, modo === 'max' ? Math.max(porCorte.get(i) ?? -Infinity, Number(v)) : Number(v))
   }
   return { cortes, g, puntos: [...porCorte.entries()].map(([x, y]) => ({ x, y })).sort((a, b) => a.x - b.x) }
 }

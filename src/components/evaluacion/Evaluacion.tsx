@@ -12,13 +12,14 @@ import { localeDe, hoyLocal } from '@/lib/fechas'
 import { detalleError } from '@/lib/errores'
 import { bmi, bmiClass, maxHR, edadDesde } from '@/lib/assessment'
 import { ModalFicha } from './ModalFicha'
+import { SeccionFotos, firmarUrls, type FotoEval } from './Fotos'
+import { SeccionCarga } from './Carga'
 import { SeccionPerimetria, ModalPerimetria, SeccionGrasa, ModalGrasa, type RegistroPerimetria, type RegistroGrasa } from './Composicion'
 import { SeccionRM, ModalRM, BorrarRM, SeccionAerobica, ModalAerobico, SeccionMuscular, ModalMuscular, type PruebaRM, type PruebaAerobica, type PruebaMusc } from './Pruebas'
 
 export const SECCIONES = ['perfil', 'rm', 'aerobica', 'muscular', 'perimetria', 'fotos', 'gordura', 'carga', 'anamnese'] as const
 export type Seccion = typeof SECCIONES[number]
-// Las secciones aparecen a medida que se construyen (ver moreSoon).
-const IMPLEMENTADAS: Seccion[] = ['perfil', 'rm', 'aerobica', 'muscular', 'perimetria', 'gordura', 'anamnese']
+const IMPLEMENTADAS: Seccion[] = [...SECCIONES]
 const SOLO_LECTURA: Seccion[] = ['carga']
 const SIN_EDITAR: Seccion[] = ['fotos', 'carga']
 
@@ -69,6 +70,7 @@ export function Evaluacion({ studentId, teacherId, modo }: { studentId: string; 
   const [muscular, setMuscular] = useState<PruebaMusc | null>(null)
   const [perimetria, setPerimetria] = useState<RegistroPerimetria[]>([])
   const [grasa, setGrasa] = useState<RegistroGrasa | null>(null)
+  const [fotos, setFotos] = useState<FotoEval[]>([])
   const [anamnesis, setAnamnesis] = useState<Anamnesis[]>([])
   const esProfe = modo === 'profesor'
 
@@ -91,7 +93,7 @@ export function Evaluacion({ studentId, teacherId, modo }: { studentId: string; 
     setFicha(data as Ficha)
     setEstado('listo')
     const f = (tabla: string) => supabase.from(tabla).select('*').eq('student_id', studentId).eq('teacher_id', teacherId)
-    const [an, rm, ae, mu, pe, gr] = await Promise.all([
+    const [an, rm, ae, mu, pe, gr, fo] = await Promise.all([
       supabase.from('anamnesis_answers').select('id,created_at,submitted_at,anamnesis_templates(name,name_es,name_en)')
         .eq('student_id', studentId).eq('teacher_id', teacherId).order('created_at', { ascending: false }),
       f('assessment_rm_tests').order('created_at'),
@@ -99,6 +101,7 @@ export function Evaluacion({ studentId, teacherId, modo }: { studentId: string; 
       f('assessment_muscular_tests').order('tested_on', { ascending: false }).order('created_at', { ascending: false }).limit(1),
       f('assessment_perimetry').order('measured_on').limit(200),
       f('assessment_bodyfat').order('tested_on', { ascending: false }).order('created_at', { ascending: false }).limit(1),
+      f('assessment_photos'),
     ])
     setAnamnesis((an.data as unknown as Anamnesis[]) ?? [])
     setRms((rm.data as PruebaRM[]) ?? [])
@@ -106,6 +109,7 @@ export function Evaluacion({ studentId, teacherId, modo }: { studentId: string; 
     setMuscular(((mu.data as PruebaMusc[]) ?? [])[0] ?? null)
     setPerimetria((pe.data as RegistroPerimetria[]) ?? [])
     setGrasa(((gr.data as RegistroGrasa[]) ?? [])[0] ?? null)
+    setFotos(await firmarUrls((fo.data as FotoEval[]) ?? []))
   }
   useEffect(() => { void cargar() }, [studentId, teacherId])
 
@@ -185,12 +189,12 @@ export function Evaluacion({ studentId, teacherId, modo }: { studentId: string; 
             {s === 'muscular' && <SeccionMuscular prueba={muscular} ficha={ficha} puedeEditar={puedeEditar('muscular')} onEditar={() => setEditando('muscular')} />}
             {s === 'perimetria' && <SeccionPerimetria registros={perimetria} ficha={ficha} puedeEditar={puedeEditar('perimetria')} onEditar={() => setEditando('perimetria')} />}
             {s === 'gordura' && <SeccionGrasa registro={grasa} ficha={ficha} puedeEditar={puedeEditar('gordura')} onEditar={() => setEditando('gordura')} />}
+            {s === 'fotos' && <SeccionFotos fotos={fotos} base={base} puedeEditar={puedeEditar('fotos')} onCambio={() => void cargar()} />}
+            {s === 'carga' && <SeccionCarga studentId={studentId} />}
             {s === 'anamnese' && <SeccionAnamnesis lista={anamnesis} esProfe={esProfe} studentId={studentId} />}
           </TarjetaSeccion>
         ))}
       </div>
-
-      <p className="text-white/40 text-rt-11 text-center mt-6 px-4">{t('evaluacion:moreSoon')}</p>
 
       {editando === 'rm' && (
         <ModalRM prueba={rmEditando} base={base} onCerrar={() => setEditando(null)} onGuardado={() => { setEditando(null); void cargar() }} />
