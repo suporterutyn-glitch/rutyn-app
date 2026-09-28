@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
 import {
   User, Dumbbell, Activity, PersonStanding, Ruler, Camera, PieChart, TrendingUp, ClipboardList,
   ChevronLeft, ChevronsUpDown, ChevronsDownUp, Pencil, Lock, LockOpen, Eye, EyeOff, UserPlus, GraduationCap,
@@ -12,6 +11,7 @@ import { localeDe, hoyLocal } from '@/lib/fechas'
 import { detalleError } from '@/lib/errores'
 import { bmi, bmiClass, maxHR, edadDesde } from '@/lib/assessment'
 import { ModalFicha } from './ModalFicha'
+import { SeccionAnamnesis, type Anamnesis } from './Anamnesis'
 import { SeccionFotos, firmarUrls, type FotoEval } from './Fotos'
 import { SeccionCarga } from './Carga'
 import { SeccionPerimetria, ModalPerimetria, SeccionGrasa, ModalGrasa, type RegistroPerimetria, type RegistroGrasa } from './Composicion'
@@ -52,7 +52,6 @@ export type Ficha = {
   updated_by_role: 'teacher' | 'student' | null
 }
 
-type Anamnesis = { id: string; created_at: string; submitted_at: string | null; anamnesis_templates: { name: string; name_es: string | null; name_en: string | null } | null }
 
 /** Ficha de evaluación física del alumno. La misma pantalla para profesor (edita todo y define permisos) y alumno (ve lo visible, edita lo liberado). */
 export function Evaluacion({ studentId, teacherId, modo }: { studentId: string; teacherId: string; modo: 'profesor' | 'alumno' }) {
@@ -94,7 +93,7 @@ export function Evaluacion({ studentId, teacherId, modo }: { studentId: string; 
     setEstado('listo')
     const f = (tabla: string) => supabase.from(tabla).select('*').eq('student_id', studentId).eq('teacher_id', teacherId)
     const [an, rm, ae, mu, pe, gr, fo] = await Promise.all([
-      supabase.from('anamnesis_answers').select('id,created_at,submitted_at,anamnesis_templates(name,name_es,name_en)')
+      supabase.from('anamnesis_answers').select('*')
         .eq('student_id', studentId).eq('teacher_id', teacherId).order('created_at', { ascending: false }),
       f('assessment_rm_tests').order('created_at'),
       f('assessment_aerobic_tests').order('tested_on', { ascending: false }).order('created_at', { ascending: false }).limit(1),
@@ -103,7 +102,7 @@ export function Evaluacion({ studentId, teacherId, modo }: { studentId: string; 
       f('assessment_bodyfat').order('tested_on', { ascending: false }).order('created_at', { ascending: false }).limit(1),
       f('assessment_photos'),
     ])
-    setAnamnesis((an.data as unknown as Anamnesis[]) ?? [])
+    setAnamnesis((an.data as Anamnesis[]) ?? [])
     setRms((rm.data as PruebaRM[]) ?? [])
     setAerobica(((ae.data as PruebaAerobica[]) ?? [])[0] ?? null)
     setMuscular(((mu.data as PruebaMusc[]) ?? [])[0] ?? null)
@@ -191,7 +190,7 @@ export function Evaluacion({ studentId, teacherId, modo }: { studentId: string; 
             {s === 'gordura' && <SeccionGrasa registro={grasa} ficha={ficha} puedeEditar={puedeEditar('gordura')} onEditar={() => setEditando('gordura')} />}
             {s === 'fotos' && <SeccionFotos fotos={fotos} base={base} puedeEditar={puedeEditar('fotos')} onCambio={() => void cargar()} />}
             {s === 'carga' && <SeccionCarga studentId={studentId} />}
-            {s === 'anamnese' && <SeccionAnamnesis lista={anamnesis} esProfe={esProfe} studentId={studentId} />}
+            {s === 'anamnese' && <SeccionAnamnesis lista={anamnesis} esProfe={esProfe} puedeResponder={ficha.student_editable_sections.includes('anamnese')} base={base} onCambio={() => void cargar()} />}
           </TarjetaSeccion>
         ))}
       </div>
@@ -411,45 +410,6 @@ function Dato({ etiqueta, valor, unidad, className = '' }: { etiqueta: string; v
       <div className="text-white text-rt-16 font-medium break-words">
         {valor}{unidad && valor !== '-' ? <span className="text-white/50 text-rt-12 font-normal"> {unidad}</span> : null}
       </div>
-    </div>
-  )
-}
-
-function SeccionAnamnesis({ lista, esProfe, studentId }: { lista: Anamnesis[]; esProfe: boolean; studentId: string }) {
-  const { t, i18n } = useTranslation()
-  const nav = useNavigate()
-  const lang = i18n.language
-  const nombre = (a: Anamnesis) => {
-    const m = a.anamnesis_templates
-    if (!m) return '—'
-    return (lang.startsWith('es') && m.name_es) || (lang.startsWith('en') && m.name_en) || m.name
-  }
-  return (
-    <div className="flex flex-col gap-3">
-      {lista.length === 0 && <p className="text-white/50 text-rt-13 text-center py-2">{t('evaluacion:anamneseEmpty')}</p>}
-      {lista.map((a) => (
-        <button
-          key={a.id}
-          onClick={() => nav(esProfe ? `/professor/anamnese/${studentId}` : `/aluno/anamnese/${a.id}`)}
-          className="w-full rounded-[12px] bg-[#252525] border border-[#333333] p-3 flex items-center gap-3 text-left"
-        >
-          <ClipboardList size={20} className="text-[#8BC34A] shrink-0" />
-          <span className="flex-1 min-w-0">
-            <span className="block text-white text-rt-14 font-semibold truncate">{nombre(a)}</span>
-            <span className="block text-white/50 text-rt-11">
-              {new Date(a.created_at).toLocaleDateString(localeDe(lang))} · {a.submitted_at ? t('evaluacion:tapToView') : esProfe ? t('evaluacion:anamnesePending') : t('evaluacion:tapToFill')}
-            </span>
-          </span>
-          <span className={'px-2 py-0.5 rounded-[10px] text-rt-10 font-semibold ' + (a.submitted_at ? 'bg-[#8BC34A]/15 text-[#8BC34A]' : 'bg-[#FFA726]/15 text-[#FFA726]')}>
-            {a.submitted_at ? t('evaluacion:anamneseDone') : t('evaluacion:anamnesePending')}
-          </span>
-        </button>
-      ))}
-      {esProfe && (
-        <button onClick={() => nav(`/professor/anamnese/${studentId}`)} className="h-11 rounded-[12px] border border-dashed border-[#8BC34A]/50 text-[#8BC34A] text-rt-13 font-semibold">
-          {t('evaluacion:anamneseManage')}
-        </button>
-      )}
     </div>
   )
 }
