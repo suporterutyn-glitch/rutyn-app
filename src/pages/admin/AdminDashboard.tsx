@@ -17,7 +17,7 @@ type Stats = {
 
 export function AdminDashboardPage() {
   const nav = useNavigate()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<Tab>('dashboard')
@@ -31,8 +31,9 @@ export function AdminDashboardPage() {
 
   // Verificar si es admin
   useEffect(() => {
-    if (!user?.email) {
-      nav('/')
+    if (authLoading) return
+    if (!user) {
+      nav('/login')
       return
     }
     void (async () => {
@@ -40,7 +41,7 @@ export function AdminDashboardPage() {
         const { data, error } = await supabase
           .from('admins')
           .select('id')
-          .eq('email', user.email)
+          .eq('user_id', user.id)
           .maybeSingle()
 
         if (error || !data) {
@@ -54,7 +55,7 @@ export function AdminDashboardPage() {
         nav('/')
       }
     })()
-  }, [user?.email, nav])
+  }, [authLoading, user, nav])
 
   // Cargar estadísticas
   async function loadStats() {
