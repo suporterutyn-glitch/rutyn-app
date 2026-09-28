@@ -47,13 +47,13 @@ export function AdminDashboardPage() {
   }, [authLoading, user, nav, cargarPerfiles])
 
   if (!isAdmin || !perfiles) {
-    return <div className="flex items-center justify-center min-h-screen bg-surface-app text-white text-rt-16">Cargando...</div>
+    return <div className="w-full flex items-center justify-center min-h-screen bg-surface-app text-white text-rt-16">Cargando...</div>
   }
 
   const actual = MENU.find((m) => m.id === seccion)!
 
   return (
-    <div className="min-h-screen bg-surface-app md:flex">
+    <div className="w-full min-h-screen bg-surface-app md:flex">
       <aside className={
         'fixed md:sticky top-0 left-0 z-[70] h-screen w-64 shrink-0 bg-surface-card border-r border-surface-line flex flex-col transition-transform ' +
         (menuAbierto ? 'translate-x-0' : '-translate-x-full md:translate-x-0')
