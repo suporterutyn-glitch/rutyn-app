@@ -74,11 +74,27 @@ Deno.serve(async (req: Request) => {
       const { data: p } = await admin.from('profiles').select('id,plan').eq('stripe_customer_id', inv.customer).maybeSingle()
       if (p && p.plan !== 'free') {
         await admin.from('notifications').insert({ user_id: p.id, ...aviso('planActive', { plan: p.plan }), type: 'success' })
+        // Enviar email de confirmación
+        const url = new URL(Deno.env.get('SUPABASE_URL')! + '/functions/v1/send-email')
+        await fetch(url, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!}` },
+          body: JSON.stringify({ action: 'payment_confirmed', userId: p.id, plan: p.plan, amount: inv.total, currency: inv.currency })
+        }).catch(e => console.error('send-email failed', e))
       }
     } else if (event.type === 'invoice.payment_failed') {
       const inv = event.data.object
       const { data: p } = await admin.from('profiles').select('id').eq('stripe_customer_id', inv.customer).maybeSingle()
-      if (p) await admin.from('notifications').insert({ user_id: p.id, ...aviso('paymentFailed', {}), type: 'warning' })
+      if (p) {
+        await admin.from('notifications').insert({ user_id: p.id, ...aviso('paymentFailed', {}), type: 'warning' })
+        // Enviar email de alerta
+        const url = new URL(Deno.env.get('SUPABASE_URL')! + '/functions/v1/send-email')
+        await fetch(url, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!}` },
+          body: JSON.stringify({ action: 'payment_failed', userId: p.id })
+        }).catch(e => console.error('send-email failed', e))
+      }
     } else if (event.type === 'charge.dispute.created') {
       const charge = event.data.object
       console.warn('dispute', charge.id, charge.amount, charge.currency)
