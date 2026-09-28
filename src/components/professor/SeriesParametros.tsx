@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Trash2, GripVertical, X } from 'lucide-react'
 import {
   PARAMETROS, PARAMETRO_POR_ID, MAX_PARAMETROS_POR_SERIE,
-  etiquetaParametro, valorFormateado, type Parametro,
+  etiquetaParametro, type Parametro,
 } from '@/lib/parametros'
 
 /** Lo que se guarda en series.params: { repetition: '12', load: '40', ... } */
