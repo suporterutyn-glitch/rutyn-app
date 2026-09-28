@@ -83,3 +83,64 @@ export function formatoPlancha(seg: number, sufijoSeg: string) {
   if (seg < 60) return `${seg} ${sufijoSeg}`
   return `${Math.floor(seg / 60)}:${String(seg % 60).padStart(2, '0')}`
 }
+
+// ---- Perimetría ----
+export const MEDIDAS = [
+  { id: 'neck', color: '#78909C' }, { id: 'shoulders', color: '#FFA726' },
+  { id: 'chest', color: '#E53935' }, { id: 'waist', color: '#FF7043' },
+  { id: 'abdomen', color: '#FFEE58' }, { id: 'hips', color: '#AB47BC' },
+  { id: 'biceps_relaxed_l', color: '#8BC34A' }, { id: 'biceps_relaxed_r', color: '#66BB6A' },
+  { id: 'biceps_contracted_l', color: '#1E88E5' }, { id: 'biceps_contracted_r', color: '#42A5F5' },
+  { id: 'forearm_l', color: '#5C6BC0' }, { id: 'forearm_r', color: '#7986CB' },
+  { id: 'thigh_l', color: '#26C6DA' }, { id: 'thigh_r', color: '#4DD0E1' },
+  { id: 'calf_l', color: '#EC407A' }, { id: 'calf_r', color: '#F48FB1' },
+] as const
+export type Medida = typeof MEDIDAS[number]['id']
+
+/** Riesgo por relación cintura/cadera. */
+export function riesgoCinturaCadera(cintura: number | null, cadera: number | null, sexo: Sexo | null) {
+  if (!cintura || !cadera || !sexo) return null
+  const r = cintura / cadera
+  const [bajo, moderado] = sexo === 'M' ? [0.9, 1.0] : [0.8, 0.85]
+  return { relacion: r, riesgo: (r < bajo ? 'low' : r < moderado ? 'moderate' : 'high') as 'low' | 'moderate' | 'high' }
+}
+
+// ---- % de grasa ----
+export type ProtocoloGrasa = 'pollock3' | 'pollock7' | 'jp3m' | 'jp3f' | 'bia' | 'manual'
+export const PROTOCOLOS_GRASA: ProtocoloGrasa[] = ['pollock3', 'pollock7', 'jp3m', 'jp3f', 'bia', 'manual']
+export type Pliegue = 'chest' | 'midaxillary' | 'triceps' | 'subscapular' | 'abdomen' | 'suprailiac' | 'thigh'
+export type ClaseGrasa = 'essential' | 'athlete' | 'fitness' | 'acceptable' | 'obesity'
+export const COLOR_GRASA: Record<ClaseGrasa, string> = { essential: '#EF5350', athlete: '#4CAF50', fitness: '#8BC34A', acceptable: '#FFC107', obesity: '#EF5350' }
+
+/** Sexo que usa la fórmula: Jackson-Pollock 3 fija el sexo; Pollock 3 usa el de la ficha. */
+export function sexoFormula(p: ProtocoloGrasa, sexo: Sexo | null): Sexo | null {
+  return p === 'jp3m' ? 'M' : p === 'jp3f' ? 'F' : sexo
+}
+
+export function pliegues(p: ProtocoloGrasa, sexo: Sexo | null): Pliegue[] {
+  if (p === 'bia' || p === 'manual') return []
+  if (p === 'pollock7') return ['chest', 'midaxillary', 'triceps', 'subscapular', 'abdomen', 'suprailiac', 'thigh']
+  return sexoFormula(p, sexo) === 'F' ? ['triceps', 'suprailiac', 'thigh'] : ['chest', 'abdomen', 'thigh']
+}
+
+/** % de grasa. Pliegues por Pollock/Jackson-Pollock + Siri; bioimpedancia/manual = valor informado. */
+export function porcentajeGrasa(p: ProtocoloGrasa, valores: Partial<Record<Pliegue, number | null>>, manual: number | null, sexo: Sexo | null, edad: number | null): number | null {
+  if (p === 'bia' || p === 'manual') return manual && manual > 0 ? manual : null
+  const s = sexoFormula(p, sexo)
+  if (!s || edad == null) return null
+  const lista = pliegues(p, sexo).map((k) => valores[k])
+  if (lista.some((v) => !v || v <= 0)) return null
+  const S = (lista as number[]).reduce((a, b) => a + b, 0)
+  const dc = p === 'pollock7'
+    ? (s === 'M' ? 1.112 - 0.00043499 * S + 0.00000055 * S * S - 0.00028826 * edad : 1.097 - 0.00046971 * S + 0.00000056 * S * S - 0.00012828 * edad)
+    : (s === 'M' ? 1.10938 - 0.0008267 * S + 0.0000016 * S * S - 0.0002574 * edad : 1.0994921 - 0.0009929 * S + 0.0000023 * S * S - 0.0001392 * edad)
+  return 495 / dc - 450
+}
+
+export function claseGrasa(pct: number | null, sexo: Sexo | null): ClaseGrasa | null {
+  if (pct == null || !sexo) return null
+  const lim = sexo === 'M' ? [6, 14, 18, 25] : [14, 21, 25, 32]
+  const orden: ClaseGrasa[] = ['essential', 'athlete', 'fitness', 'acceptable', 'obesity']
+  const i = lim.findIndex((l) => pct < l)
+  return orden[i === -1 ? 4 : i]
+}
