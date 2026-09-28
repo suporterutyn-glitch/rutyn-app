@@ -181,7 +181,7 @@ export function NutricaoPage() {
           {meals.length === 0 ? (
             <div className="card-dark p-4 text-white/60 text-rt-13">{t('nutricao:noMeals')}</div>
           ) : (
-            <ul className="flex flex-col gap-3">
+            <ul className="grid grid-cols-1 lg:grid-cols-2 items-start gap-3">
               {meals.map((m, mi) => {
                 const claves = m.foods.map((_, fi) => `${todayIdx}-${mi}-${fi}`)
                 const hechos = claves.filter((k) => marked[k]).length

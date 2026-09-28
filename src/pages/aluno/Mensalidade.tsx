@@ -65,7 +65,7 @@ export function MensalidadePage() {
   const currency = currencyOf(teacher?.country ?? profile?.country)
 
   return (
-    <div className="pt-[calc(env(safe-area-inset-top)+16px)] px-4 pb-24">
+    <div className="pt-[calc(env(safe-area-inset-top)+16px)] px-4 pb-24 md:max-w-form md:mx-auto w-full">
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => nav(-1)} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white">
           <ArrowLeft size={20} />

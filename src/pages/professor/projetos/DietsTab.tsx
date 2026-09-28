@@ -144,7 +144,7 @@ export function DietsTab({ query, filtro, alumno }: { query: string; filtro: Fil
               ? <EmptyState icon={UtensilsCrossed} title={t('projetos:die.noAssigned')} body={t('projetos:die.addFor', { name: alumno.nombre })} />
               : <EmptyState icon={UtensilsCrossed} title={t('projetos:die.none')} body={t('projetos:die.createFirst')} />
       ) : (
-        <ul className="flex flex-col gap-3">
+        <ul className="grid grid-cols-1 lg:grid-cols-2 items-start gap-3">
           {filtered.map((d) => (
             <li
               key={d.id}
@@ -457,7 +457,7 @@ function ClonarDieta({ dieta, onCerrar, onResultado }: { dieta: Dieta; onCerrar:
           ) : lista.length === 0 ? (
             <p className="text-center text-white/60 text-rt-13 py-10">{t('projetos:die.noStudents')}</p>
           ) : (
-            <ul className="flex flex-col gap-3">
+            <ul className="grid grid-cols-1 lg:grid-cols-2 items-start gap-3">
               {lista.map((a, i) => {
                 const on = marcados.includes(a.id)
                 return (
@@ -547,7 +547,7 @@ function AdicionarDieta({ alumno, onCerrar, onCrear, onListo, onError }: {
           ) : modelos.length === 0 ? (
             <p className="text-center text-white/60 text-rt-13 py-8">{t('projetos:die.noTemplates')}</p>
           ) : (
-            <ul className="flex flex-col gap-3">
+            <ul className="grid grid-cols-1 lg:grid-cols-2 items-start gap-3">
               {modelos.map((d) => {
                 const on = elegida === d.id
                 const m = macrosDieta(d)
@@ -611,7 +611,7 @@ function MetaHidratacao({ alumno, onAviso }: { alumno: AlumnoCtx; onAviso: (a: A
 
   return (
     <>
-      <div className="fixed inset-x-0 mx-auto w-full max-w-app px-4 z-30 flex items-center justify-end pointer-events-none [&>*]:pointer-events-auto" style={{ bottom: 'calc(env(safe-area-inset-bottom) + 100px)' }}>
+      <div className="fixed inset-x-0 mx-auto w-full max-w-app px-4 z-30 flex items-center justify-end pointer-events-none [&>*]:pointer-events-auto" style={{ bottom: 'calc(env(safe-area-inset-bottom) + 24px + 76px * var(--con-nav))' }}>
         {abierto && (
           <div className="mr-[-28px] pr-9 pl-4 h-14 rounded-l-full bg-white flex items-center gap-2 shadow-lg">
             <div className="flex flex-col">

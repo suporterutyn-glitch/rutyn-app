@@ -113,7 +113,7 @@ export default {
         "pop-elastic": "pop-elastic 600ms cubic-bezier(0.34,1.56,0.64,1) both"
       },
       spacing: { "nav-pro": "80px", "nav-student": "105px", "sheet-top": "80px" },
-      maxWidth: { app: "430px" }
+      maxWidth: { app: "var(--app-w)", form: "var(--form-w)" }
     }
   },
   plugins: [require("tailwindcss-animate")]

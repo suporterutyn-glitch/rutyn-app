@@ -12,7 +12,7 @@ export function ModalEdicion({ titulo, subtitulo, guardando, error, onGuardar, o
   const { t } = useTranslation()
   return (
     <div className="fixed inset-0 z-50 bg-[#1E1E1E] flex flex-col">
-      <div className="max-w-app w-full mx-auto flex items-start justify-between gap-3 px-6 pt-[calc(env(safe-area-inset-top)+20px)] pb-4">
+      <div className="max-w-form w-full mx-auto flex items-start justify-between gap-3 px-6 pt-[calc(env(safe-area-inset-top)+20px)] pb-4">
         <div className="min-w-0">
           <h2 className="text-white text-rt-20 font-bold">{titulo}</h2>
           {subtitulo && <div className="text-[#8BC34A]/80 text-rt-13 mt-0.5">{subtitulo}</div>}
@@ -22,13 +22,13 @@ export function ModalEdicion({ titulo, subtitulo, guardando, error, onGuardar, o
         </button>
       </div>
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-app mx-auto px-6 pb-6 flex flex-col gap-4">
+        <div className="max-w-form mx-auto px-6 pb-6 flex flex-col gap-4">
           {children}
           {error && <p className="text-[#EF5350] text-rt-13" role="alert">{error}</p>}
         </div>
       </div>
       <div className="border-t border-[#2D2D2D] px-6 pt-3 pb-[calc(env(safe-area-inset-bottom)+16px)]">
-        <div className="max-w-app mx-auto">
+        <div className="max-w-form mx-auto">
           <button onClick={onGuardar} disabled={guardando}
             className="w-full h-[54px] rounded-[27px] bg-gradient-to-b from-[#91C145] to-[#5A8F2F] shadow-[0_4px_12px_rgba(124,179,66,0.3)] text-white text-rt-16 font-bold flex items-center justify-center">
             {guardando ? <span className="w-5 h-5 rounded-full border-2 border-white/40 border-t-white animate-spin" /> : t('evaluacion:save')}

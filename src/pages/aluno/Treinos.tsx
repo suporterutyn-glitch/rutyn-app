@@ -129,7 +129,7 @@ export function TreinosPage() {
       ) : items.length === 0 ? (
         <EmptyState icon={Dumbbell} title={t('aluno:noWorkouts')} body={t('aluno:noWorkoutsSub')} />
       ) : (
-        <ul className="flex flex-col gap-3">
+        <ul className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 items-start gap-3">
           {items.map((r) => {
             const done = r.estimated_workouts > 0 && r.completed_workouts >= r.estimated_workouts
             const atual = r.completed_workouts > 0 && !done

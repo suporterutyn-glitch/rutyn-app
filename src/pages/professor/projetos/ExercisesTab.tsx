@@ -183,7 +183,7 @@ export function ExercisesTab({ query, filtro }: { query: string; filtro: Filtro 
             ? <EmptyState icon={Dumbbell} title={t('projetos:ex.noOwn')} body={t('projetos:ex.createFirst')} />
             : q ? null : <EmptyState icon={Dumbbell} title={t('projetos:ex.none')} body={t('projetos:ex.createFirst')} />
       ) : (
-        <ul className="flex flex-col gap-3">
+        <ul className="grid grid-cols-1 lg:grid-cols-2 items-start gap-3">
           {filtered.map((e) => (
             <TarjetaCatalogo
               key={e.id}

@@ -102,7 +102,7 @@ export function AdicionarAlimentos({ bloqueados, onCerrar, onAgregar, extraArrib
           ) : lista.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-12"><UtensilsCrossed size={48} className="text-[#616161]" /><span className="text-white/60 text-rt-13">{t('projetos:aa.notFound')}</span></div>
           ) : (
-            <ul className="flex flex-col gap-2.5">
+            <ul className="grid grid-cols-1 lg:grid-cols-2 items-start gap-2.5">
               {lista.map((f) => {
                 const bloqueado = ya.has(f.id)
                 const elegido = elegidos.find((e) => e.food.id === f.id)

@@ -186,7 +186,7 @@ export function AlunosPage() {
       ) : filtered.length === 0 ? (
         <EmptyState icon={UserIcon} title={t('students:noStudents')} body={t('students:noStudentsSub')} />
       ) : (
-        <ul className="flex flex-col gap-3">
+        <ul className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 items-start gap-3">
           {filtered.map((s) => (
             <li key={s.id} className="card-dark p-4 relative">
               {(() => {

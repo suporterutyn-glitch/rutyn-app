@@ -155,7 +155,7 @@ export function AdicionarExercicios({ yaEnRutina, onCerrar, onAgregar }: {
               <span className="text-white/60 text-rt-13">{t('projetos:pick.notFound')}</span>
             </div>
           ) : (
-            <ul className="flex flex-col gap-2.5">
+            <ul className="grid grid-cols-1 lg:grid-cols-2 items-start gap-2.5">
               {lista.map((e) => {
                 const bloqueado = ya.has(e.id)
                 const on = marcados.includes(e.id)

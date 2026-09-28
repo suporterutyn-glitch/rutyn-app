@@ -126,7 +126,7 @@ export function TreinoDetalhePage() {
       )}
 
       <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-app px-4 pb-4"
-           style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 116px)' }}>
+           style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 16px + 100px * var(--con-nav))' }}>
         <div className="h-[5px] rounded-full bg-brand-h mb-2" />
         <DragSlider
           label={t('treino:dragToStart')}

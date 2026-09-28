@@ -44,6 +44,19 @@
     --offline: 38 100% 50%;
     --nav-height-pro: 80px;
     --nav-height-student: 105px;
+
+    /* Layout responsivo: ancho de página, de formularios y de la barra lateral.
+       --con-nav vale 1 mientras existe la barra inferior (celular y tablet) y 0 en escritorio. */
+    --app-w: 430px;
+    --form-w: 430px;
+    --lado-w: 0px;
+    --con-nav: 1;
+  }
+  @media (min-width: 768px) {
+    :root { --app-w: 720px; --form-w: 600px; }
+  }
+  @media (min-width: 1024px) {
+    :root { --app-w: 1120px; --form-w: 680px; --lado-w: 248px; --con-nav: 0; }
   }
 
   /* iOS usa documentElement como contenedor de scroll: sin overflow-x en `html`
@@ -64,6 +77,20 @@
     min-height: 100dvh;
     position: relative;
     background: #1A1A1A;
+  }
+
+  /* Tablet y escritorio: el panel (profesor/alumno) ocupa toda la pantalla y el
+     contenido se centra en --app-w; en escritorio deja lugar a la barra lateral. */
+  @media (min-width: 768px) {
+    #root { background: linear-gradient(rgba(0,0,0,.78), rgba(0,0,0,.78)), #0b0b0b url('/assets/images/background.png') center/cover fixed; }
+    .app-shell:not(.app-panel) { box-shadow: 0 0 80px rgba(0,0,0,.7); }
+    .app-panel { max-width: none; }
+    .app-panel .app-main { width: 100%; max-width: var(--app-w); margin: 0 auto; }
+    .app-panel .app-shell { max-width: none; min-height: 0; background: transparent; box-shadow: none; }
+  }
+  @media (min-width: 1024px) {
+    .app-panel { padding-left: var(--lado-w); }
+    .app-panel .app-main { padding-top: 16px; padding-left: 32px; padding-right: 32px; }
   }
 
   .app-bg { background: #1A1A1A url('/assets/images/background.png') center/cover no-repeat; }
@@ -158,3 +185,19 @@ input[type="datetime-local"] {
   cursor: pointer;
 }
 @keyframes progreso { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
+
+/* ── Responsivo: tablet y escritorio ─────────────────────────────────────────
+   Las hojas que suben desde abajo (overlay fijo con items-end) pasan a ser
+   modales centrados; las pantallas completas de edición y las barras fijas
+   inferiores respetan la barra lateral. Se hace aquí para que valga en todas
+   las pantallas sin repetir clases en cada una. */
+@media (min-width: 768px) {
+  .fixed.inset-0.items-end { align-items: center; justify-content: center; padding: 24px; }
+  .fixed.inset-0.items-end > * { max-width: 560px; border-radius: 20px; }
+}
+@media (min-width: 1024px) {
+  .fixed.inset-0[class*="bg-[#1E1E1E]"],
+  .fixed.inset-0.bg-surface-card { left: var(--lado-w); }
+  .fixed.bottom-0.left-1\/2 { left: calc(var(--lado-w) + (100vw - var(--lado-w)) / 2); max-width: 520px; }
+  .fixed.inset-x-0.mx-auto { left: var(--lado-w); }
+}

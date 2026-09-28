@@ -136,7 +136,7 @@ export function AssinaturaPage() {
       <div className="text-white text-rt-22 font-bold mb-1">{t('planes:choose')}</div>
       {!pago && <div className="text-white/70 text-rt-13 mb-4">{t('planes:activeNow', { count: activos })}</div>}
 
-      <div className="flex flex-col gap-3 mb-6 mt-3">
+      <div className="flex flex-col gap-3 mb-6 mt-3 lg:grid lg:grid-cols-3 lg:gap-4 lg:items-stretch">
         <Tarjeta plan="free" actual={actual} titulo={t('planes:name.free')} bajada={t('planes:free.tagline')}
           precio={t('planes:name.free')} rasgos={[t('planes:free.f1'), t('planes:free.f2')]}>
           <Boton activo={actual === 'free'} texto={actual === 'free' ? t('planes:currentPlan') : t('planes:toFree')} tono="claro"

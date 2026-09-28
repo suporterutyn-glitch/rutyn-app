@@ -139,16 +139,16 @@ export function AlunoHome() {
           : 'pendiente'
 
   return (
-    <div className="px-4 pt-[calc(env(safe-area-inset-top)+16px)]">
+    <div className="px-4 pt-[calc(env(safe-area-inset-top)+16px)] lg:px-0 lg:pt-4">
       {/* Mismo encabezado que la home del profesor */}
       <div className="flex items-center justify-between mb-5">
         <div className="min-w-0">
-          <div className="text-white text-rt-20 font-bold truncate">{t('aluno:hello', { name: firstName })}</div>
+          <div className="text-white text-rt-20 lg:text-rt-28 font-bold truncate">{t('aluno:hello', { name: firstName })}</div>
           <div className="text-white/60 text-rt-11 mt-0.5 truncate">{t('aluno:welcome')}</div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <LanguageToggle />
-          <button onClick={() => nav('/aluno/configuracoes')} className="w-10 h-10 rounded-full bg-surface-raised flex items-center justify-center" aria-label={t('inicio:settings')}>
+          <div className="lg:hidden"><LanguageToggle /></div>
+          <button onClick={() => nav('/aluno/configuracoes')} className="lg:hidden w-10 h-10 rounded-full bg-surface-raised flex items-center justify-center" aria-label={t('inicio:settings')}>
             <Settings size={20} className="text-white" />
           </button>
           <button onClick={() => nav('/aluno/notificacoes')} className="w-10 h-10 rounded-full bg-surface-raised flex items-center justify-center relative" aria-label={t('inicio:notifications')}>
@@ -162,9 +162,10 @@ export function AlunoHome() {
         </div>
       </div>
 
+      <div className="md:grid md:grid-cols-2 md:gap-3 lg:gap-4">
       {/* Mensalidade: misma forma que el card de plano del profesor */}
       <div className={
-        'rounded-card p-4 mb-3 ' +
+        'rounded-card p-4 mb-3 md:mb-0 ' +
         (estadoPago === 'ok' ? 'bg-pay-ok'
           : estadoPago === 'aguardando' ? 'bg-pay-awaiting'
             : estadoPago === 'suspendido' ? 'bg-pay-suspended'
@@ -216,16 +217,8 @@ export function AlunoHome() {
         )}
       </div>
 
-      {/* Grid 2x2, idéntico al del profesor */}
-      <div className="grid grid-cols-2 gap-2.5 mb-3">
-        <DashCard title={t('aluno:newWorkouts')} value={String(newRoutines)} icon={Dumbbell} onClick={() => nav('/aluno/treinos')} />
-        <DashCard title={t('aluno:physicalAss')} value={String(assessments)} icon={ClipboardCheck} onClick={() => nav('/aluno/avaliacao')} />
-        <DashCard title={t('aluno:messages')} value={String(unread)} icon={MessageSquare} onClick={() => nav('/aluno/chat')} />
-        <DashCard title={t('aluno:doneWorkouts')} value={String(treinosDelMes)} icon={Flame} onClick={() => nav('/aluno/treinos')} />
-      </div>
-
       {/* Hidratação: es la única tarjeta con botones, por eso va a lo ancho */}
-      <div className="card-dark p-4 mb-3 flex items-center gap-4">
+      <div className="card-dark p-4 mb-3 md:mb-0 flex items-center gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <Droplet size={18} className="text-info-light" />
@@ -254,6 +247,17 @@ export function AlunoHome() {
         <VasoAgua pct={hydPct} />
       </div>
 
+      </div>
+
+      {/* Grid 2x2, idéntico al del profesor */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 lg:gap-4 mb-3 md:my-3 lg:my-4">
+        <DashCard title={t('aluno:newWorkouts')} value={String(newRoutines)} icon={Dumbbell} onClick={() => nav('/aluno/treinos')} />
+        <DashCard title={t('aluno:physicalAss')} value={String(assessments)} icon={ClipboardCheck} onClick={() => nav('/aluno/avaliacao')} />
+        <DashCard title={t('aluno:messages')} value={String(unread)} icon={MessageSquare} onClick={() => nav('/aluno/chat')} />
+        <DashCard title={t('aluno:doneWorkouts')} value={String(treinosDelMes)} icon={Flame} onClick={() => nav('/aluno/treinos')} />
+      </div>
+
+      <div className="lg:grid lg:grid-cols-2 lg:gap-4 lg:items-start">
       {/* Agenda: mismos compromisos que ve el profesor */}
       <div className="mb-3">
         <div className="flex items-center gap-2 mb-2 px-1">
@@ -311,6 +315,7 @@ export function AlunoHome() {
             {t('aluno:frequencySub', { n: semanasEntrenadas })}
           </div>
         </div>
+      </div>
       </div>
 
       {metaHidratacion && (

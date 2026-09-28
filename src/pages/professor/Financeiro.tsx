@@ -106,7 +106,7 @@ export function FinanceiroPage() {
       ) : filtered.length === 0 ? (
         <EmptyState icon={Wallet} title={t('financeiro:fin.none')} body={t('financeiro:fin.noneBody')} />
       ) : (
-        <ul className="flex flex-col gap-3 mb-4">
+        <ul className="grid grid-cols-1 lg:grid-cols-2 items-start gap-3 mb-4">
           {filtered.map((c) => (
             <li key={c.id} className="card-dark p-4">
               <div className="flex items-center justify-between mb-2">

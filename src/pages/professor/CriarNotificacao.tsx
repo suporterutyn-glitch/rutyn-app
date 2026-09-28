@@ -50,7 +50,7 @@ export function CriarNotificacaoPage() {
   const allOn = students.length > 0 && selected.size === students.length
 
   return (
-    <div className="pt-[calc(env(safe-area-inset-top)+16px)] px-4 pb-32">
+    <div className="pt-[calc(env(safe-area-inset-top)+16px)] px-4 pb-32 md:max-w-form md:mx-auto w-full">
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => nav(-1)} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white">
           <ArrowLeft size={20} />
@@ -95,7 +95,7 @@ export function CriarNotificacaoPage() {
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-app px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+96px)] bg-surface-app/95 backdrop-blur">
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-app px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+16px+80px*var(--con-nav))] bg-surface-app/95 backdrop-blur">
         <button onClick={send} disabled={saving || !title.trim() || selected.size === 0} className="btn-save disabled:opacity-50">
           {saving ? t('prof:notif.sending') : saved ? t('prof:notif.sentN', { n: selected.size }) : (<><Send size={16} className="inline mr-1" /> {t('prof:notif.send')}</>)}
         </button>

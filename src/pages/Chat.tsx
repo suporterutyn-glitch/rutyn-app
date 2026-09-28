@@ -13,7 +13,21 @@ type Conv = {
   other?: { id: string; full_name: string | null; avatar_url: string | null }
 }
 
+/** En escritorio la lista queda a la izquierda y la conversación a la derecha. */
 export function ConversasPage() {
+  const { t } = useTranslation()
+  return (
+    <div className="lg:flex lg:gap-4 lg:h-[calc(100dvh-72px)] lg:pt-2">
+      <div className="lg:w-[340px] lg:shrink-0 lg:overflow-y-auto no-scrollbar"><ListaConversas /></div>
+      <div className="hidden lg:flex flex-1 card-dark items-center justify-center flex-col gap-3 text-white/50">
+        <MessageSquare size={40} className="text-brand" />
+        <div className="text-rt-14">{t('general:extra.tapToChat')}</div>
+      </div>
+    </div>
+  )
+}
+
+function ListaConversas({ activoId }: { activoId?: string }) {
   const { t } = useTranslation()
   const { profile } = useAuth()
   const nav = useNavigate()
@@ -70,7 +84,7 @@ export function ConversasPage() {
   const backTo = isTeacher ? '/professor' : '/aluno'
 
   return (
-    <div className="pt-[calc(env(safe-area-inset-top)+16px)] px-4 pb-24">
+    <div className="pt-[calc(env(safe-area-inset-top)+16px)] px-4 pb-24 lg:p-0">
       <div className="flex items-center gap-3 mb-4">
         {!isTeacher && (
           <button onClick={() => nav(backTo)} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white">
@@ -88,13 +102,14 @@ export function ConversasPage() {
         <ul className="flex flex-col gap-2">
           {convs.map((c) => {
             const goto = isTeacher ? `/professor/mensagens/${c.id}` : `/aluno/chat/${c.id}`
+            // En escritorio se reemplaza la conversación abierta: volver no recorre cada chat visitado.
             return (
               <li key={c.id}>
                 {/* Botón, no un li con onClick: se abre con teclado y lo anuncia el lector. */}
                 <button
                   type="button"
-                  onClick={() => nav(goto)}
-                  className="w-full text-left card-dark p-3 flex items-center gap-3 active:scale-[0.99]"
+                  onClick={() => nav(goto, { replace: !!activoId })}
+                  className={'w-full text-left card-dark p-3 flex items-center gap-3 active:scale-[0.99] hover:border-brand/40 ' + (c.id === activoId ? '!border-brand bg-brand/10' : '')}
                 >
                 <div className="w-12 h-12 rounded-full bg-surface-raised flex items-center justify-center overflow-hidden">
                   {c.other?.avatar_url ? <img src={c.other.avatar_url} alt="" className="w-full h-full object-cover" /> : <UserIcon size={22} className="text-grey-500" />}
@@ -162,10 +177,12 @@ export function ConversaPage() {
   }
 
   return (
-    <div className="app-shell app-bg-pro">
-      <div className="relative z-10 min-h-dvh flex flex-col">
-        <div className="sticky top-0 bg-surface-app/95 backdrop-blur px-4 pt-[calc(env(safe-area-inset-top)+12px)] pb-3 flex items-center gap-3 border-b border-surface-line">
-          <button onClick={() => nav(-1)} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white">
+    <div className="lg:flex lg:gap-4 lg:h-[calc(100dvh-72px)] lg:pt-2">
+    <div className="hidden lg:block lg:w-[340px] lg:shrink-0 lg:overflow-y-auto no-scrollbar"><ListaConversas activoId={id} /></div>
+    <div className="app-shell app-bg-pro lg:flex-1 lg:h-full lg:rounded-card lg:overflow-hidden lg:border lg:border-surface-line-strong">
+      <div className="relative z-10 min-h-dvh lg:min-h-0 lg:h-full flex flex-col">
+        <div className="sticky top-0 bg-surface-app/95 backdrop-blur px-4 pt-[calc(env(safe-area-inset-top)+12px)] lg:pt-3 pb-3 flex items-center gap-3 border-b border-surface-line">
+          <button onClick={() => nav(-1)} className="lg:hidden w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white">
             <ArrowLeft size={20} />
           </button>
           <div className="w-10 h-10 rounded-full bg-surface-raised flex items-center justify-center overflow-hidden">
@@ -178,7 +195,7 @@ export function ConversaPage() {
           {msgs.map((m) => {
             const mine = m.sender_id === profile?.id
             return (
-              <div key={m.id} className={'max-w-[80%] rounded-bubble px-3 py-2 ' + (mine ? 'self-end bg-brand text-white rounded-br-none' : 'self-start bg-surface-raised text-white rounded-bl-none')}>
+              <div key={m.id} className={'max-w-[80%] lg:max-w-[60%] rounded-bubble px-3 py-2 ' + (mine ? 'self-end bg-brand text-white rounded-br-none' : 'self-start bg-surface-raised text-white rounded-bl-none')}>
                 <div className="text-rt-14 whitespace-pre-wrap break-words">{m.body}</div>
                 <div className={'text-rt-10 mt-0.5 ' + (mine ? 'text-white/70 text-right' : 'text-grey-500')}>
                   {new Date(m.created_at).toLocaleTimeString(localeDe(), { hour: '2-digit', minute: '2-digit' })}
@@ -202,6 +219,7 @@ export function ConversaPage() {
           </button>
         </div>
       </div>
+    </div>
     </div>
   )
 }

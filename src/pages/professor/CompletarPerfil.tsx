@@ -38,7 +38,7 @@ function Formulario({ profile }: { profile: Profile }) {
   return (
     // Hoja a pantalla completa sobre la app (tapa la barra inferior), como en el diseño.
     <div className="fixed inset-0 z-40 bg-[#1E1E1E] overflow-y-auto">
-      <div className="max-w-app mx-auto px-5 pt-[calc(env(safe-area-inset-top)+24px)] pb-[calc(env(safe-area-inset-bottom)+32px)]">
+      <div className="max-w-form mx-auto px-5 pt-[calc(env(safe-area-inset-top)+24px)] pb-[calc(env(safe-area-inset-bottom)+32px)]">
         <div className="flex items-center justify-between gap-3 mb-6">
           <h1 className="text-white text-rt-24 font-bold">{t('completeProfile:title')}</h1>
           <button onClick={() => nav(-1)} aria-label={t('close')} className="w-11 h-11 shrink-0 rounded-full bg-[#333333] flex items-center justify-center text-white">

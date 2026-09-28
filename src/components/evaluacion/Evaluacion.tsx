@@ -166,7 +166,7 @@ export function Evaluacion({ studentId, teacherId, modo }: { studentId: string; 
         </div>
       )}
 
-      <div className="flex flex-col gap-4 mt-5">
+      <div className="flex flex-col gap-4 mt-5 lg:block lg:columns-2 lg:gap-4 lg:[&>*]:mb-4 lg:[&>*]:break-inside-avoid">
         {visibles.map((s) => (
           <TarjetaSeccion
             key={s}

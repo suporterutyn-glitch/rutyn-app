@@ -89,18 +89,18 @@ export function ProfessorHome() {
   }, [allAppointments])
 
   return (
-    <div className="px-4 pt-[calc(env(safe-area-inset-top)+16px)]">
+    <div className="px-4 pt-[calc(env(safe-area-inset-top)+16px)] lg:px-0 lg:pt-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-5 lg:mb-7">
         <div>
-          <div className="text-white text-rt-20 font-bold">{t('professor:hello', { name: firstName })}</div>
+          <div className="text-white text-rt-20 lg:text-rt-28 font-bold">{t('professor:hello', { name: firstName })}</div>
           <div className="text-white/60 text-rt-11 mt-0.5">{t('professor:welcomeBack')}</div>
         </div>
         <div className="flex items-center gap-2">
-          <LanguageToggle />
+          <div className="lg:hidden"><LanguageToggle /></div>
           <button
             onClick={() => nav('/professor/configuracoes')}
-            className="w-10 h-10 rounded-full bg-surface-raised flex items-center justify-center"
+            className="lg:hidden w-10 h-10 rounded-full bg-surface-raised flex items-center justify-center"
             aria-label={t('prof:home.settings')}
           >
             <Settings size={20} className="text-white" />
@@ -137,11 +137,12 @@ export function ProfessorHome() {
         </button>
       )}
 
+      <div className="md:grid md:grid-cols-2 md:gap-3 lg:gap-4 md:mb-3 lg:mb-4">
       {/* Card do plano */}
       <div
         onClick={() => nav('/professor/assinatura')}
         className={
-          'rounded-card p-4 mb-3 cursor-pointer ' +
+          'rounded-card p-4 lg:p-6 mb-3 md:mb-0 cursor-pointer ' +
           (plan === 'free' ? 'bg-plan-free' : 'bg-plan-premium')
         }
       >
@@ -183,15 +184,16 @@ export function ProfessorHome() {
       )}
 
       {/* Recebidos do mês */}
-      <div className="rounded-card bg-revenue p-4 mb-3">
+      <div className="rounded-card bg-revenue p-4 lg:p-6 mb-3 md:mb-0 flex flex-col justify-center">
         <div className="text-white/80 text-rt-11 font-semibold uppercase tracking-wider">{t('professor:monthReceived')}</div>
         <div className="text-white text-rt-42 font-bold mt-1 leading-none">
           {loading ? '—' : formatMoney(received, currency)}
         </div>
       </div>
+      </div>
 
       {/* Grid 2x2 de cards */}
-      <div className="grid grid-cols-2 gap-2.5 mb-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 lg:gap-4 mb-4 lg:mb-6">
         <DashCard title={t('professor:activeStudents')} value={activeStudents.toString()} icon={Users} onClick={() => nav('/professor/alunos')} />
         <DashCard title={t('professor:changeWorkouts')} value="0" icon={RefreshCw} onClick={() => nav('/professor/alunos')} />
         <DashCard title={t('professor:assessments')} value="0" icon={ClipboardCheck} onClick={() => nav('/professor/alunos')} />
@@ -199,6 +201,7 @@ export function ProfessorHome() {
       </div>
 
       {/* Calendar and Agenda */}
+      <div className="lg:grid lg:grid-cols-2 lg:gap-4 lg:items-start">
       <WeekCalendar selectedDate={selectedDate} onSelectDate={setSelectedDate} datesWithEvents={datesWithEvents} />
 
       <div className="mb-6">
@@ -273,6 +276,8 @@ export function ProfessorHome() {
         )}
       </div>
 
+      </div>
+
       <AnnouncementModal />
     </div>
   )
@@ -292,7 +297,7 @@ function DashCard({
   return (
     <button
       onClick={onClick}
-      className="card-dark p-3 flex flex-col justify-between h-24 text-left active:scale-[0.98] transition"
+      className="card-dark p-3 lg:p-5 flex flex-col justify-between h-24 lg:h-32 text-left hover:border-brand/50 active:scale-[0.98] transition"
     >
       <div className="flex items-start justify-between">
         <div className="text-white text-rt-13 font-semibold leading-tight">{title}</div>

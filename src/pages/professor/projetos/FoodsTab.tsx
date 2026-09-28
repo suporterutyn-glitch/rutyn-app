@@ -239,7 +239,7 @@ export function FoodsTab({ query, filtro }: { query: string; filtro: Filtro }) {
               ? <EmptyState icon={UtensilsCrossed} title={t('projetos:al.noOwn')} body={t('projetos:al.createFirst')} />
               : <EmptyState icon={UtensilsCrossed} title={t('projetos:al.none')} body={t('projetos:al.createFirst')} />
       ) : (
-        <ul className="flex flex-col gap-3">
+        <ul className="grid grid-cols-1 lg:grid-cols-2 items-start gap-3">
           {filtered.map((f) => (
             <TarjetaAlimento
               key={f.id}

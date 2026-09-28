@@ -123,7 +123,7 @@ export function RoutinesTab({ query, filtro }: { query: string; filtro: Filtro }
           }
         />
       ) : (
-        <ul className="flex flex-col gap-3">
+        <ul className="grid grid-cols-1 lg:grid-cols-2 items-start gap-3">
           {filtered.map((r) => (
             <li key={r.id} className="flex flex-col gap-0">
             <RoutineCard
@@ -234,7 +234,7 @@ export function FixedBottomActions({ children }: { children: React.ReactNode }) 
   return (
     <div
       className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-app px-4 pt-3 pointer-events-none"
-      style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 92px)' }}
+      style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 16px + 76px * var(--con-nav))' }}
     >
       <div className="pointer-events-auto">{children}</div>
     </div>

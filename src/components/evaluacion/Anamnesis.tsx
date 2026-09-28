@@ -502,16 +502,16 @@ function Cuestionario({ a, editar, base, esProfe, onCerrar }: { a: Anamnesis; ed
 
   return (
     <div className="fixed inset-0 z-[60] bg-[#1E1E1E] flex flex-col">
-      <div className="max-w-app w-full mx-auto flex items-center gap-2 px-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-3">
+      <div className="max-w-form w-full mx-auto flex items-center gap-2 px-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-3">
         <button onClick={() => void salir()} aria-label={t('back')} className="p-1 text-white"><ArrowLeft size={20} /></button>
         <span className="flex-1 min-w-0 truncate text-white text-rt-16 font-semibold">{nombreAnamnesis(a, i18n.language)}</span>
         {lectura && <span className="px-2 py-0.5 rounded-[10px] bg-[#42A5F5]/15 text-[#90CAF9] text-rt-11 font-semibold">{t('evaluacion:viewing')}</span>}
         <span className="text-white/60 text-rt-13">{i + 1}/{preguntas.length}</span>
       </div>
-      <div className="max-w-app w-full mx-auto px-4"><div className="h-1.5 rounded bg-[#2D2D2D] overflow-hidden"><div className="h-full transition-all" style={{ width: `${((i + 1) / preguntas.length) * 100}%`, background: colorBarra }} /></div></div>
+      <div className="max-w-form w-full mx-auto px-4"><div className="h-1.5 rounded bg-[#2D2D2D] overflow-hidden"><div className="h-full transition-all" style={{ width: `${((i + 1) / preguntas.length) * 100}%`, background: colorBarra }} /></div></div>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-app mx-auto p-5 flex flex-col gap-4">
+        <div className="max-w-form mx-auto p-5 flex flex-col gap-4">
           <div className="rounded-[16px] bg-[#252525] border border-[#2D2D2D] p-5 text-white text-rt-15 font-medium leading-relaxed">{textoPregunta(q, i18n.language)}</div>
           {lectura && <span className="text-white/50 text-rt-12">{t('evaluacion:answerLabel')}</span>}
 
@@ -596,7 +596,7 @@ function Cuestionario({ a, editar, base, esProfe, onCerrar }: { a: Anamnesis; ed
       </div>
 
       <div className="border-t border-[#2D2D2D] px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+16px)]">
-        <div className="max-w-app mx-auto flex gap-3">
+        <div className="max-w-form mx-auto flex gap-3">
           <button disabled={i === 0} onClick={() => setI(i - 1)} className="flex-1 h-12 rounded-[24px] border border-[#333333] text-white text-rt-14 font-semibold disabled:opacity-40">{t('evaluacion:previous')}</button>
           {lectura ? (
             <button disabled={i === preguntas.length - 1} onClick={() => setI(i + 1)} className="flex-1 h-12 rounded-[24px] bg-[#42A5F5]/20 text-[#90CAF9] text-rt-14 font-semibold disabled:opacity-40">{t('evaluacion:next')}</button>
