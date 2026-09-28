@@ -1,76 +1,13 @@
-// Edge Function: enviar emails vía Postfix en VPS (relay Gmail)
+// Edge Function: enviar emails vía SMTP relay Python en VPS
 // Deploy: supabase functions deploy send-email --no-verify-jwt
 
 // deno-lint-ignore-file
 // @ts-ignore
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
 
-const VPS_SMTP = Deno.env.get('VPS_SMTP_HOST') || '179.197.67.10'
-const VPS_PORT = 25
+const VPS_RELAY = Deno.env.get('VPS_RELAY_URL') || 'http://179.197.67.10:3001'
 const FROM = 'suporte@rutyn.com.br'
 const FROM_NAME = 'Rutyn'
-
-async function enviarSMTP(opts: { to: string; subject: string; html: string }): Promise<void> {
-  // Construir email SMTP manualmente
-  const headers = [
-    `From: ${FROM_NAME} <${FROM}>`,
-    `To: ${opts.to}`,
-    `Subject: ${opts.subject}`,
-    'MIME-Version: 1.0',
-    'Content-Type: text/html; charset=utf-8',
-    'Content-Transfer-Encoding: quoted-printable',
-    '',
-  ].join('\r\n')
-
-  const body = headers + '\r\n' + opts.html
-
-  // Conectar a Postfix en el VPS
-  const conn = await Deno.connect({ hostname: VPS_SMTP, port: VPS_PORT })
-  const encoder = new TextEncoder()
-  const decoder = new TextDecoder()
-
-  const read = async () => {
-    const buf = new Uint8Array(1024)
-    const n = await conn.read(buf)
-    if (n === null) throw new Error('connection closed')
-    return decoder.decode(buf.slice(0, n))
-  }
-
-  const write = (s: string) => conn.writeSync(encoder.encode(s + '\r\n'))
-
-  try {
-    // SMTP handshake
-    let res = await read()
-    if (!res.startsWith('220')) throw new Error('SMTP: ' + res)
-
-    write(`EHLO rutyn-app`)
-    res = await read()
-
-    write(`MAIL FROM:<${FROM}>`)
-    res = await read()
-    if (!res.startsWith('250')) throw new Error('MAIL FROM: ' + res)
-
-    write(`RCPT TO:<${opts.to}>`)
-    res = await read()
-    if (!res.startsWith('250')) throw new Error('RCPT TO: ' + res)
-
-    write(`DATA`)
-    res = await read()
-    if (!res.startsWith('354')) throw new Error('DATA: ' + res)
-
-    write(body)
-    write('.')
-    res = await read()
-    if (!res.startsWith('250')) throw new Error('send: ' + res)
-
-    write(`QUIT`)
-    await read()
-  } finally {
-    conn.close()
-  }
-
-  console.log('📧 enviado a', opts.to)
-}
 
 // @ts-ignore
 Deno.serve(async (req: Request) => {
@@ -103,7 +40,19 @@ Deno.serve(async (req: Request) => {
 
     if (!subject || !html) return new Response(JSON.stringify({ error: 'invalid action' }), { status: 400 })
 
-    await enviarSMTP({ to: prof.email, subject, html })
+    // Llamar relay en VPS
+    const res = await fetch(`${VPS_RELAY}/send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to: prof.email, subject, html }),
+    })
+
+    if (!res.ok) {
+      const err = await res.text()
+      throw new Error(err)
+    }
+
+    console.log('📧 enviado a', prof.email)
     return new Response(JSON.stringify({ ok: true }))
   } catch (e) {
     console.error('send-email', action, e)
