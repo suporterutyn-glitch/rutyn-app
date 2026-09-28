@@ -19,7 +19,7 @@ export default textos({
     chat: { title: 'Mensagens', none: 'Sem conversas', noneTeacher: 'Assim que você tiver alunos ativos aparecerão aqui.', noneStudent: 'Aguarde ser vinculado a um professor.', placeholder: 'Digite sua mensagem…' },
     ui: {
       confirm: 'Confirmar', cancel: 'Cancelar', search: 'Buscar...', nothingFound: 'Nenhum dado encontrado',
-      maxSize: 'Máximo 2MB', changePhoto: 'Alterar foto', learnMore: 'Saber mais', later: 'Depois', switchLang: 'Alternar idioma',
+      maxSize: 'Máximo 2MB', photoFormat: 'Não foi possível ler essa imagem. Use uma foto JPG ou PNG.', changePhoto: 'Alterar foto', learnMore: 'Saber mais', later: 'Depois', switchLang: 'Alternar idioma',
       back: 'Voltar', min: '{{label}} — mínimo', max: '{{label}} — máximo', copy: '{{name}} (cópia)', workoutName: 'TREINO - A',
     },
     extra: { tapToChat: 'Toque para conversar', pricesIn: 'Preços na sua moeda ({{c}}). Cobrança mensal via provedor.', perMonth: 'mês', notes: 'Observações: (alguma coisa que queira me contar?)' },
@@ -41,7 +41,7 @@ export default textos({
     chat: { title: 'Mensajes', none: 'Sin conversaciones', noneTeacher: 'Cuando tengas alumnos activos aparecerán acá.', noneStudent: 'Esperá a que un profesor te vincule.', placeholder: 'Escribí tu mensaje…' },
     ui: {
       confirm: 'Confirmar', cancel: 'Cancelar', search: 'Buscar...', nothingFound: 'No se encontraron datos',
-      maxSize: 'Máximo 2MB', changePhoto: 'Cambiar foto', learnMore: 'Saber más', later: 'Después', switchLang: 'Cambiar idioma',
+      maxSize: 'Máximo 2MB', photoFormat: 'No se pudo leer esa imagen. Usá una foto JPG o PNG.', changePhoto: 'Cambiar foto', learnMore: 'Saber más', later: 'Después', switchLang: 'Cambiar idioma',
       back: 'Volver', min: '{{label}} — mínimo', max: '{{label}} — máximo', copy: '{{name}} (copia)', workoutName: 'ENTRENO - A',
     },
     extra: { tapToChat: 'Tocá para conversar', pricesIn: 'Precios en tu moneda ({{c}}). Cobro mensual a través del proveedor.', perMonth: 'mes', notes: 'Observaciones: (¿algo que quieras contarme?)' },
@@ -63,7 +63,7 @@ export default textos({
     chat: { title: 'Messages', none: 'No conversations', noneTeacher: 'Your active students will show up here.', noneStudent: 'Wait until a trainer links you.', placeholder: 'Type your message…' },
     ui: {
       confirm: 'Confirm', cancel: 'Cancel', search: 'Search...', nothingFound: 'Nothing found',
-      maxSize: 'Max 2MB', changePhoto: 'Change photo', learnMore: 'Learn more', later: 'Later', switchLang: 'Switch language',
+      maxSize: 'Max 2MB', photoFormat: "Couldn't read that image. Use a JPG or PNG photo.", changePhoto: 'Change photo', learnMore: 'Learn more', later: 'Later', switchLang: 'Switch language',
       back: 'Back', min: '{{label}} — minimum', max: '{{label}} — maximum', copy: '{{name}} (copy)', workoutName: 'WORKOUT - A',
     },
     extra: { tapToChat: 'Tap to chat', pricesIn: 'Prices in your currency ({{c}}). Billed monthly through the provider.', perMonth: 'month', notes: 'Notes: (anything you want to tell me?)' },

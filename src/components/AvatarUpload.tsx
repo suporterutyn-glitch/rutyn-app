@@ -7,6 +7,36 @@ import { mensajeError } from '@/lib/errores'
 
 type Props = { size?: number; className?: string }
 
+const LADO = 512
+
+/**
+ * Recorta al centro en cuadrado y reduce a 512px en JPEG (~50–150 KB). Así sube
+ * cualquier foto del celular: las de cámara de 3–6 MB, las HEIC del iPhone
+ * (Safari las decodifica) y las que la galería entrega sin tipo MIME, que el
+ * bucket rechazaría.
+ */
+async function prepararFoto(file: File): Promise<Blob | null> {
+  const url = URL.createObjectURL(file)
+  try {
+    const img = new Image()
+    img.src = url
+    await img.decode()
+    const lado = Math.min(img.naturalWidth, img.naturalHeight)
+    if (!lado) return null
+    const destino = Math.min(LADO, lado)
+    const canvas = document.createElement('canvas')
+    canvas.width = canvas.height = destino
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return null
+    ctx.drawImage(img, (img.naturalWidth - lado) / 2, (img.naturalHeight - lado) / 2, lado, lado, 0, 0, destino, destino)
+    return await new Promise((r) => canvas.toBlob(r, 'image/jpeg', 0.85))
+  } catch {
+    return null
+  } finally {
+    URL.revokeObjectURL(url)
+  }
+}
+
 export function AvatarUpload({ size = 96, className = '' }: Props) {
   const { t } = useTranslation()
   const { profile, refresh } = useAuth()
@@ -16,15 +46,16 @@ export function AvatarUpload({ size = 96, className = '' }: Props) {
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
+    e.target.value = '' // permite volver a elegir la misma foto tras un error
     if (!file || !profile?.id) return
-    if (file.size > 2 * 1024 * 1024) { setError(t('general:ui.maxSize')); return }
     setError(null); setUploading(true)
 
-    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
-    const path = `${profile.id}/avatar-${Date.now()}.${ext}`
+    const foto = await prepararFoto(file)
+    if (!foto) { setError(t('general:ui.photoFormat')); setUploading(false); return }
+    const path = `${profile.id}/avatar-${Date.now()}.jpg`
 
-    const { error: upErr } = await supabase.storage.from('avatars').upload(path, file, {
-      cacheControl: '3600', upsert: false, contentType: file.type,
+    const { error: upErr } = await supabase.storage.from('avatars').upload(path, foto, {
+      cacheControl: '3600', upsert: false, contentType: 'image/jpeg',
     })
     if (upErr) { setError(mensajeError(upErr)); setUploading(false); return }
 
@@ -37,7 +68,8 @@ export function AvatarUpload({ size = 96, className = '' }: Props) {
       if (old && old !== path) await supabase.storage.from('avatars').remove([old]).catch(() => {})
     }
 
-    await supabase.from('profiles').update({ avatar_url: url }).eq('id', profile.id)
+    const { error: perfilErr } = await supabase.from('profiles').update({ avatar_url: url }).eq('id', profile.id)
+    if (perfilErr) setError(mensajeError(perfilErr))
     await refresh()
     setUploading(false)
   }
@@ -60,8 +92,8 @@ export function AvatarUpload({ size = 96, className = '' }: Props) {
           {uploading ? <Loader2 size={14} className="text-white animate-spin" /> : <Camera size={14} className="text-white" />}
         </div>
       </button>
-      {error && <div className="text-danger text-rt-10">{error}</div>}
-      <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={onFile} />
+      {error && <div className="text-danger text-rt-10 text-center max-w-[140px]">{error}</div>}
+      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={onFile} />
     </div>
   )
 }
