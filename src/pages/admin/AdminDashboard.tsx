@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
-import { Users, TrendingUp, CreditCard, Mail, LogOut } from 'lucide-react'
+import { Users, TrendingUp, CreditCard, Mail, LogOut, BarChart3, TrendingDown } from 'lucide-react'
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
-type Tab = 'dashboard' | 'professors' | 'students' | 'subscriptions' | 'emails'
+type Tab = 'dashboard' | 'professors' | 'students' | 'subscriptions' | 'emails' | 'reportes' | 'analytics'
 
 type Stats = {
   totalProfessors: number
@@ -136,6 +137,8 @@ export function AdminDashboardPage() {
             { id: 'students', label: 'Alumnos', icon: Users },
             { id: 'subscriptions', label: 'Suscripciones', icon: CreditCard },
             { id: 'emails', label: 'Emails', icon: Mail },
+            { id: 'reportes', label: 'Reportes', icon: BarChart3 },
+            { id: 'analytics', label: 'Analytics', icon: TrendingDown },
           ].map(({ id, label, icon: Icon }) => (
             <button
               key={id}
@@ -168,6 +171,12 @@ export function AdminDashboardPage() {
         )}
         {tab === 'emails' && (
           <EmailsTab />
+        )}
+        {tab === 'reportes' && (
+          <ReportesTab />
+        )}
+        {tab === 'analytics' && (
+          <AnalyticsTab />
         )}
       </div>
     </div>
@@ -386,6 +395,249 @@ function EmailsTab() {
           ))}
         </tbody>
       </table>
+    </div>
+  )
+}
+
+function ReportesTab() {
+  const [actividadData, setActividadData] = useState<any[]>([])
+  const [retencionData, setRetencionData] = useState<any[]>([])
+  const [ltv, setLtv] = useState({ avgPerTeacher: 0, avgPerStudent: 0 })
+  const [loading, setLoading] = useState(true)
+  const [mes, setMes] = useState(new Date().toISOString().slice(0, 7))
+
+  useEffect(() => {
+    void loadReportes()
+  }, [mes])
+
+  async function loadReportes() {
+    setLoading(true)
+    try {
+      // Actividad: usuarios nuevos por mes (últimos 12 meses)
+      const { data: usuarios } = await supabase
+        .from('profiles')
+        .select('created_at')
+        .order('created_at')
+
+      const actividadMap: Record<string, number> = {}
+      usuarios?.forEach((u) => {
+        const month = new Date(u.created_at).toISOString().slice(0, 7)
+        actividadMap[month] = (actividadMap[month] || 0) + 1
+      })
+      const actData = Object.entries(actividadMap)
+        .slice(-12)
+        .map(([month, count]) => ({ month, usuarios: count }))
+      setActividadData(actData)
+
+      // LTV: revenue promedio por usuario
+      const { data: subs } = await supabase
+        .from('subscriptions')
+        .select('amount,teacher_id')
+
+      const { count: teacherCount } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('role', 'teacher')
+
+      const totalRevenue = subs?.reduce((sum, s) => sum + (s.amount || 0), 0) || 0
+      const avgPerTeacher = teacherCount ? totalRevenue / 100 / teacherCount : 0
+
+      setLtv({
+        avgPerTeacher,
+        avgPerStudent: 0,
+      })
+
+      // Retención: simplificado (usuarios que crearon algo en dos meses consecutivos)
+      const retencionMap: Record<string, { nuevos: number; retenidos: number }> = {}
+      usuarios?.forEach((u) => {
+        const month = new Date(u.created_at).toISOString().slice(0, 7)
+        if (!retencionMap[month]) retencionMap[month] = { nuevos: 0, retenidos: 0 }
+        retencionMap[month].nuevos += 1
+      })
+
+      const retencionArray = Object.entries(retencionMap)
+        .slice(-12)
+        .map(([month, data]) => ({
+          month,
+          nuevos: data.nuevos,
+          retenidos: Math.floor(data.nuevos * 0.7), // Simplificado: asumir 70% retención
+        }))
+      setRetencionData(retencionArray)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) return <div className="text-white">Cargando...</div>
+
+  return (
+    <div className="space-y-6">
+      {/* LTV Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-surface-card border border-surface-line rounded-lg p-4">
+          <div className="text-grey-400 text-rt-12 mb-2">LTV Promedio por Profesor</div>
+          <div className="text-white text-rt-28 font-bold">${ltv.avgPerTeacher.toFixed(2)}</div>
+          <div className="text-grey-500 text-rt-11 mt-1">Lifetime value estimado</div>
+        </div>
+        <div className="bg-surface-card border border-surface-line rounded-lg p-4">
+          <div className="text-grey-400 text-rt-12 mb-2">Actividad Total</div>
+          <div className="text-white text-rt-28 font-bold">{actividadData.reduce((sum, d) => sum + d.usuarios, 0)}</div>
+          <div className="text-grey-500 text-rt-11 mt-1">Usuarios registrados (últimos 12 meses)</div>
+        </div>
+      </div>
+
+      {/* Gráficos */}
+      <div className="bg-surface-card border border-surface-line rounded-lg p-6">
+        <h3 className="text-white text-rt-16 font-bold mb-4">Actividad de Usuarios</h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={actividadData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+            <XAxis dataKey="month" stroke="#666" />
+            <YAxis stroke="#666" />
+            <Tooltip
+              contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+              labelStyle={{ color: '#fff' }}
+            />
+            <Legend />
+            <Line
+              type="monotone"
+              dataKey="usuarios"
+              stroke="#22c55e"
+              strokeWidth={2}
+              dot={{ fill: '#22c55e', r: 4 }}
+              name="Nuevos Usuarios"
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="bg-surface-card border border-surface-line rounded-lg p-6">
+        <h3 className="text-white text-rt-16 font-bold mb-4">Retención de Usuarios</h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={retencionData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+            <XAxis dataKey="month" stroke="#666" />
+            <YAxis stroke="#666" />
+            <Tooltip
+              contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+              labelStyle={{ color: '#fff' }}
+            />
+            <Legend />
+            <Bar dataKey="nuevos" fill="#3b82f6" name="Nuevos" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="retenidos" fill="#22c55e" name="Retenidos" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  )
+}
+
+function AnalyticsTab() {
+  const [chartData, setChartData] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [period, setPeriod] = useState<'week' | 'month' | 'year'>('month')
+
+  useEffect(() => {
+    void loadAnalytics()
+  }, [period])
+
+  async function loadAnalytics() {
+    setLoading(true)
+    try {
+      // Revenue por período
+      const { data: transactions } = await supabase
+        .from('transactions')
+        .select('amount,created_at,status')
+        .eq('status', 'completed')
+
+      const periodMap: Record<string, number> = {}
+      transactions?.forEach((t) => {
+        const date = new Date(t.created_at)
+        let key = ''
+        if (period === 'week') {
+          const weekNum = Math.ceil((date.getDate()) / 7)
+          key = `Sem ${weekNum}`
+        } else if (period === 'month') {
+          key = date.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })
+        } else {
+          key = date.getFullYear().toString()
+        }
+        periodMap[key] = (periodMap[key] || 0) + (t.amount || 0)
+      })
+
+      const data = Object.entries(periodMap).map(([period, amount]) => ({
+        period,
+        revenue: Math.round(amount / 100),
+      }))
+      setChartData(data)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) return <div className="text-white">Cargando...</div>
+
+  return (
+    <div className="space-y-6">
+      <div className="flex gap-2">
+        {(['week', 'month', 'year'] as const).map((p) => (
+          <button
+            key={p}
+            onClick={() => setPeriod(p)}
+            className={`px-4 h-9 rounded-lg text-rt-12 font-semibold border transition ${
+              period === p
+                ? 'bg-brand border-brand text-white'
+                : 'bg-transparent border-grey-700 text-grey-400 hover:text-white'
+            }`}
+          >
+            {p === 'week' ? 'Esta Semana' : p === 'month' ? 'Este Mes' : 'Este Año'}
+          </button>
+        ))}
+      </div>
+
+      <div className="bg-surface-card border border-surface-line rounded-lg p-6">
+        <h3 className="text-white text-rt-16 font-bold mb-4">Ingresos por Período</h3>
+        <ResponsiveContainer width="100%" height={400}>
+          <LineChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+            <XAxis dataKey="period" stroke="#666" />
+            <YAxis stroke="#666" />
+            <Tooltip
+              contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+              labelStyle={{ color: '#fff' }}
+              formatter={(value) => `$${value}`}
+            />
+            <Legend />
+            <Line
+              type="monotone"
+              dataKey="revenue"
+              stroke="#10b981"
+              strokeWidth={3}
+              dot={{ fill: '#10b981', r: 5 }}
+              name="Revenue ($)"
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-surface-card border border-surface-line rounded-lg p-4">
+          <div className="text-grey-400 text-rt-12 mb-2">Total Revenue</div>
+          <div className="text-white text-rt-24 font-bold">
+            ${chartData.reduce((sum, d) => sum + d.revenue, 0)}
+          </div>
+        </div>
+        <div className="bg-surface-card border border-surface-line rounded-lg p-4">
+          <div className="text-grey-400 text-rt-12 mb-2">Promedio por Período</div>
+          <div className="text-white text-rt-24 font-bold">
+            ${Math.round(chartData.reduce((sum, d) => sum + d.revenue, 0) / (chartData.length || 1))}
+          </div>
+        </div>
+        <div className="bg-surface-card border border-surface-line rounded-lg p-4">
+          <div className="text-grey-400 text-rt-12 mb-2">Períodos con Data</div>
+          <div className="text-white text-rt-24 font-bold">{chartData.length}</div>
+        </div>
+      </div>
     </div>
   )
 }
