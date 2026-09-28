@@ -43,6 +43,7 @@ import { MensalidadePage } from '@/pages/aluno/Mensalidade'
 import { PerfilProfessorPublicoPage } from '@/pages/aluno/PerfilProfessor'
 import { AvaliacaoAlunoPage } from '@/pages/aluno/Avaliacao'
 import { EncontrarProfessorPage } from '@/pages/aluno/EncontrarProfessor'
+import { AdminDashboardPage } from '@/pages/admin/AdminDashboard'
 
 export default function App() {
   return (
@@ -53,6 +54,7 @@ export default function App() {
           <Route path="/" element={<SplashPage />} />
           <Route path="/identificacao" element={<IdentificacaoPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="/esqueci-senha" element={<EsqueciSenhaPage />} />
           <Route path="/redefinir-senha" element={<RedefinirSenhaPage />} />
           <Route path="/cadastro/professor" element={<CadastroProfessorPage />} />
