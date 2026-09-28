@@ -1,117 +1,64 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
-import { Users, TrendingUp, CreditCard, Mail, LogOut, BarChart3, TrendingDown } from 'lucide-react'
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { Users, TrendingUp, CreditCard, LogOut, BarChart3, Search } from 'lucide-react'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
-type Tab = 'dashboard' | 'professors' | 'students' | 'subscriptions' | 'emails' | 'reportes' | 'analytics'
+type Tab = 'resumen' | 'profesores' | 'alumnos' | 'planes' | 'crecimiento'
 
-type Stats = {
-  totalProfessors: number
-  totalStudents: number
-  activeSubscriptions: number
-  monthlyRevenue: number
-  failedEmails: number
+type Perfil = {
+  id: string
+  role: 'teacher' | 'student'
+  full_name: string | null
+  email: string | null
+  country: string | null
+  teacher_id: string | null
+  link_status: string | null
+  plan: string | null
+  plan_seats: number | null
+  plan_status: string | null
+  plan_cancel_at_period_end: boolean | null
+  created_at: string
 }
+
+// Precios de planes_stripe: Básico por alumno, Pro fijo. BR cobra en BRL, el resto en USD.
+function precioMensual(p: Perfil): { valor: number; moneda: 'BRL' | 'USD' } | null {
+  if (p.plan_status !== 'active') return null
+  const br = p.country === 'BR'
+  if (p.plan === 'basic') return { valor: (p.plan_seats ?? 0) * (br ? 5.9 : 1), moneda: br ? 'BRL' : 'USD' }
+  if (p.plan === 'pro') return { valor: br ? 149.9 : 29.99, moneda: br ? 'BRL' : 'USD' }
+  return null
+}
+
+const dinero = (v: number, m: 'BRL' | 'USD') =>
+  v.toLocaleString(m === 'BRL' ? 'pt-BR' : 'en-US', { style: 'currency', currency: m })
+
+const fecha = (s: string) => new Date(s).toLocaleDateString('es-ES')
 
 export function AdminDashboardPage() {
   const nav = useNavigate()
   const { user, loading: authLoading } = useAuth()
   const [isAdmin, setIsAdmin] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<Tab>('dashboard')
-  const [stats, setStats] = useState<Stats>({
-    totalProfessors: 0,
-    totalStudents: 0,
-    activeSubscriptions: 0,
-    monthlyRevenue: 0,
-    failedEmails: 0,
-  })
+  const [perfiles, setPerfiles] = useState<Perfil[] | null>(null)
+  const [tab, setTab] = useState<Tab>('resumen')
 
-  // Verificar si es admin
   useEffect(() => {
     if (authLoading) return
-    if (!user) {
-      nav('/login')
-      return
-    }
+    if (!user) { nav('/login'); return }
     void (async () => {
-      try {
-        const { data, error } = await supabase
-          .from('admins')
-          .select('id')
-          .eq('user_id', user.id)
-          .maybeSingle()
-
-        if (error || !data) {
-          nav('/')
-          return
-        }
-        setIsAdmin(true)
-        loadStats()
-      } catch (err) {
-        console.error('Admin check error:', err)
-        nav('/')
-      }
+      const { data } = await supabase.from('admins').select('id').eq('user_id', user.id).maybeSingle()
+      if (!data) { nav('/'); return }
+      setIsAdmin(true)
+      const { data: ps } = await supabase
+        .from('profiles')
+        .select('id,role,full_name,email,country,teacher_id,link_status,plan,plan_seats,plan_status,plan_cancel_at_period_end,created_at')
+        .order('created_at', { ascending: false })
+      setPerfiles((ps as Perfil[]) ?? [])
     })()
   }, [authLoading, user, nav])
 
-  // Cargar estadísticas
-  async function loadStats() {
-    setLoading(true)
-    try {
-      // Total de profesores
-      const { count: profCount } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'teacher')
-
-      // Total de alumnos
-      const { count: studentCount } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'student')
-
-      // Suscripciones activas
-      const { data: subs } = await supabase
-        .from('subscriptions')
-        .select('id,amount,currency')
-        .eq('status', 'active')
-
-      // Revenue del mes actual
-      const now = new Date()
-      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
-      const { data: transactions } = await supabase
-        .from('transactions')
-        .select('amount,currency')
-        .gte('created_at', monthStart)
-        .eq('status', 'completed')
-
-      // Emails fallidos
-      const { count: emailFailCount } = await supabase
-        .from('email_logs')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'failed')
-
-      setStats({
-        totalProfessors: profCount || 0,
-        totalStudents: studentCount || 0,
-        activeSubscriptions: subs?.length || 0,
-        monthlyRevenue: transactions?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0,
-        failedEmails: emailFailCount || 0,
-      })
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function logout() {
-    await supabase.auth.signOut()
-    nav('/')
-  }
-
-  if (!isAdmin || loading) {
+  if (!isAdmin || !perfiles) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-surface-app">
         <div className="text-white text-rt-16">Cargando...</div>
@@ -119,533 +66,212 @@ export function AdminDashboardPage() {
     )
   }
 
+  const tabs = [
+    { id: 'resumen', label: 'Resumen', icon: TrendingUp },
+    { id: 'profesores', label: 'Profesores', icon: Users },
+    { id: 'alumnos', label: 'Alumnos', icon: Users },
+    { id: 'planes', label: 'Planes', icon: CreditCard },
+    { id: 'crecimiento', label: 'Crecimiento', icon: BarChart3 },
+  ] as const
+
   return (
     <div className="min-h-screen bg-surface-app pt-4 px-4 pb-8">
-      {/* Header */}
-      <div className="max-w-7xl mx-auto mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-white text-rt-28 font-bold">Admin Dashboard</h1>
-            <p className="text-grey-400 text-rt-13 mt-1">{user?.email}</p>
-          </div>
+      <div className="max-w-7xl mx-auto mb-6 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-white text-rt-24 font-bold">Admin Rutyn</h1>
+          <p className="text-grey-400 text-rt-12 truncate">{user?.email}</p>
+        </div>
+        <button
+          onClick={async () => { await supabase.auth.signOut(); nav('/') }}
+          className="flex items-center gap-2 px-4 h-10 rounded-lg border border-danger text-danger text-rt-12 font-semibold shrink-0"
+        >
+          <LogOut size={16} /> Salir
+        </button>
+      </div>
+
+      <div className="max-w-7xl mx-auto mb-6 flex gap-2 border-b border-surface-line overflow-x-auto no-scrollbar">
+        {tabs.map(({ id, label, icon: Icon }) => (
           <button
-            onClick={logout}
-            className="flex items-center gap-2 px-4 h-10 rounded-lg bg-danger/10 border border-danger text-danger text-rt-12 font-semibold hover:bg-danger/20 transition"
-          >
-            <LogOut size={16} /> Logout
-          </button>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="max-w-7xl mx-auto mb-8">
-        <div className="flex gap-2 border-b border-surface-line overflow-x-auto">
-          {[
-            { id: 'dashboard', label: 'Dashboard', icon: TrendingUp },
-            { id: 'professors', label: 'Profesores', icon: Users },
-            { id: 'students', label: 'Alumnos', icon: Users },
-            { id: 'subscriptions', label: 'Suscripciones', icon: CreditCard },
-            { id: 'emails', label: 'Emails', icon: Mail },
-            { id: 'reportes', label: 'Reportes', icon: BarChart3 },
-            { id: 'analytics', label: 'Analytics', icon: TrendingDown },
-          ].map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              onClick={() => setTab(id as Tab)}
-              className={`flex items-center gap-2 px-4 h-12 text-rt-13 font-semibold whitespace-nowrap border-b-2 transition ${
-                tab === id
-                  ? 'border-brand text-brand'
-                  : 'border-transparent text-grey-400 hover:text-white'
-              }`}
-            >
-              <Icon size={16} /> {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="max-w-7xl mx-auto">
-        {tab === 'dashboard' && (
-          <DashboardTab stats={stats} />
-        )}
-        {tab === 'professors' && (
-          <ProfessorsTab />
-        )}
-        {tab === 'students' && (
-          <StudentsTab />
-        )}
-        {tab === 'subscriptions' && (
-          <SubscriptionsTab />
-        )}
-        {tab === 'emails' && (
-          <EmailsTab />
-        )}
-        {tab === 'reportes' && (
-          <ReportesTab />
-        )}
-        {tab === 'analytics' && (
-          <AnalyticsTab />
-        )}
-      </div>
-    </div>
-  )
-}
-
-function DashboardTab({ stats }: { stats: Stats }) {
-  const cards = [
-    { label: 'Profesores Activos', value: stats.totalProfessors, icon: Users, color: 'bg-brand' },
-    { label: 'Alumnos Activos', value: stats.totalStudents, icon: Users, color: 'bg-blue-500' },
-    { label: 'Suscripciones Activas', value: stats.activeSubscriptions, icon: CreditCard, color: 'bg-green-500' },
-    { label: 'Ingresos (este mes)', value: `$${(stats.monthlyRevenue / 100).toFixed(2)}`, icon: TrendingUp, color: 'bg-emerald-500' },
-    { label: 'Emails Fallidos', value: stats.failedEmails, icon: Mail, color: 'bg-danger' },
-  ]
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-      {cards.map((card) => {
-        const Icon = card.icon
-        return (
-          <div key={card.label} className="bg-surface-card border border-surface-line rounded-lg p-4">
-            <div className="flex items-start justify-between mb-3">
-              <span className="text-grey-400 text-rt-12">{card.label}</span>
-              <div className={`${card.color} w-8 h-8 rounded-lg flex items-center justify-center`}>
-                <Icon size={16} className="text-white" />
-              </div>
-            </div>
-            <div className="text-white text-rt-24 font-bold">{card.value}</div>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-function ProfessorsTab() {
-  const [professors, setProfessors] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    void (async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('id,full_name,email,country,created_at')
-        .eq('role', 'teacher')
-        .order('created_at', { ascending: false })
-      setProfessors(data || [])
-      setLoading(false)
-    })()
-  }, [])
-
-  if (loading) return <div className="text-white">Cargando...</div>
-
-  return (
-    <div className="bg-surface-card border border-surface-line rounded-lg overflow-hidden">
-      <table className="w-full">
-        <thead>
-          <tr className="border-b border-surface-line">
-            <th className="text-left px-4 py-3 text-grey-400 text-rt-12 font-semibold">Nombre</th>
-            <th className="text-left px-4 py-3 text-grey-400 text-rt-12 font-semibold">Email</th>
-            <th className="text-left px-4 py-3 text-grey-400 text-rt-12 font-semibold">País</th>
-            <th className="text-left px-4 py-3 text-grey-400 text-rt-12 font-semibold">Fecha Registro</th>
-          </tr>
-        </thead>
-        <tbody>
-          {professors.map((prof) => (
-            <tr key={prof.id} className="border-b border-surface-line hover:bg-surface-line/50">
-              <td className="px-4 py-3 text-white text-rt-13">{prof.full_name}</td>
-              <td className="px-4 py-3 text-white text-rt-13">{prof.email}</td>
-              <td className="px-4 py-3 text-white text-rt-13">{prof.country}</td>
-              <td className="px-4 py-3 text-grey-400 text-rt-12">{new Date(prof.created_at).toLocaleDateString()}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
-}
-
-function StudentsTab() {
-  const [students, setStudents] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    void (async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('id,full_name,email,country,teacher_id,created_at')
-        .eq('role', 'student')
-        .order('created_at', { ascending: false })
-      setStudents(data || [])
-      setLoading(false)
-    })()
-  }, [])
-
-  if (loading) return <div className="text-white">Cargando...</div>
-
-  return (
-    <div className="bg-surface-card border border-surface-line rounded-lg overflow-hidden">
-      <table className="w-full">
-        <thead>
-          <tr className="border-b border-surface-line">
-            <th className="text-left px-4 py-3 text-grey-400 text-rt-12 font-semibold">Nombre</th>
-            <th className="text-left px-4 py-3 text-grey-400 text-rt-12 font-semibold">Email</th>
-            <th className="text-left px-4 py-3 text-grey-400 text-rt-12 font-semibold">Profesor ID</th>
-            <th className="text-left px-4 py-3 text-grey-400 text-rt-12 font-semibold">Fecha Registro</th>
-          </tr>
-        </thead>
-        <tbody>
-          {students.map((student) => (
-            <tr key={student.id} className="border-b border-surface-line hover:bg-surface-line/50">
-              <td className="px-4 py-3 text-white text-rt-13">{student.full_name}</td>
-              <td className="px-4 py-3 text-white text-rt-13">{student.email}</td>
-              <td className="px-4 py-3 text-grey-400 text-rt-12">{student.teacher_id?.slice(0, 8)}</td>
-              <td className="px-4 py-3 text-grey-400 text-rt-12">{new Date(student.created_at).toLocaleDateString()}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
-}
-
-function SubscriptionsTab() {
-  const [subscriptions, setSubscriptions] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    void (async () => {
-      const { data } = await supabase
-        .from('subscriptions')
-        .select('id,teacher_id,plan,status,amount,currency,current_period_start,current_period_end')
-        .order('current_period_end', { ascending: false })
-      setSubscriptions(data || [])
-      setLoading(false)
-    })()
-  }, [])
-
-  if (loading) return <div className="text-white">Cargando...</div>
-
-  return (
-    <div className="bg-surface-card border border-surface-line rounded-lg overflow-hidden">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-surface-line">
-            <th className="text-left px-4 py-3 text-grey-400 text-rt-12 font-semibold">Plan</th>
-            <th className="text-left px-4 py-3 text-grey-400 text-rt-12 font-semibold">Status</th>
-            <th className="text-left px-4 py-3 text-grey-400 text-rt-12 font-semibold">Monto</th>
-            <th className="text-left px-4 py-3 text-grey-400 text-rt-12 font-semibold">Fin Período</th>
-          </tr>
-        </thead>
-        <tbody>
-          {subscriptions.map((sub) => (
-            <tr key={sub.id} className="border-b border-surface-line hover:bg-surface-line/50">
-              <td className="px-4 py-3 text-white text-rt-13 font-semibold">{sub.plan}</td>
-              <td className="px-4 py-3">
-                <span className={`px-2 py-1 rounded text-rt-11 font-semibold ${
-                  sub.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-grey-500/20 text-grey-400'
-                }`}>
-                  {sub.status}
-                </span>
-              </td>
-              <td className="px-4 py-3 text-white text-rt-13">${(sub.amount / 100).toFixed(2)} {sub.currency}</td>
-              <td className="px-4 py-3 text-grey-400 text-rt-12">{new Date(sub.current_period_end).toLocaleDateString()}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
-}
-
-function EmailsTab() {
-  const [emails, setEmails] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    void (async () => {
-      const { data } = await supabase
-        .from('email_logs')
-        .select('id,recipient,subject,status,created_at')
-        .order('created_at', { ascending: false })
-        .limit(50)
-      setEmails(data || [])
-      setLoading(false)
-    })()
-  }, [])
-
-  if (loading) return <div className="text-white">Cargando...</div>
-
-  return (
-    <div className="bg-surface-card border border-surface-line rounded-lg overflow-hidden">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-surface-line">
-            <th className="text-left px-4 py-3 text-grey-400 text-rt-12 font-semibold">Destinatario</th>
-            <th className="text-left px-4 py-3 text-grey-400 text-rt-12 font-semibold">Asunto</th>
-            <th className="text-left px-4 py-3 text-grey-400 text-rt-12 font-semibold">Status</th>
-            <th className="text-left px-4 py-3 text-grey-400 text-rt-12 font-semibold">Fecha</th>
-          </tr>
-        </thead>
-        <tbody>
-          {emails.map((email) => (
-            <tr key={email.id} className="border-b border-surface-line hover:bg-surface-line/50">
-              <td className="px-4 py-3 text-white text-rt-13">{email.recipient}</td>
-              <td className="px-4 py-3 text-white text-rt-13 truncate">{email.subject}</td>
-              <td className="px-4 py-3">
-                <span className={`px-2 py-1 rounded text-rt-11 font-semibold ${
-                  email.status === 'sent' ? 'bg-green-500/20 text-green-400' : 'bg-danger/20 text-danger'
-                }`}>
-                  {email.status}
-                </span>
-              </td>
-              <td className="px-4 py-3 text-grey-400 text-rt-12">{new Date(email.created_at).toLocaleDateString()}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
-}
-
-function ReportesTab() {
-  const [actividadData, setActividadData] = useState<any[]>([])
-  const [retencionData, setRetencionData] = useState<any[]>([])
-  const [ltv, setLtv] = useState({ avgPerTeacher: 0, avgPerStudent: 0 })
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    void loadReportes()
-  }, [])
-
-  async function loadReportes() {
-    setLoading(true)
-    try {
-      // Actividad: usuarios nuevos por mes (últimos 12 meses)
-      const { data: usuarios } = await supabase
-        .from('profiles')
-        .select('created_at')
-        .order('created_at')
-
-      const actividadMap: Record<string, number> = {}
-      usuarios?.forEach((u) => {
-        const month = new Date(u.created_at).toISOString().slice(0, 7)
-        actividadMap[month] = (actividadMap[month] || 0) + 1
-      })
-      const actData = Object.entries(actividadMap)
-        .slice(-12)
-        .map(([month, count]) => ({ month, usuarios: count }))
-      setActividadData(actData)
-
-      // LTV: revenue promedio por usuario
-      const { data: subs } = await supabase
-        .from('subscriptions')
-        .select('amount,teacher_id')
-
-      const { count: teacherCount } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'teacher')
-
-      const totalRevenue = subs?.reduce((sum, s) => sum + (s.amount || 0), 0) || 0
-      const avgPerTeacher = teacherCount ? totalRevenue / 100 / teacherCount : 0
-
-      setLtv({
-        avgPerTeacher,
-        avgPerStudent: 0,
-      })
-
-      // Retención: simplificado (usuarios que crearon algo en dos meses consecutivos)
-      const retencionMap: Record<string, { nuevos: number; retenidos: number }> = {}
-      usuarios?.forEach((u) => {
-        const month = new Date(u.created_at).toISOString().slice(0, 7)
-        if (!retencionMap[month]) retencionMap[month] = { nuevos: 0, retenidos: 0 }
-        retencionMap[month].nuevos += 1
-      })
-
-      const retencionArray = Object.entries(retencionMap)
-        .slice(-12)
-        .map(([month, data]) => ({
-          month,
-          nuevos: data.nuevos,
-          retenidos: Math.floor(data.nuevos * 0.7), // Simplificado: asumir 70% retención
-        }))
-      setRetencionData(retencionArray)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (loading) return <div className="text-white">Cargando...</div>
-
-  return (
-    <div className="space-y-6">
-      {/* LTV Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-surface-card border border-surface-line rounded-lg p-4">
-          <div className="text-grey-400 text-rt-12 mb-2">LTV Promedio por Profesor</div>
-          <div className="text-white text-rt-28 font-bold">${ltv.avgPerTeacher.toFixed(2)}</div>
-          <div className="text-grey-500 text-rt-11 mt-1">Lifetime value estimado</div>
-        </div>
-        <div className="bg-surface-card border border-surface-line rounded-lg p-4">
-          <div className="text-grey-400 text-rt-12 mb-2">Actividad Total</div>
-          <div className="text-white text-rt-28 font-bold">{actividadData.reduce((sum, d) => sum + d.usuarios, 0)}</div>
-          <div className="text-grey-500 text-rt-11 mt-1">Usuarios registrados (últimos 12 meses)</div>
-        </div>
-      </div>
-
-      {/* Gráficos */}
-      <div className="bg-surface-card border border-surface-line rounded-lg p-6">
-        <h3 className="text-white text-rt-16 font-bold mb-4">Actividad de Usuarios</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={actividadData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-            <XAxis dataKey="month" stroke="#666" />
-            <YAxis stroke="#666" />
-            <Tooltip
-              contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
-              labelStyle={{ color: '#fff' }}
-            />
-            <Legend />
-            <Line
-              type="monotone"
-              dataKey="usuarios"
-              stroke="#22c55e"
-              strokeWidth={2}
-              dot={{ fill: '#22c55e', r: 4 }}
-              name="Nuevos Usuarios"
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-
-      <div className="bg-surface-card border border-surface-line rounded-lg p-6">
-        <h3 className="text-white text-rt-16 font-bold mb-4">Retención de Usuarios</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={retencionData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-            <XAxis dataKey="month" stroke="#666" />
-            <YAxis stroke="#666" />
-            <Tooltip
-              contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
-              labelStyle={{ color: '#fff' }}
-            />
-            <Legend />
-            <Bar dataKey="nuevos" fill="#3b82f6" name="Nuevos" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="retenidos" fill="#22c55e" name="Retenidos" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
-  )
-}
-
-function AnalyticsTab() {
-  const [chartData, setChartData] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [period, setPeriod] = useState<'week' | 'month' | 'year'>('month')
-
-  useEffect(() => {
-    void loadAnalytics()
-  }, [period])
-
-  async function loadAnalytics() {
-    setLoading(true)
-    try {
-      // Revenue por período
-      const { data: transactions } = await supabase
-        .from('transactions')
-        .select('amount,created_at,status')
-        .eq('status', 'completed')
-
-      const periodMap: Record<string, number> = {}
-      transactions?.forEach((t) => {
-        const date = new Date(t.created_at)
-        let key = ''
-        if (period === 'week') {
-          const weekNum = Math.ceil((date.getDate()) / 7)
-          key = `Sem ${weekNum}`
-        } else if (period === 'month') {
-          key = date.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })
-        } else {
-          key = date.getFullYear().toString()
-        }
-        periodMap[key] = (periodMap[key] || 0) + (t.amount || 0)
-      })
-
-      const data = Object.entries(periodMap).map(([period, amount]) => ({
-        period,
-        revenue: Math.round(amount / 100),
-      }))
-      setChartData(data)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (loading) return <div className="text-white">Cargando...</div>
-
-  return (
-    <div className="space-y-6">
-      <div className="flex gap-2">
-        {(['week', 'month', 'year'] as const).map((p) => (
-          <button
-            key={p}
-            onClick={() => setPeriod(p)}
-            className={`px-4 h-9 rounded-lg text-rt-12 font-semibold border transition ${
-              period === p
-                ? 'bg-brand border-brand text-white'
-                : 'bg-transparent border-grey-700 text-grey-400 hover:text-white'
+            key={id}
+            onClick={() => setTab(id)}
+            className={`flex items-center gap-2 px-4 h-11 text-rt-13 font-semibold whitespace-nowrap border-b-2 ${
+              tab === id ? 'border-brand text-brand' : 'border-transparent text-grey-400 hover:text-white'
             }`}
           >
-            {p === 'week' ? 'Esta Semana' : p === 'month' ? 'Este Mes' : 'Este Año'}
+            <Icon size={16} /> {label}
           </button>
         ))}
       </div>
 
-      <div className="bg-surface-card border border-surface-line rounded-lg p-6">
-        <h3 className="text-white text-rt-16 font-bold mb-4">Ingresos por Período</h3>
-        <ResponsiveContainer width="100%" height={400}>
-          <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-            <XAxis dataKey="period" stroke="#666" />
-            <YAxis stroke="#666" />
-            <Tooltip
-              contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
-              labelStyle={{ color: '#fff' }}
-              formatter={(value: any) => `$${value}`}
-            />
-            <Legend />
-            <Line
-              type="monotone"
-              dataKey="revenue"
-              stroke="#10b981"
-              strokeWidth={3}
-              dot={{ fill: '#10b981', r: 5 }}
-              name="Revenue ($)"
-            />
-          </LineChart>
-        </ResponsiveContainer>
+      <div className="max-w-7xl mx-auto">
+        {tab === 'resumen' && <Resumen perfiles={perfiles} />}
+        {tab === 'profesores' && <Profesores perfiles={perfiles} />}
+        {tab === 'alumnos' && <Alumnos perfiles={perfiles} />}
+        {tab === 'planes' && <Planes perfiles={perfiles} />}
+        {tab === 'crecimiento' && <Crecimiento perfiles={perfiles} />}
       </div>
+    </div>
+  )
+}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-surface-card border border-surface-line rounded-lg p-4">
-          <div className="text-grey-400 text-rt-12 mb-2">Total Revenue</div>
-          <div className="text-white text-rt-24 font-bold">
-            ${chartData.reduce((sum, d) => sum + d.revenue, 0)}
-          </div>
-        </div>
-        <div className="bg-surface-card border border-surface-line rounded-lg p-4">
-          <div className="text-grey-400 text-rt-12 mb-2">Promedio por Período</div>
-          <div className="text-white text-rt-24 font-bold">
-            ${Math.round(chartData.reduce((sum, d) => sum + d.revenue, 0) / (chartData.length || 1))}
-          </div>
-        </div>
-        <div className="bg-surface-card border border-surface-line rounded-lg p-4">
-          <div className="text-grey-400 text-rt-12 mb-2">Períodos con Data</div>
-          <div className="text-white text-rt-24 font-bold">{chartData.length}</div>
-        </div>
-      </div>
+function Tarjeta({ label, valor, nota }: { label: string; valor: string | number; nota?: string }) {
+  return (
+    <div className="bg-surface-card border border-surface-line rounded-lg p-4">
+      <div className="text-grey-400 text-rt-12 mb-2">{label}</div>
+      <div className="text-white text-rt-24 font-bold">{valor}</div>
+      {nota && <div className="text-grey-500 text-rt-11 mt-1">{nota}</div>}
+    </div>
+  )
+}
+
+function Resumen({ perfiles }: { perfiles: Perfil[] }) {
+  const profes = perfiles.filter((p) => p.role === 'teacher')
+  const alumnos = perfiles.filter((p) => p.role === 'student')
+  const activos = alumnos.filter((a) => a.link_status === 'active').length
+  let brl = 0, usd = 0, pagantes = 0
+  for (const p of profes) {
+    const pr = precioMensual(p)
+    if (!pr) continue
+    pagantes++
+    if (pr.moneda === 'BRL') brl += pr.valor
+    else usd += pr.valor
+  }
+  const mes = new Date().toISOString().slice(0, 7)
+  const nuevosMes = perfiles.filter((p) => p.created_at.slice(0, 7) === mes).length
+
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+      <Tarjeta label="Profesores" valor={profes.length} />
+      <Tarjeta label="Alumnos" valor={alumnos.length} nota={`${activos} vinculados`} />
+      <Tarjeta label="Profesores pagantes" valor={pagantes} nota={`${profes.length - pagantes} en plan gratis`} />
+      <Tarjeta label="MRR Brasil" valor={dinero(brl, 'BRL')} nota="Ingreso mensual recurrente estimado" />
+      <Tarjeta label="MRR internacional" valor={dinero(usd, 'USD')} nota="Ingreso mensual recurrente estimado" />
+      <Tarjeta label="Registros este mes" valor={nuevosMes} />
+    </div>
+  )
+}
+
+function useBusqueda(lista: Perfil[]) {
+  const [q, setQ] = useState('')
+  const filtrados = useMemo(() => {
+    const t = q.trim().toLowerCase()
+    if (!t) return lista
+    return lista.filter((p) => (p.full_name ?? '').toLowerCase().includes(t) || (p.email ?? '').toLowerCase().includes(t))
+  }, [q, lista])
+  const input = (
+    <div className="relative mb-4 max-w-sm">
+      <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-grey-500" />
+      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por nombre o email" className="input-dark pl-9" />
+    </div>
+  )
+  return { filtrados, input }
+}
+
+function Tabla({ cabeceras, filas }: { cabeceras: string[]; filas: (string | number)[][] }) {
+  return (
+    <div className="bg-surface-card border border-surface-line rounded-lg overflow-x-auto">
+      <table className="w-full min-w-[640px]">
+        <thead>
+          <tr className="border-b border-surface-line">
+            {cabeceras.map((c) => <th key={c} className="text-left px-4 py-3 text-grey-400 text-rt-12 font-semibold">{c}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {filas.length === 0 && (
+            <tr><td colSpan={cabeceras.length} className="px-4 py-6 text-grey-500 text-rt-13">Sin resultados</td></tr>
+          )}
+          {filas.map((f, i) => (
+            <tr key={i} className="border-b border-surface-line last:border-0">
+              {f.map((v, j) => <td key={j} className="px-4 py-3 text-white text-rt-13">{v}</td>)}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+const nombrePlan = (p: string | null) => (p === 'basic' ? 'Básico' : p === 'pro' ? 'Pro' : 'Gratis')
+
+function Profesores({ perfiles }: { perfiles: Perfil[] }) {
+  const profes = useMemo(() => perfiles.filter((p) => p.role === 'teacher'), [perfiles])
+  const { filtrados, input } = useBusqueda(profes)
+  const alumnosPor = useMemo(() => {
+    const m: Record<string, number> = {}
+    for (const p of perfiles) if (p.role === 'student' && p.teacher_id && p.link_status === 'active') m[p.teacher_id] = (m[p.teacher_id] ?? 0) + 1
+    return m
+  }, [perfiles])
+  return (
+    <>
+      {input}
+      <Tabla
+        cabeceras={['Nombre', 'Email', 'País', 'Plan', 'Alumnos', 'Registro']}
+        filas={filtrados.map((p) => [p.full_name ?? '—', p.email ?? '—', p.country ?? '—', nombrePlan(p.plan), alumnosPor[p.id] ?? 0, fecha(p.created_at)])}
+      />
+    </>
+  )
+}
+
+function Alumnos({ perfiles }: { perfiles: Perfil[] }) {
+  const alumnos = useMemo(() => perfiles.filter((p) => p.role === 'student'), [perfiles])
+  const nombres = useMemo(() => Object.fromEntries(perfiles.map((p) => [p.id, p.full_name ?? p.email ?? '—'])), [perfiles])
+  const { filtrados, input } = useBusqueda(alumnos)
+  return (
+    <>
+      {input}
+      <Tabla
+        cabeceras={['Nombre', 'Email', 'Profesor', 'Vínculo', 'Registro']}
+        filas={filtrados.map((p) => [p.full_name ?? '—', p.email ?? '—', p.teacher_id ? nombres[p.teacher_id] ?? '—' : '—', p.link_status ?? '—', fecha(p.created_at)])}
+      />
+    </>
+  )
+}
+
+function Planes({ perfiles }: { perfiles: Perfil[] }) {
+  const pagos = perfiles.filter((p) => p.role === 'teacher' && p.plan && p.plan !== 'free')
+  return (
+    <Tabla
+      cabeceras={['Profesor', 'Plan', 'Estado', 'Cupos', 'Mensual', 'Renovación']}
+      filas={pagos.map((p) => {
+        const pr = precioMensual(p)
+        return [
+          p.full_name ?? p.email ?? '—',
+          nombrePlan(p.plan),
+          p.plan_status ?? '—',
+          p.plan === 'basic' ? p.plan_seats ?? 0 : '∞',
+          pr ? dinero(pr.valor, pr.moneda) : '—',
+          p.plan_cancel_at_period_end ? 'Cancela al final del período' : 'Automática',
+        ]
+      })}
+    />
+  )
+}
+
+function Crecimiento({ perfiles }: { perfiles: Perfil[] }) {
+  const datos = useMemo(() => {
+    const meses: string[] = []
+    const d = new Date()
+    for (let i = 11; i >= 0; i--) meses.push(new Date(d.getFullYear(), d.getMonth() - i, 1).toISOString().slice(0, 7))
+    return meses.map((m) => ({
+      mes: m,
+      Profesores: perfiles.filter((p) => p.role === 'teacher' && p.created_at.slice(0, 7) === m).length,
+      Alumnos: perfiles.filter((p) => p.role === 'student' && p.created_at.slice(0, 7) === m).length,
+    }))
+  }, [perfiles])
+  return (
+    <div className="bg-surface-card border border-surface-line rounded-lg p-4">
+      <h3 className="text-white text-rt-16 font-bold mb-4">Registros por mes (últimos 12 meses)</h3>
+      <ResponsiveContainer width="100%" height={320}>
+        <BarChart data={datos}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+          <XAxis dataKey="mes" stroke="#888" fontSize={11} />
+          <YAxis stroke="#888" allowDecimals={false} />
+          <Tooltip contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }} labelStyle={{ color: '#fff' }} />
+          <Legend />
+          <Bar dataKey="Profesores" fill="#8BC34A" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="Alumnos" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   )
 }
