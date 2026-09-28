@@ -73,7 +73,7 @@ export function MeusProjetosPage() {
       </div>
 
       {/* Categorías: Rutinas / Ejercicios / Dietas / etc */}
-      <div className="flex flex-wrap gap-2 mb-6 md:justify-center">
+      <div className="flex gap-2 mb-6 overflow-x-auto no-scrollbar -mx-4 px-4 md:mx-0 md:px-0 md:justify-center">
         {TABS.map((x) => {
           const on = tab === x.key
           return (
