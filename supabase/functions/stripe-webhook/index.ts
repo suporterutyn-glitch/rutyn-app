@@ -12,7 +12,8 @@ import { stripe, planDePrecio, json } from '../_shared/stripe.ts'
 
 const EVENTOS = [
   'checkout.session.completed', 'customer.subscription.created', 'customer.subscription.updated',
-  'customer.subscription.deleted', 'invoice.payment_failed',
+  'customer.subscription.deleted', 'invoice.payment_succeeded', 'invoice.payment_failed',
+  'charge.dispute.created',
 ]
 
 // Avisos con clave + datos (se traducen en la app); title/body en PT de respaldo.
@@ -68,13 +69,26 @@ Deno.serve(async (req: Request) => {
       if (cs.subscription) await sincronizar(admin, await s.subscriptions.retrieve(cs.subscription), cs.client_reference_id)
     } else if (event.type.startsWith('customer.subscription.')) {
       await sincronizar(admin, await s.subscriptions.retrieve(event.data.object.id).catch(() => event.data.object))
+    } else if (event.type === 'invoice.payment_succeeded') {
+      const inv = event.data.object
+      const { data: p } = await admin.from('profiles').select('id,plan').eq('stripe_customer_id', inv.customer).maybeSingle()
+      if (p && p.plan !== 'free') {
+        await admin.from('notifications').insert({ user_id: p.id, ...aviso('planActive', { plan: p.plan }), type: 'success' })
+      }
     } else if (event.type === 'invoice.payment_failed') {
       const inv = event.data.object
       const { data: p } = await admin.from('profiles').select('id').eq('stripe_customer_id', inv.customer).maybeSingle()
       if (p) await admin.from('notifications').insert({ user_id: p.id, ...aviso('paymentFailed', {}), type: 'warning' })
+    } else if (event.type === 'charge.dispute.created') {
+      const charge = event.data.object
+      console.warn('dispute', charge.id, charge.amount, charge.currency)
+      const { data: p } = await admin.from('profiles').select('id,plan').eq('stripe_customer_id', charge.customer).maybeSingle()
+      if (p && p.plan !== 'free') {
+        await admin.from('notifications').insert({ user_id: p.id, type: 'warning', title: 'Disputa en tu tarjeta', body: 'Stripe reportó una disputa. Revisa tu bandeja de correo.', data: {} })
+      }
     }
   } catch (e) {
-    console.error('webhook', event.type, e)
+    console.error('webhook error', event.type, event.id, e)
     return new Response('error', { status: 500 }) // Stripe reintenta
   }
   return new Response('ok')
