@@ -111,24 +111,24 @@ export function FilaSerie({
               </button>
             </div>
 
-            <div className="flex gap-2 mt-2 overflow-x-auto no-scrollbar">
+            <div className="grid grid-cols-2 gap-3 mt-3 md:grid-cols-3 lg:grid-cols-4">
               {puestos.map((p) => (
-                <div key={p.id} className="shrink-0 w-[85px] flex flex-col">
-                  <div className="text-grey-400 text-[10px] text-center leading-tight h-7 flex items-end justify-center pb-1">
+                <div key={p.id} className="bg-surface-card border border-surface-line rounded-[12px] p-3 flex flex-col">
+                  <label className="text-grey-500 text-rt-10 font-semibold mb-2 block">
                     {etiquetaParametro(p, lang)}
-                  </div>
+                  </label>
                   <input
                     type={p.tipo === 'time' ? 'text' : p.tipo === 'select' ? 'text' : 'text'}
                     value={params[p.id] ?? ''}
                     onChange={(e) => onParams({ ...params, [p.id]: e.target.value })}
-                    className="flex-1 h-[45px] rounded-[10px] bg-white text-black text-rt-14 font-bold px-1 text-center"
+                    className="bg-white text-black text-rt-16 font-bold py-2 px-2 rounded-[8px] text-center mb-2 outline-none border border-transparent focus:border-brand transition"
                   />
                   <button
                     type="button"
                     onClick={() => setEditando(p)}
-                    className="w-full h-5 rounded-md bg-white text-black text-[8px] font-bold mt-1"
+                    className="text-grey-400 text-rt-11 font-semibold hover:text-brand transition"
                   >
-                    {t('projetos:ser.edit')}
+                    {t('projetos:ser.edit')} / {t('projetos:ser.removeField')}
                   </button>
                 </div>
               ))}
