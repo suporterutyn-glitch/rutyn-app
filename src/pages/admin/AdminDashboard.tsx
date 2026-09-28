@@ -16,9 +16,8 @@ type Stats = {
 }
 
 export function AdminDashboardPage() {
-  const { t } = useTranslation()
   const nav = useNavigate()
-  const { user, profile } = useAuth()
+  const { user } = useAuth()
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<Tab>('dashboard')
