@@ -31,20 +31,28 @@ export function AdminDashboardPage() {
 
   // Verificar si es admin
   useEffect(() => {
-    if (!user?.email) return
+    if (!user?.email) {
+      nav('/')
+      return
+    }
     void (async () => {
-      const { data } = await supabase
-        .from('admins')
-        .select('id')
-        .eq('email', user.email)
-        .single()
+      try {
+        const { data, error } = await supabase
+          .from('admins')
+          .select('id')
+          .eq('email', user.email)
+          .maybeSingle()
 
-      if (!data) {
+        if (error || !data) {
+          nav('/')
+          return
+        }
+        setIsAdmin(true)
+        loadStats()
+      } catch (err) {
+        console.error('Admin check error:', err)
         nav('/')
-        return
       }
-      setIsAdmin(true)
-      loadStats()
     })()
   }, [user?.email, nav])
 
