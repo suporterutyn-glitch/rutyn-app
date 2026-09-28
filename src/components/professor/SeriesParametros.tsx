@@ -113,17 +113,16 @@ export function FilaSerie({
 
             <div className="flex gap-2 mt-2 overflow-x-auto no-scrollbar">
               {puestos.map((p) => (
-                <div key={p.id} className="shrink-0 w-[85px]">
+                <div key={p.id} className="shrink-0 w-[85px] flex flex-col">
                   <div className="text-grey-400 text-[10px] text-center leading-tight h-7 flex items-end justify-center pb-1">
                     {etiquetaParametro(p, lang)}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setEditando(p)}
-                    className="w-full h-[45px] rounded-[10px] bg-white text-black text-rt-14 font-bold px-1 truncate"
-                  >
-                    {valorFormateado(p, params[p.id], lang)}
-                  </button>
+                  <input
+                    type={p.tipo === 'time' ? 'text' : p.tipo === 'select' ? 'text' : 'text'}
+                    value={params[p.id] ?? ''}
+                    onChange={(e) => onParams({ ...params, [p.id]: e.target.value })}
+                    className="flex-1 h-[45px] rounded-[10px] bg-white text-black text-rt-14 font-bold px-1 text-center"
+                  />
                   <button
                     type="button"
                     onClick={() => setEditando(p)}
