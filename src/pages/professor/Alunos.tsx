@@ -237,9 +237,11 @@ export function AlunosPage() {
                       href={`https://wa.me/${s.phone.replace(/\D/g, '')}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-2 h-9 px-4 rounded-btn-pill border border-brand text-brand text-rt-13 font-semibold"
+                      className="inline-flex items-center justify-center gap-1.5 h-9 px-3.5 rounded-full bg-whatsapp hover:bg-whatsapp/90 active:scale-95 transition text-white text-rt-12 font-bold"
+                      title={s.phone}
+                      aria-label={`${t('students:whatsapp')}: ${s.phone}`}
                     >
-                      <Phone size={16} />
+                      <Phone size={14} strokeWidth={2.5} />
                       {t('students:whatsapp')}
                     </a>
                   )}
