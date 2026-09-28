@@ -8,7 +8,7 @@ import { useFavoritos } from '@/lib/favoritos'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { CajaSelector, HojaRadio } from '@/components/professor/SelectorRadio'
-import { categoriasAlimento, unidadesAlimento, abreviaturaUnidad, etiquetaDe } from '@/lib/catalogos'
+import { categoriasAlimento, unidadesAlimento, abreviaturaUnidad, etiquetaDe, type Catalogo } from '@/lib/catalogos'
 import { nombreEjercicio as nombreEnIdioma } from '@/lib/nombreEjercicio'
 import { useAuth } from '@/lib/auth'
 import { EmptyState, FixedBottomActions, FullScreenSheet } from './RoutinesTab'
@@ -51,6 +51,29 @@ export function coincideBusqueda(f: Pick<Food, 'name' | 'name_pt' | 'name_es' | 
   return coincide(busca, textosAlimento(f))
 }
 
+/** Macros llevados a 100 g/ml para poder comparar alimentos con porciones distintas (por unidad, tal cual). */
+export function por100(f: Food) {
+  const q = Number(f.portion_qty ?? 100)
+  const k = (f.unit === 'uni' || !q) ? 1 : 100 / q
+  return { kcal: Number(f.calories ?? 0) * k, p: Number(f.protein_g ?? 0) * k, c: Number(f.carbs_g ?? 0) * k, g: Number(f.fats_g ?? 0) * k }
+}
+
+const FILTROS_MACRO: { id: string; cumple: (m: ReturnType<typeof por100>) => boolean }[] = [
+  { id: 'highProtein', cumple: (m) => m.p >= 8 && m.kcal > 0 && (m.p * 4) / m.kcal >= 0.3 },
+  { id: 'lowCarb', cumple: (m) => m.c <= 5 },
+  { id: 'lowFat', cumple: (m) => m.g <= 3 },
+  { id: 'lowCalorie', cumple: (m) => m.kcal <= 100 },
+]
+
+const ORDENES: Catalogo[] = [
+  { id: 'name', pt: 'Nome (A-Z)', es: 'Nombre (A-Z)', en: 'Name (A-Z)' },
+  { id: 'protein', pt: 'Mais proteína', es: 'Más proteína', en: 'Most protein' },
+  { id: 'carbs', pt: 'Mais carboidrato', es: 'Más carbohidrato', en: 'Most carbs' },
+  { id: 'fat', pt: 'Mais gordura', es: 'Más grasa', en: 'Most fat' },
+  { id: 'kcalAsc', pt: 'Menos calorias', es: 'Menos calorías', en: 'Fewest calories' },
+  { id: 'kcalDesc', pt: 'Mais calorias', es: 'Más calorías', en: 'Most calories' },
+]
+
 export function porcionDe(f: Food) {
   return `${Number(f.portion_qty ?? 100)}${abreviaturaUnidad(f.unit)}`
 }
@@ -65,6 +88,9 @@ export function FoodsTab({ query, filtro }: { query: string; filtro: Filtro }) {
   const [editando, setEditando] = useState<Food | null>(null)
   const [seleccion, setSeleccion] = useState<string[]>([])
   const [categoria, setCategoria] = useState('')
+  const [macros, setMacros] = useState<string[]>([])
+  const [orden, setOrden] = useState('name')
+  const [eligiendoOrden, setEligiendoOrden] = useState(false)
   const [combinando, setCombinando] = useState(false)
   const [borrando, setBorrando] = useState<{ propios: Food[]; enUso: { food: Food; dietas: string[] }[] } | null>(null)
   const [aviso, setAviso] = useState<{ kind: 'error' | 'success'; message: string } | null>(null)
@@ -84,7 +110,13 @@ export function FoodsTab({ query, filtro }: { query: string; filtro: Filtro }) {
     .filter((f) => (filtro === 'minhas' ? f.trainer_id === profile?.id : true))
     .filter((f) => !categoria || (f.category ?? 'none') === categoria)
     .filter((f) => coincideBusqueda(f, query))
-    .sort((a, b) => nombreEnIdioma(a, lang).localeCompare(nombreEnIdioma(b, lang)))
+    .filter((f) => macros.every((id) => FILTROS_MACRO.find((x) => x.id === id)!.cumple(por100(f))))
+    .sort((a, b) => {
+      const ma = por100(a), mb = por100(b)
+      const d = orden === 'protein' ? mb.p - ma.p : orden === 'carbs' ? mb.c - ma.c : orden === 'fat' ? mb.g - ma.g
+        : orden === 'kcalAsc' ? ma.kcal - mb.kcal : orden === 'kcalDesc' ? mb.kcal - ma.kcal : 0
+      return d || nombreEnIdioma(a, lang).localeCompare(nombreEnIdioma(b, lang))
+    })
 
   const categoriasPresentes = categoriasAlimento.map((c) => c.id).filter((id) => items.some((f) => (f.category ?? 'none') === id))
   const enSeleccion = seleccion.length > 0
@@ -164,6 +196,37 @@ export function FoodsTab({ query, filtro }: { query: string; filtro: Filtro }) {
           </button>
         ))}
       </div>
+
+      <div className="-mx-4 px-4 mb-3 flex gap-2 overflow-x-auto no-scrollbar items-center">
+        {FILTROS_MACRO.map((m) => {
+          const activo = macros.includes(m.id)
+          return (
+            <button
+              key={m.id}
+              type="button"
+              aria-pressed={activo}
+              onClick={() => { setMacros((p) => (activo ? p.filter((x) => x !== m.id) : [...p, m.id])); setSeleccion([]) }}
+              className={'shrink-0 px-3 py-1.5 rounded-[16px] text-rt-12 font-semibold border transition ' +
+                (activo ? 'bg-[#64B5F6] border-[#64B5F6] text-black' : 'bg-transparent border-[#424242] text-grey-400')}
+            >
+              {t(`projetos:al.macro.${m.id}`)}
+            </button>
+          )
+        })}
+        <button
+          type="button"
+          onClick={() => setEligiendoOrden(true)}
+          className={'shrink-0 px-3 py-1.5 rounded-[16px] text-rt-12 font-semibold border ' + (orden !== 'name' ? 'border-brand text-brand' : 'border-[#424242] text-grey-400')}
+        >
+          {t('projetos:al.sortBy')}: {etiquetaDe(ORDENES, orden, lang)}
+        </button>
+      </div>
+      {macros.length > 0 && (
+        <div className="text-grey-500 text-rt-11 mb-3 -mt-1">{t('projetos:al.per100Note')}</div>
+      )}
+      {eligiendoOrden && (
+        <HojaRadio lista={ORDENES} valor={orden} lang={lang} onElegir={(id) => { setOrden(id); setEligiendoOrden(false) }} onCerrar={() => setEligiendoOrden(false)} />
+      )}
 
       {loading ? (
         <div className="py-10 flex justify-center"><span className="w-8 h-8 rounded-full border-2 border-brand/30 border-t-brand animate-spin" /></div>

@@ -11,7 +11,8 @@ import { MiniaturaMedia, ReproductorMedia } from '@/components/MediaExercicio'
 import { CombinarExercicios } from './CombinarExercicios'
 import { CajaSelector, HojaRadio } from '@/components/professor/SelectorRadio'
 import { CajaMulti, HojaMulti } from '@/components/professor/SelectorMulti'
-import { gruposMusculares, categoriasExercicio, tiposMidia, etiquetasDe, etiquetaDe } from '@/lib/catalogos'
+import { gruposMusculares, categoriasExercicio, equipamentos, tiposMidia, etiquetasDe, etiquetaDe } from '@/lib/catalogos'
+import { FiltroCaja } from '@/components/professor/FiltroCaja'
 import { useAuth } from '@/lib/auth'
 import { EmptyState, FixedBottomActions, FullScreenSheet } from './RoutinesTab'
 import { nombreEjercicio, type ConTraducciones } from '@/lib/nombreEjercicio'
@@ -29,6 +30,7 @@ type Exercise = {
   thumbnail_url: string | null
   description: string | null
   equipment?: string | null
+  extra_categories?: string[] | null
 } & ConTraducciones
 
 export function ExercisesTab({ query, filtro }: { query: string; filtro: Filtro }) {
@@ -43,6 +45,10 @@ export function ExercisesTab({ query, filtro }: { query: string; filtro: Filtro 
   const [combinando, setCombinando] = useState(false)
   const [borrando, setBorrando] = useState<{ propios: Exercise[]; enUso: { nombre: string; rutina: string }[] } | null>(null)
   const [aviso, setAviso] = useState<{ kind: 'error' | 'success'; message: string } | null>(null)
+  const [fGrupo, setFGrupo] = useState('')
+  const [fCategoria, setFCategoria] = useState('')
+  const [fEquipo, setFEquipo] = useState('')
+  const [abriendoFiltro, setAbriendoFiltro] = useState<'grupo' | 'categoria' | 'equipo' | null>(null)
 
   async function load() {
     setLoading(true)
@@ -60,8 +66,18 @@ export function ExercisesTab({ query, filtro }: { query: string; filtro: Filtro 
   const filtered = items
     .filter((e) => (filtro === 'favoritos' ? esFavorito(e.id) : true))
     .filter((e) => (filtro === 'minhas' ? e.trainer_id === profile?.id : true))
+    .filter((e) => !fGrupo || (e.muscle_groups?.length ? e.muscle_groups : [e.muscle_group]).includes(fGrupo))
+    .filter((e) => !fCategoria || e.category === fCategoria || !!e.extra_categories?.includes(fCategoria))
+    .filter((e) => !fEquipo || e.equipment === fEquipo)
     .filter((e) => coincide(query, textosEjercicio(e)))
     .sort((x, y) => nombreEjercicio(x, i18n.language).localeCompare(nombreEjercicio(y, i18n.language)))
+
+  // Solo se ofrecen opciones que tienen ejercicios.
+  const usados = (ids: (string | null | undefined)[]) => new Set(ids.filter(Boolean) as string[])
+  const gruposUsados = usados(items.flatMap((e) => (e.muscle_groups?.length ? e.muscle_groups : [e.muscle_group])))
+  const categoriasUsadas = usados(items.flatMap((e) => [e.category, ...(e.extra_categories ?? [])]))
+  const equiposUsados = usados(items.map((e) => e.equipment))
+  const hayFiltro = !!(fGrupo || fCategoria || fEquipo)
 
   const enSeleccion = seleccion.length > 0
   const todosMarcados = filtered.length > 0 && filtered.every((e) => seleccion.includes(e.id))
@@ -133,6 +149,27 @@ export function ExercisesTab({ query, filtro }: { query: string; filtro: Filtro 
             {todosMarcados ? t('projetos:c.deselectAll') : t('projetos:c.selectAll')}
           </button>
         </div>
+      )}
+
+      <div className="flex items-center gap-2 mb-3">
+        <FiltroCaja etiqueta={t('projetos:ex.muscleGroup')} valor={fGrupo && etiquetaDe(gruposMusculares, fGrupo, i18n.language)} onClick={() => setAbriendoFiltro('grupo')} />
+        <FiltroCaja etiqueta={t('projetos:pick.categories')} valor={fCategoria && etiquetaDe(categoriasExercicio, fCategoria, i18n.language)} onClick={() => setAbriendoFiltro('categoria')} />
+        <FiltroCaja etiqueta={t('projetos:ex.equipmentFilter')} valor={fEquipo && etiquetaDe(equipamentos, fEquipo, i18n.language)} onClick={() => setAbriendoFiltro('equipo')} />
+      </div>
+      {hayFiltro && (
+        <div className="flex items-center justify-between mb-3 -mt-1">
+          <span className="text-grey-500 text-rt-12">{t('projetos:ex.resultCount', { count: filtered.length })}</span>
+          <button onClick={() => { setFGrupo(''); setFCategoria(''); setFEquipo('') }} className="text-[#EF5350] text-rt-12 font-semibold">{t('projetos:c.clear')}</button>
+        </div>
+      )}
+      {abriendoFiltro === 'grupo' && (
+        <HojaRadio lista={gruposMusculares.filter((g) => gruposUsados.has(g.id))} valor={fGrupo} lang={i18n.language} onElegir={(id) => { setFGrupo(id === fGrupo ? '' : id); setAbriendoFiltro(null) }} onCerrar={() => setAbriendoFiltro(null)} />
+      )}
+      {abriendoFiltro === 'categoria' && (
+        <HojaRadio lista={categoriasExercicio.filter((c) => categoriasUsadas.has(c.id))} valor={fCategoria} lang={i18n.language} onElegir={(id) => { setFCategoria(id === fCategoria ? '' : id); setAbriendoFiltro(null) }} onCerrar={() => setAbriendoFiltro(null)} />
+      )}
+      {abriendoFiltro === 'equipo' && (
+        <HojaRadio lista={equipamentos.filter((c) => equiposUsados.has(c.id))} valor={fEquipo} lang={i18n.language} onElegir={(id) => { setFEquipo(id === fEquipo ? '' : id); setAbriendoFiltro(null) }} onCerrar={() => setAbriendoFiltro(null)} />
       )}
 
       {loading ? (

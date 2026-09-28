@@ -9,6 +9,7 @@ export default textos({
       difficulty: 'Dificuldade', objective: 'Objetivo', beginnerPh: 'Iniciante', hypertrophyPh: 'Hipertrofia', routineName: 'Nome da Rotina',
     },
     ex: {
+      equipmentFilter: 'Equipamento', resultCount_one: '{{count}} exercício', resultCount_other: '{{count}} exercícios',
       loadError: 'Erro ao carregar exercícios: {{msg}}', noMedia: 'Este exercício não possui mídia disponível',
       cantDeleteApp: 'Os exercícios do catálogo do app não podem ser excluídos. Selecione exercícios criados por você.', routine: 'Rotina',
       deleted: '{{n}} exercício(s) excluído(s).', kept: ' {{n}} do catálogo do app foram mantidos.',
@@ -60,6 +61,7 @@ export default textos({
       saveParams: 'Salvar Parâmetros', useRange: 'Usar intervalo (ex: 10-12)', save: 'Salvar', removeField: 'Remover Campo', done: 'Pronto', close: 'Fechar',
     },
     al: {
+      macro: { highProtein: 'Rico em proteína', lowCarb: 'Baixo carboidrato', lowFat: 'Baixa gordura', lowCalorie: 'Baixas calorias' }, sortBy: 'Ordenar', per100Note: 'Valores comparados por 100 g ou 100 ml.',
       allCategories: 'Todas',
       loadError: 'Erro ao carregar alimentos: {{msg}}', cantDeleteApp: 'Os alimentos do catálogo do app não podem ser excluídos. Selecione alimentos criados por você.',
       deletedOk: '{{n}} alimento(s) excluído(s) com sucesso.', deletedForced: '{{n}} alimento(s) excluído(s) e removido(s) das dietas.', kept: ' {{n}} do catálogo do app foram mantidos.',
@@ -165,6 +167,7 @@ export default textos({
       difficulty: 'Dificultad', objective: 'Objetivo', beginnerPh: 'Principiante', hypertrophyPh: 'Hipertrofia', routineName: 'Nombre de la Rutina',
     },
     ex: {
+      equipmentFilter: 'Equipamiento', resultCount_one: '{{count}} ejercicio', resultCount_other: '{{count}} ejercicios',
       loadError: 'Error al cargar ejercicios: {{msg}}', noMedia: 'Este ejercicio no tiene multimedia disponible',
       cantDeleteApp: 'Los ejercicios del catálogo de la app no se pueden eliminar. Seleccioná ejercicios creados por vos.', routine: 'Rutina',
       deleted: '{{n}} ejercicio(s) eliminado(s).', kept: ' {{n}} del catálogo de la app se mantuvieron.',
@@ -216,6 +219,7 @@ export default textos({
       saveParams: 'Guardar Parámetros', useRange: 'Usar intervalo (ej: 10-12)', save: 'Guardar', removeField: 'Quitar Campo', done: 'Listo', close: 'Cerrar',
     },
     al: {
+      macro: { highProtein: 'Rico en proteína', lowCarb: 'Bajo en carbohidratos', lowFat: 'Bajo en grasa', lowCalorie: 'Bajo en calorías' }, sortBy: 'Ordenar', per100Note: 'Valores comparados por 100 g o 100 ml.',
       allCategories: 'Todas',
       loadError: 'Error al cargar alimentos: {{msg}}', cantDeleteApp: 'Los alimentos del catálogo de la app no se pueden eliminar. Seleccioná alimentos creados por vos.',
       deletedOk: '{{n}} alimento(s) eliminado(s) con éxito.', deletedForced: '{{n}} alimento(s) eliminado(s) y quitado(s) de las dietas.', kept: ' {{n}} del catálogo de la app se mantuvieron.',
@@ -321,6 +325,7 @@ export default textos({
       difficulty: 'Difficulty', objective: 'Goal', beginnerPh: 'Beginner', hypertrophyPh: 'Hypertrophy', routineName: 'Routine Name',
     },
     ex: {
+      equipmentFilter: 'Equipment', resultCount_one: '{{count}} exercise', resultCount_other: '{{count}} exercises',
       loadError: 'Error loading exercises: {{msg}}', noMedia: 'This exercise has no media available',
       cantDeleteApp: "The app's catalog exercises can't be deleted. Select exercises you created.", routine: 'Routine',
       deleted: '{{n}} exercise(s) deleted.', kept: ' {{n}} from the app catalog were kept.',
@@ -372,6 +377,7 @@ export default textos({
       saveParams: 'Save Parameters', useRange: 'Use range (e.g.: 10-12)', save: 'Save', removeField: 'Remove Field', done: 'Done', close: 'Close',
     },
     al: {
+      macro: { highProtein: 'High protein', lowCarb: 'Low carb', lowFat: 'Low fat', lowCalorie: 'Low calorie' }, sortBy: 'Sort', per100Note: 'Values compared per 100 g or 100 ml.',
       allCategories: 'All',
       loadError: 'Error loading foods: {{msg}}', cantDeleteApp: "The app's catalog foods can't be deleted. Select foods you created.",
       deletedOk: '{{n}} food(s) deleted successfully.', deletedForced: '{{n}} food(s) deleted and removed from diets.', kept: ' {{n}} from the app catalog were kept.',
