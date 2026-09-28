@@ -159,11 +159,13 @@ export const unidadesAlimento: Catalogo[] = [
   { id: 'ml', pt: 'ml (Mililitros)', es: 'ml (Mililitros)', en: 'ml (Milliliters)' },
   { id: 'l', pt: 'L (Litros)', es: 'L (Litros)', en: 'L (Liters)' },
   { id: 'uni', pt: 'Uni (Unidade)', es: 'Uni (Unidad)', en: 'Unit' },
+  { id: 'tbsp', pt: 'Cuchara de Sopa', es: 'Cuchara de Sopa', en: 'Tablespoon' },
+  { id: 'tsp', pt: 'Cuchara de Café', es: 'Cuchara de Café', en: 'Teaspoon' },
 ]
 
 /** Abreviatura que se muestra junto a la cantidad ('100g', '1 Uni'). */
 export function abreviaturaUnidad(id: string | null | undefined): string {
-  return id === 'kg' ? 'Kg' : id === 'l' ? 'L' : id === 'uni' ? ' Uni' : id ?? 'g'
+  return id === 'kg' ? 'Kg' : id === 'l' ? 'L' : id === 'uni' ? ' Uni' : id === 'tbsp' ? ' cda' : id === 'tsp' ? ' cdita' : id ?? 'g'
 }
 
 export const categoriasReceita: Catalogo[] = [
