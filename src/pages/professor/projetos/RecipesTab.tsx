@@ -154,7 +154,7 @@ export function RecipesTab({ query, filtro }: { query: string; filtro: Filtro })
       )}
 
       <FixedBottomActions>
-        <button className="w-full h-12 rounded-[12px] bg-[#2D2D2D] border border-[#616161] text-white text-rt-14 font-semibold flex items-center justify-center gap-2" onClick={() => setFormAbierto('nueva')}>
+        <button className="btn-create" onClick={() => setFormAbierto('nueva')}>
           <Plus size={18} /> {t('projetos:rec.newRecipe')}
         </button>
       </FixedBottomActions>

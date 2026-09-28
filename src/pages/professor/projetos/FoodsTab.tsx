@@ -259,7 +259,7 @@ export function FoodsTab({ query, filtro }: { query: string; filtro: Filtro }) {
 
       <FixedBottomActions>
         <button
-          className="w-full h-12 rounded-[12px] bg-[#2D2D2D] border border-[#616161] text-white text-rt-14 font-semibold flex items-center justify-center gap-2"
+          className="btn-create"
           onClick={() => setShowNew(true)}
         >
           <Plus size={18} /> {t('projetos:al.createNew')}

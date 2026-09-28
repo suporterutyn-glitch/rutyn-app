@@ -202,7 +202,7 @@ export function ExercisesTab({ query, filtro }: { query: string; filtro: Filtro 
       )}
 
       <FixedBottomActions>
-        <button className="btn-primary-pill h-12 rounded-btn-pill" onClick={() => setShowNew(true)}>
+        <button className="btn-create" onClick={() => setShowNew(true)}>
           <Plus size={20} /> {t('projetos:ex.createNew')}
         </button>
       </FixedBottomActions>

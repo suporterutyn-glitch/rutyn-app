@@ -105,6 +105,9 @@
   .btn-primary-pill {
     @apply relative w-full h-[55px] rounded-[50px] bg-brand-v shadow-btn text-white font-bold text-rt-20 flex items-center justify-center transition active:scale-[0.98];
   }
+  .btn-create {
+    @apply relative w-full h-12 rounded-[12px] bg-brand-v shadow-btn text-white font-semibold text-rt-14 flex items-center justify-center gap-2 transition active:scale-[0.98];
+  }
   .btn-save {
     @apply relative w-full h-[54px] rounded-[27px] bg-save shadow-glow text-white font-bold text-rt-16 flex items-center justify-center transition active:scale-[0.98];
   }
