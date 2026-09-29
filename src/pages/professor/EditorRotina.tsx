@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Plus, Trash2, Dumbbell, GripVertical, Users, Link2, ChevronDown, MoreVertical, Unlink } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -60,6 +60,18 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
   const [seleccion, setSeleccion] = useState<string[]>([])
   const [grupoAbierto, setGrupoAbierto] = useState<{ tipo: string; ids: string[] } | null>(null)
 
+  // Rutina de un alumno: cada cambio se manda a su app. Los cambios seguidos se juntan en uno.
+  const timerSync = useRef<number | undefined>(undefined)
+  function sincronizarPronto() {
+    if (!id || !routine?.student_id) return
+    window.clearTimeout(timerSync.current)
+    timerSync.current = window.setTimeout(() => { void sincronizarRutinaAlumno(id) }, 800)
+  }
+  useEffect(() => () => {
+    // Al salir del editor no se pierde el último cambio.
+    if (timerSync.current !== undefined && id) { window.clearTimeout(timerSync.current); void sincronizarRutinaAlumno(id) }
+  }, [id])
+
   // Reordenar ejercicios arrastrando por la manija.
   const arrastre = useArrastreLista<string>((desde, hasta) => void reordenarExercicios(desde, hasta))
 
@@ -74,6 +86,7 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
       const { error } = await supabase.from('series').update({ position: n }).eq('id', nuevo[n].id!)
       if (error) { setErrorGuardado(mensajeError(error)); return }
     }
+    sincronizarPronto()
   }
 
   async function reordenarExercicios(desdeId: string, hastaId: string) {
@@ -88,6 +101,7 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
       const { error } = await supabase.from('routine_exercises').update({ position: n }).eq('id', nuevo[n].id!)
       if (error) { setErrorGuardado(mensajeError(error)); return }
     }
+    sincronizarPronto()
   }
   const catalogo = useMediaDeExercicios(exs.map((e) => e.exercise_id))
 
@@ -199,6 +213,7 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
     })))
     const { error } = await supabase.from('series').update({ params }).eq('id', sId)
     if (error) setErrorGuardado(mensajeError(error))
+    else sincronizarPronto()
   }
 
   async function updateSerieNotas(sId: string, notes: string) {
@@ -208,6 +223,7 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
     })))
     const { error } = await supabase.from('series').update({ notes }).eq('id', sId)
     if (error) setErrorGuardado(mensajeError(error))
+    else sincronizarPronto()
   }
 
   /** Copia parámetros y observación al final, como pide el diseño. */
