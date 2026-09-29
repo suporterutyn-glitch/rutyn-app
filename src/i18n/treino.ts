@@ -2,6 +2,7 @@ import { textos } from './textos'
 
 export default textos({
   pt: {
+    restMode: { title: 'Como quer o descanso?', intro: 'Depois você pode mudar quando quiser, no botão ao lado do cronômetro.', auto: 'Automático', autoDesc: 'Ao finalizar uma série, o cronômetro de descanso começa sozinho.', manual: 'Manual', manualDesc: 'Ao finalizar a série, você toca no botão de descanso quando quiser começar a contar.', start: 'Começar treino' },
     rest: 'Descanso', workoutTime: 'Tempo de treino', exit: 'Sair', openRest: 'Abrir tela de descanso', reset: 'Zerar',
     pause: 'Pausar', start: 'Iniciar', resume: 'Continuar', completed: 'Completado',
     series_one: '{{count}} Série', series_other: '{{count}} Séries', rep: '{{reps}} Rep', loadProgress: 'Progressão de carga',
@@ -29,6 +30,7 @@ export default textos({
     video: 'Vídeo', noMedia: 'Nenhuma mídia', exerciseVideo: 'Vídeo do exercício', tapToPlay: 'Toque para reproduzir',
   },
   es: {
+    restMode: { title: '¿Cómo querés el descanso?', intro: 'Después lo cambiás cuando quieras, en el botón junto al cronómetro.', auto: 'Automático', autoDesc: 'Al finalizar una serie, el cronómetro de descanso arranca solo.', manual: 'Manual', manualDesc: 'Al finalizar la serie, tocás el botón de descanso cuando quieras empezar a contar.', start: 'Empezar entreno' },
     rest: 'Descanso', workoutTime: 'Tiempo de entreno', exit: 'Salir', openRest: 'Abrir pantalla de descanso', reset: 'Reiniciar',
     pause: 'Pausar', start: 'Iniciar', resume: 'Continuar', completed: 'Completado',
     series_one: '{{count}} Serie', series_other: '{{count}} Series', rep: '{{reps}} Rep', loadProgress: 'Progresión de carga',
@@ -56,6 +58,7 @@ export default textos({
     video: 'Video', noMedia: 'Sin multimedia', exerciseVideo: 'Video del ejercicio', tapToPlay: 'Tocá para reproducir',
   },
   en: {
+    restMode: { title: 'How do you want your rest?', intro: 'You can change it anytime with the switch next to the timer.', auto: 'Automatic', autoDesc: 'When you finish a set, the rest timer starts on its own.', manual: 'Manual', manualDesc: 'When you finish a set, tap the rest button whenever you want to start counting.', start: 'Start workout' },
     rest: 'Rest', workoutTime: 'Workout time', exit: 'Exit', openRest: 'Open rest screen', reset: 'Reset',
     pause: 'Pause', start: 'Start', resume: 'Resume', completed: 'Completed',
     series_one: '{{count}} Set', series_other: '{{count}} Sets', rep: '{{reps}} Reps', loadProgress: 'Load progression',

@@ -60,6 +60,10 @@ export function TreinoExecucaoPage() {
   const [ahora, setAhora] = useState(() => Date.now())
   const [descanso, setDescanso] = useState<Descanso>({ terminaEn: null, pausadoCon: null, total: 0 })
   const [pantallaDescanso, setPantallaDescanso] = useState(false)
+  // Descanso automático (arranca al finalizar la serie) o manual (el alumno lo inicia).
+  // Se pregunta solo en el primer treino; después se cambia con el interruptor junto al cronómetro.
+  const [modoDescanso, setModoDescanso] = useState<ModoDescanso>(() => (leerModo() ?? 'auto'))
+  const [elegirModo, setElegirModo] = useState(false)
   const refs = useRef<(HTMLLIElement | null)[]>([])
 
   useEffect(() => {
@@ -118,7 +122,7 @@ export function TreinoExecucaoPage() {
     if (!id) return
     const guardado = Number(localStorage.getItem(`sr-${id}-started`))
     if (guardado && Date.now() - guardado <= 6 * 3600 * 1000) setInicio(guardado)
-    else localStorage.setItem(`sr-${id}-started`, String(inicio))
+    else { localStorage.setItem(`sr-${id}-started`, String(inicio)); if (!leerModo()) setElegirModo(true) }
     const t = window.setInterval(() => setAhora(Date.now()), 250)
     return () => window.clearInterval(t)
   }, [id])
@@ -197,7 +201,7 @@ export function TreinoExecucaoPage() {
     marcar(ex, serie, true)
     const quedanEnEjercicio = exercises[ex].series.some((x, j) => j !== serie && !x.done)
     const quedanEnTreino = exercises.some((e, i) => e.series.some((x, j) => !x.done && !(i === ex && j === serie)))
-    if (quedanEnTreino) iniciarDescanso(s.rest ?? DEFAULT_REST)
+    if (quedanEnTreino && modoDescanso === 'auto') iniciarDescanso(s.rest ?? DEFAULT_REST)
     if (!quedanEnEjercicio) {
       const sig = exercises.findIndex((e, i) => i > ex && e.series.some((x) => !x.done))
       const destino = sig >= 0 ? sig : exercises.findIndex((e, i) => i !== ex && e.series.some((x) => !x.done))
@@ -252,7 +256,21 @@ export function TreinoExecucaoPage() {
             </button>
 
             <div className="flex-1 min-w-0">
-              <div className="text-[10px] uppercase tracking-[2px] font-semibold text-white/60">{t('treino:rest')}</div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] uppercase tracking-[2px] font-semibold text-white/60">{t('treino:rest')}</span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={modoDescanso === 'auto'}
+                  onClick={() => { const m = modoDescanso === 'auto' ? 'manual' : 'auto'; setModoDescanso(m); guardarModo(m) }}
+                  className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-white/70"
+                >
+                  <span className={'w-7 h-4 rounded-full p-0.5 transition ' + (modoDescanso === 'auto' ? 'bg-brand' : 'bg-grey-700')}>
+                    <span className={'block w-3 h-3 rounded-full bg-white transition-transform ' + (modoDescanso === 'auto' ? 'translate-x-3' : '')} />
+                  </span>
+                  {modoDescanso === 'auto' ? t('treino:restMode.auto') : t('treino:restMode.manual')}
+                </button>
+              </div>
               <div className="flex items-center gap-2 mt-1">
                 <button
                   onClick={() => { if (corriendo || descanso.pausadoCon) setPantallaDescanso(true) }}
@@ -359,6 +377,13 @@ export function TreinoExecucaoPage() {
         </ul>
       </div>
 
+      {elegirModo && (
+        <ElegirModoDescanso
+          inicial={modoDescanso}
+          onElegir={(m) => { setModoDescanso(m); guardarModo(m); setElegirModo(false) }}
+        />
+      )}
+
       {pantallaDescanso && (
         <PantallaDescanso
           restante={restante}
@@ -424,6 +449,50 @@ export function TreinoExecucaoPage() {
           onCancel={() => setConfirmarSaida(false)}
         />
       )}
+    </div>
+  )
+}
+
+type ModoDescanso = 'auto' | 'manual'
+const CLAVE_MODO = 'rutyn_descanso_modo'
+function leerModo(): ModoDescanso | null {
+  try { const v = localStorage.getItem(CLAVE_MODO); return v === 'auto' || v === 'manual' ? v : null } catch { return null }
+}
+function guardarModo(m: ModoDescanso) {
+  try { localStorage.setItem(CLAVE_MODO, m) } catch { /* sin almacenamiento: se vuelve a preguntar */ }
+}
+
+/** Al empezar el treino: el alumno elige si el descanso arranca solo o lo inicia él. */
+function ElegirModoDescanso({ inicial, onElegir }: { inicial: ModoDescanso; onElegir: (m: ModoDescanso) => void }) {
+  const { t } = useTranslation()
+  const [modo, setModo] = useState<ModoDescanso>(inicial)
+  const opcion = (m: ModoDescanso, titulo: string, texto: string) => (
+    <button
+      type="button"
+      onClick={() => setModo(m)}
+      className={'w-full text-left rounded-[16px] border p-4 flex gap-3 items-start transition ' +
+        (modo === m ? 'border-brand bg-brand/10' : 'border-surface-line bg-surface-card')}
+    >
+      <span className={'mt-0.5 w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center ' + (modo === m ? 'border-brand' : 'border-grey-600')}>
+        {modo === m && <span className="w-2.5 h-2.5 rounded-full bg-brand" />}
+      </span>
+      <span>
+        <span className="block text-white text-rt-15 font-bold">{titulo}</span>
+        <span className="block text-white/70 text-rt-12 mt-1">{texto}</span>
+      </span>
+    </button>
+  )
+  return (
+    <div className="fixed inset-0 z-[80] flex items-end md:items-center justify-center bg-black/70">
+      <div className="w-full max-w-app md:max-w-md rounded-t-[28px] md:rounded-[28px] bg-surface-card px-5 pt-6 pb-[calc(env(safe-area-inset-bottom)+20px)]">
+        <h2 className="text-white text-rt-18 font-bold mb-1">{t('treino:restMode.title')}</h2>
+        <p className="text-white/60 text-rt-12 mb-4">{t('treino:restMode.intro')}</p>
+        <div className="flex flex-col gap-3">
+          {opcion('auto', t('treino:restMode.auto'), t('treino:restMode.autoDesc'))}
+          {opcion('manual', t('treino:restMode.manual'), t('treino:restMode.manualDesc'))}
+        </div>
+        <button onClick={() => onElegir(modo)} className="btn-save mt-5">{t('treino:restMode.start')}</button>
+      </div>
     </div>
   )
 }
