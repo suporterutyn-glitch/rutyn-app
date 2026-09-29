@@ -129,7 +129,7 @@ export function NovoCompromissoPage() {
       )}
 
       <div className="mt-8">
-        <button className="btn-save" disabled={saving || !title.trim()} onClick={save}>
+        <button className="btn-save" disabled={saving} onClick={save}>
           {saving ? t('prof:appt.saving') : t('prof:appt.save')}
         </button>
       </div>

@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { Send, Wallet, CheckCircle2, X, RefreshCw } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
-import { currencyOf, formatMoney } from '@/lib/plans'
+import { currencyOf, formatMoney, leerMonto } from '@/lib/plans'
 import { EmptyState, FullScreenSheet, Field } from './projetos/RoutinesTab'
 import { aviso } from '@/lib/avisos'
 
@@ -66,7 +66,13 @@ export function FinanceiroPage() {
     .reduce((s, c) => s + Number(c.amount), 0)
 
   async function markPaid(c: Charge) {
-    await supabase.from('charges').update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', c.id)
+    const { error } = await supabase.from('charges').update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', c.id)
+    if (!error) {
+      await supabase.from('notifications').insert({
+        user_id: c.student_id, type: 'payment',
+        ...aviso('paymentConfirmed', { who: profile?.full_name, amount: formatMoney(Number(c.amount), currency) }),
+      })
+    }
     await load()
   }
   async function reject(c: Charge) {
@@ -171,12 +177,12 @@ function ProposalSheet({ charge, currency, onClose, onSent }: { charge: Charge; 
     setSaving(true)
     await supabase.from('charge_change_proposals').insert({
       teacher_id: profile.id, student_id: charge.student_id,
-      new_format: newFormat, new_amount: Number(newAmount) || 0,
+      new_format: newFormat, new_amount: leerMonto(newAmount) || 0,
       reason: reason || null,
     })
     await supabase.from('notifications').insert({
       user_id: charge.student_id, type: 'payment',
-      ...aviso('changeProposal', { who: profile.full_name, amount: formatMoney(Number(newAmount) || 0, currency), fmt: newFormat }),
+      ...aviso('changeProposal', { who: profile.full_name, amount: formatMoney(leerMonto(newAmount) || 0, currency), fmt: newFormat }),
     })
     setSaving(false)
     onSent()
@@ -223,6 +229,7 @@ function CobrarSheet({ currency, onClose, onCreated }: { currency: string; onClo
   const [dueDate, setDueDate] = useState(nextMonthISO())
   const [format, setFormat] = useState<'monthly' | 'hourly'>('monthly')
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!profile?.id) return
@@ -233,17 +240,22 @@ function CobrarSheet({ currency, onClose, onCreated }: { currency: string; onClo
   }, [profile?.id])
 
   async function save() {
-    if (!profile?.id || !studentId || !amount) return
+    if (!profile?.id) return
+    const valor = leerMonto(amount)
+    if (!studentId) { setError(t('financeiro:fin.errStudent')); return }
+    if (!(valor > 0)) { setError(t('financeiro:fin.errAmount')); return }
+    setError(null)
     setSaving(true)
-    await supabase.from('charges').insert({
+    const { error: e } = await supabase.from('charges').insert({
       teacher_id: profile.id,
       student_id: studentId,
       format,
-      amount: Number(amount),
+      amount: valor,
       due_date: dueDate,
       status: 'pending',
     })
     setSaving(false)
+    if (e) { setError(t('financeiro:fin.errSave')); return }
     onCreated()
   }
 
@@ -276,7 +288,8 @@ function CobrarSheet({ currency, onClose, onCreated }: { currency: string; onClo
         </Field>
       </div>
       <div className="mt-8">
-        <button className="btn-save" disabled={saving || !studentId || !amount} onClick={save}>
+        {error && <div className="mb-4 p-3 bg-danger/10 border border-danger rounded-lg text-danger text-rt-13 font-semibold">{error}</div>}
+        <button className="btn-save" disabled={saving} onClick={save}>
           {saving ? t('financeiro:c.sending') : t('financeiro:fin.sendCharge')}
         </button>
       </div>

@@ -7,7 +7,7 @@ export default textos({
       title: 'Financeiro', bank: 'Dados bancários', received: 'Recebido no mês', all: 'Todos', pending: 'Pendente', awaiting: 'Aguardando', paid: 'Pago', suspended: 'Suspenso',
       none: 'Sem cobranças', noneBody: 'Cobre seu primeiro aluno para começar.', dueOn: 'Vence: {{date}}', confirm: 'Confirmar', markPaid: 'Marcar paga', change: 'Alterar',
       charge: 'Cobrar Aluno', proposeTitle: 'Propor alteração', current: 'Cobrança atual:', newFormat: 'Novo formato', sendProposal: 'Enviar proposta ao aluno',
-      select: 'Selecione…', dueDate: 'Data de vencimento', sendCharge: 'Enviar cobrança',
+      select: 'Selecione…', dueDate: 'Data de vencimento', sendCharge: 'Enviar cobrança', errStudent: 'Escolha o aluno.', errAmount: 'Digite um valor maior que zero.', errSave: 'Não foi possível criar a cobrança. Tente de novo.',
     },
     conv: {
       title: 'Convites Recebidos', none: 'Nenhum convite', noneBody: 'Você não tem convites pendentes.', counterSent: 'Contraproposta enviada', perWeekShort: '{{n}}x/sem',
@@ -21,7 +21,7 @@ export default textos({
       title: 'Finanzas', bank: 'Datos bancarios', received: 'Recibido en el mes', all: 'Todos', pending: 'Pendiente', awaiting: 'En espera', paid: 'Pagado', suspended: 'Suspendido',
       none: 'Sin cobros', noneBody: 'Cobrale a tu primer alumno para empezar.', dueOn: 'Vence: {{date}}', confirm: 'Confirmar', markPaid: 'Marcar pagado', change: 'Cambiar',
       charge: 'Cobrar Alumno', proposeTitle: 'Proponer cambio', current: 'Cobro actual:', newFormat: 'Nuevo formato', sendProposal: 'Enviar propuesta al alumno',
-      select: 'Seleccioná…', dueDate: 'Fecha de vencimiento', sendCharge: 'Enviar cobro',
+      select: 'Seleccioná…', dueDate: 'Fecha de vencimiento', sendCharge: 'Enviar cobro', errStudent: 'Elegí el alumno.', errAmount: 'Ingresá un monto mayor a cero.', errSave: 'No se pudo crear el cobro. Probá de nuevo.',
     },
     conv: {
       title: 'Invitaciones Recibidas', none: 'Ninguna invitación', noneBody: 'No tenés invitaciones pendientes.', counterSent: 'Contrapropuesta enviada', perWeekShort: '{{n}}x/sem',
@@ -35,7 +35,7 @@ export default textos({
       title: 'Finances', bank: 'Bank details', received: 'Received this month', all: 'All', pending: 'Pending', awaiting: 'Awaiting', paid: 'Paid', suspended: 'Suspended',
       none: 'No charges', noneBody: 'Charge your first student to get started.', dueOn: 'Due: {{date}}', confirm: 'Confirm', markPaid: 'Mark as paid', change: 'Change',
       charge: 'Charge Student', proposeTitle: 'Propose change', current: 'Current charge:', newFormat: 'New format', sendProposal: 'Send proposal to student',
-      select: 'Select…', dueDate: 'Due date', sendCharge: 'Send charge',
+      select: 'Select…', dueDate: 'Due date', sendCharge: 'Send charge', errStudent: 'Choose the student.', errAmount: 'Enter an amount greater than zero.', errSave: 'The charge could not be created. Try again.',
     },
     conv: {
       title: 'Received Invitations', none: 'No invitations', noneBody: "You don't have pending invitations.", counterSent: 'Counteroffer sent', perWeekShort: '{{n}}x/wk',

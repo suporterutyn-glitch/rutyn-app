@@ -91,3 +91,8 @@ export const PRICE_RANGES: Record<string, {
   EC: { hourly: { min: 5, max: 100, step: 5 }, monthly: { min: 50, max: 1000, step: 25 } },
   VE: { hourly: { min: 5, max: 100, step: 5 }, monthly: { min: 50, max: 1000, step: 25 } },
 }
+
+/** Lee un monto escrito a mano: "150", "150,50", "1.500,50" o "150.50". NaN si no es un número. */
+export function leerMonto(texto: string): number {
+  return Number(texto.trim().replace(/\.(?=\d{3}(\D|$))/g, '').replace(',', '.'))
+}

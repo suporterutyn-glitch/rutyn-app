@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, MapPin, User as UserIcon, CheckCircle2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
-import { currencyOf, formatMoney } from '@/lib/plans'
+import { currencyOf, formatMoney, leerMonto } from '@/lib/plans'
 import { FullScreenSheet, Field } from '@/pages/professor/projetos/RoutinesTab'
 import { atuacoes, especialidades, formatosTrabalho, etiquetaDe } from '@/lib/catalogos'
 import { diasCortos } from '@/lib/fechas'
@@ -145,7 +145,7 @@ function PropostaSheet({ teacher, onClose, onSent }: { teacher: Teacher; onClose
       // Crear la invitación
       const { data: inviteData, error: inviteError } = await supabase.from('invites').insert({
         student_id: profile.id, teacher_id: teacher.id,
-        format, amount: Number(amount), frequency: freq, weekdays: days.slice(0, freq),
+        format, amount: leerMonto(amount), frequency: freq, weekdays: days.slice(0, freq),
         model, objectives: objectives.split(',').map((s) => s.trim()).filter(Boolean),
         last_offer_by: 'student', status: 'pending',
       }).select()

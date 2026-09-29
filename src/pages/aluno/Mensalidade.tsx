@@ -57,8 +57,14 @@ export function MensalidadePage() {
   async function declarePaid() {
     if (!charge?.id) return
     setDeclaring(true)
-    await supabase.from('charges').update({ status: 'awaiting', student_declared_at: new Date().toISOString() }).eq('id', charge.id)
-    setCharge({ ...charge, status: 'awaiting' })
+    const { error } = await supabase.from('charges').update({ status: 'awaiting', student_declared_at: new Date().toISOString() }).eq('id', charge.id)
+    if (!error && profile?.teacher_id) {
+      await supabase.from('notifications').insert({
+        user_id: profile.teacher_id, type: 'payment',
+        ...aviso('paymentDeclared', { who: profile.full_name, amount: formatMoney(Number(charge.amount), currency) }),
+      })
+    }
+    if (!error) setCharge({ ...charge, status: 'awaiting' })
     setDeclaring(false)
   }
 
@@ -94,7 +100,9 @@ export function MensalidadePage() {
         <>
           <div className={
             'rounded-card p-4 mb-4 border ' +
-            (charge.status === 'awaiting' ? 'bg-pay-awaiting border-info/40' : 'bg-pay-pending border-danger-wine/40')
+            (charge.status === 'awaiting' ? 'bg-pay-awaiting border-info/40'
+              : charge.due_date < new Date().toISOString().slice(0, 10) ? 'bg-pay-pending border-danger-wine/40'
+              : 'bg-surface-card border-brand/40')
           }>
             <div className="text-white/70 text-rt-11 uppercase tracking-wide font-semibold">
               {charge.status === 'awaiting' ? t('cuenta:mens.awaiting') : t('cuenta:mens.due')}

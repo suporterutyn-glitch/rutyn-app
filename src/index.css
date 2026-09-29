@@ -111,6 +111,9 @@
   .btn-save {
     @apply relative w-full h-[54px] rounded-[27px] bg-save shadow-glow text-white font-bold text-rt-16 flex items-center justify-center transition active:scale-[0.98];
   }
+  .btn-save:disabled, .btn-create:disabled {
+    @apply opacity-45 cursor-not-allowed shadow-none active:scale-100;
+  }
   .btn-google {
     @apply relative w-full h-[55px] rounded-[50px] bg-google shadow-btn text-white font-semibold text-rt-16 flex items-center justify-center gap-3 border border-white/50;
   }

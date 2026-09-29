@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Check, MessageSquare, User as UserIcon, RefreshCw } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
-import { currencyOf, formatMoney } from '@/lib/plans'
+import { currencyOf, formatMoney, leerMonto } from '@/lib/plans'
 import { EmptyState, FullScreenSheet, Field } from './projetos/RoutinesTab'
 import { limiteDePlan } from '@/lib/plans'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
@@ -168,7 +168,7 @@ function CounterSheet({ invite, currency, onClose, onSent }: {
     if (!profile?.id) return
     setSaving(true)
     await supabase.from('invites').update({
-      amount: Number(amount) || 0,
+      amount: leerMonto(amount) || 0,
       format, frequency: freq,
       status: 'countered', last_offer_by: 'teacher',
     }).eq('id', invite.id)

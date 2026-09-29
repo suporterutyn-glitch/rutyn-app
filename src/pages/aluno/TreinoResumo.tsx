@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth'
 import { EsforcoPercebido } from './EsforcoPercebido'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { mensajeError } from '@/lib/errores'
+import { etiquetaDe, gruposMusculares as CATALOGO_GRUPOS } from '@/lib/catalogos'
 
 type SerieHecha = { done?: boolean; load?: string; reps?: number }
 type ExHecho = { name: string; muscle_group?: string | null; series?: SerieHecha[] }
@@ -14,7 +15,7 @@ type ExHecho = { name: string; muscle_group?: string | null; series?: SerieHecha
 export function TreinoResumoPage() {
   const [sp] = useSearchParams()
   const nav = useNavigate()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { profile } = useAuth()
 
   const dur = Number(sp.get('dur') ?? 0)
@@ -105,7 +106,7 @@ export function TreinoResumoPage() {
               </div>
               <div className="text-grey-700 text-rt-13 mt-3">{t('treino:todayExercises')}</div>
               {gruposMusculares.length > 0 && (
-                <div className="text-grey-500 text-rt-12 mt-1">{gruposMusculares.join(', ')}</div>
+                <div className="text-grey-500 text-rt-12 mt-1">{gruposMusculares.map((g) => etiquetaDe(CATALOGO_GRUPOS, g, i18n.language)).join(', ')}</div>
               )}
             </div>
 

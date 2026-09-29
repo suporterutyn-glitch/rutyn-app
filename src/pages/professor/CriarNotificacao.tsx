@@ -119,7 +119,7 @@ export function CriarNotificacaoPage() {
       )}
 
       <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-app px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+16px+80px*var(--con-nav))] bg-surface-app/95 backdrop-blur">
-        <button onClick={send} disabled={saving || !title.trim() || selected.size === 0} className="btn-save disabled:opacity-50">
+        <button onClick={send} disabled={saving} className="btn-save disabled:opacity-50">
           {saving ? t('prof:notif.sending') : saved ? t('prof:notif.sentN', { n: selected.size }) : (<><Send size={16} className="inline mr-1" /> {t('prof:notif.send')}</>)}
         </button>
       </div>
