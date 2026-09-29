@@ -2,12 +2,16 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Hourglass, Info, Search, User } from 'lucide-react'
+import { formatMoney, currencyOf } from '@/lib/plans'
+import { aviso } from '@/lib/avisos'
+import { mensajeError } from '@/lib/errores'
 import { useAuth } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
 
 const PLAZO_DIAS = 30
 
 type Professor = { full_name: string | null; email: string | null; avatar_url: string | null }
+type Propuesta = { id: string; amount: number; format: string; frequency: number; teacher_id: string; teacher: string | null; country: string | null }
 
 export function AguardandoAprovacaoPage() {
   const { t } = useTranslation()
@@ -15,6 +19,9 @@ export function AguardandoAprovacaoPage() {
   const { profile, refresh, signOut } = useAuth()
   const [checking, setChecking] = useState(false)
   const [professor, setProfessor] = useState<Professor | null>(null)
+  const [propuesta, setPropuesta] = useState<Propuesta | null>(null)
+  const [aceptando, setAceptando] = useState(false)
+  const [errorProp, setErrorProp] = useState<string | null>(null)
 
   // El plazo cuenta desde la creación de la cuenta, no desde que se abre la pantalla.
   const creado = profile?.created_at ? new Date(profile.created_at).getTime() : null
@@ -38,7 +45,31 @@ export function AguardandoAprovacaoPage() {
     })()
   }, [profile?.teacher_id])
 
+  // El profesor ya mandó su propuesta: el alumno la acepta acá (todavía no entra a la home).
+  async function cargarPropuesta() {
+    if (!profile?.id) return
+    const { data } = await supabase.from('invites')
+      .select('id,amount,format,frequency,teacher_id,profiles!invites_teacher_id_fkey(full_name,country)')
+      .eq('student_id', profile.id).eq('status', 'countered').eq('last_offer_by', 'teacher').maybeSingle()
+    const p = (data as any)?.profiles
+    setPropuesta(data ? { id: data.id, amount: Number(data.amount ?? 0), format: data.format, frequency: data.frequency ?? 0, teacher_id: data.teacher_id, teacher: p?.full_name ?? null, country: p?.country ?? null } : null)
+  }
+  useEffect(() => { void cargarPropuesta() }, [profile?.id])
+
+  async function aceptar() {
+    if (!propuesta || !profile) return
+    setAceptando(true)
+    setErrorProp(null)
+    const { error } = await supabase.rpc('aceptar_convite', { convite_id: propuesta.id })
+    if (error) { setAceptando(false); setErrorProp(mensajeError(error)); return }
+    await supabase.from('notifications').insert({ user_id: propuesta.teacher_id, type: 'invite', ...aviso('counterAccepted', { who: profile.full_name }) })
+    await refresh()
+    setAceptando(false)
+    nav('/aluno', { replace: true })
+  }
+
   async function check() {
+    void cargarPropuesta()
     setChecking(true)
     await refresh()
     setChecking(false)
@@ -79,6 +110,19 @@ export function AguardandoAprovacaoPage() {
             <span className="shrink-0 text-rt-11 font-semibold px-2.5 py-1 rounded-btn-pill bg-warning/25 text-warning">
               {t('waiting:pending')}
             </span>
+          </div>
+        )}
+
+        {propuesta && (
+          <div className="mb-6 rounded-card bg-surface-raised border border-brand p-5">
+            <div className="text-white text-rt-16 font-bold">{t('inicio:counterTitle')}</div>
+            <div className="text-white/70 text-rt-12 mt-1 mb-3">{t('inicio:counterSent', { name: propuesta.teacher ?? t('inicio:yourTeacher') })}</div>
+            <div className="text-brand text-rt-24 font-bold">{formatMoney(propuesta.amount, currencyOf(propuesta.country))}</div>
+            <div className="text-white/70 text-rt-12">
+              {propuesta.format === 'monthly' ? t('inicio:monthly') : t('inicio:hourly')} · {t('inicio:perWeek', { n: propuesta.frequency })}
+            </div>
+            {errorProp && <div className="mt-3 p-3 bg-danger/10 border border-danger rounded-lg text-danger text-rt-13 font-semibold">{errorProp}</div>}
+            <button disabled={aceptando} onClick={() => void aceptar()} className="btn-save mt-4">{t('inicio:accept')}</button>
           </div>
         )}
 

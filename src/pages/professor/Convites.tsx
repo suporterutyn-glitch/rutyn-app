@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Check, MessageSquare, User as UserIcon, RefreshCw } from 'lucide-react'
+import { ArrowLeft, Check, MessageSquare, User as UserIcon, RefreshCw, Send } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { currencyOf, formatMoney, leerMonto } from '@/lib/plans'
@@ -103,13 +103,17 @@ export function ConvitesPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-white text-rt-14 font-bold truncate">{inv.profiles?.full_name ?? inv.profiles?.email ?? t('financeiro:c.student')}</div>
-                  {inv.status === 'countered' && <div className="text-warning text-rt-11">{t('financeiro:conv.counterSent')}</div>}
+                  {inv.status === 'countered' && <div className="text-warning text-rt-11">{t('financeiro:conv.proposalSent')}</div>}
                 </div>
               </div>
 
+              {!inv.amount ? (
+                <div className="text-warning text-rt-13 mb-2">{t('financeiro:conv.noPrice')}</div>
+              ) : (
               <div className="text-white text-rt-13 mb-2">
                 <strong>{formatMoney(Number(inv.amount ?? 0), currency)}</strong> · {inv.format === 'monthly' ? t('financeiro:c.monthly') : t('financeiro:c.hourly')} · {t('financeiro:conv.perWeekShort', { n: inv.frequency })} · {etiquetaDe(formatosTrabalho, inv.model, i18n.language)}
               </div>
+              )}
               {inv.objectives && inv.objectives.length > 0 && (
                 <div className="flex flex-wrap gap-1 mb-3">
                   {inv.objectives.map((o) => <span key={o} className="text-rt-9 px-2 py-0.5 rounded-tag bg-surface-raised text-white/80">{o}</span>)}
@@ -118,12 +122,21 @@ export function ConvitesPage() {
 
               <div className="flex gap-2 flex-wrap">
                 <button onClick={() => reject(inv)} className="flex-1 h-10 rounded-btn-pill bg-danger-wine text-white text-rt-13 font-semibold min-w-[80px]">{t('financeiro:conv.reject')}</button>
-                <button onClick={() => setCounterOf(inv)} className="flex-1 h-10 rounded-btn-pill border-[1.5px] border-warning text-warning text-rt-13 font-semibold min-w-[110px] flex items-center justify-center gap-1">
-                  <RefreshCw size={14} /> {t('financeiro:conv.counter')}
-                </button>
-                <button onClick={() => accept(inv)} className="flex-1 h-10 rounded-btn-pill bg-brand text-white text-rt-13 font-semibold min-w-[90px] flex items-center justify-center gap-1">
-                  <Check size={16} /> {t('financeiro:conv.accept')}
-                </button>
+                {!inv.amount || inv.last_offer_by === 'teacher' ? (
+                  // Sin precio todavía: aceptar crearía una mensualidad de 0. El profesor propone el suyo.
+                  <button onClick={() => setCounterOf(inv)} className="flex-[2] h-10 rounded-btn-pill bg-brand text-white text-rt-13 font-semibold min-w-[140px] flex items-center justify-center gap-1">
+                    <Send size={14} /> {inv.last_offer_by === 'teacher' ? t('financeiro:conv.editProposal') : t('financeiro:conv.propose')}
+                  </button>
+                ) : (
+                  <>
+                    <button onClick={() => setCounterOf(inv)} className="flex-1 h-10 rounded-btn-pill border-[1.5px] border-warning text-warning text-rt-13 font-semibold min-w-[110px] flex items-center justify-center gap-1">
+                      <RefreshCw size={14} /> {t('financeiro:conv.counter')}
+                    </button>
+                    <button onClick={() => accept(inv)} className="flex-1 h-10 rounded-btn-pill bg-brand text-white text-rt-13 font-semibold min-w-[90px] flex items-center justify-center gap-1">
+                      <Check size={16} /> {t('financeiro:conv.accept')}
+                    </button>
+                  </>
+                )}
               </div>
             </li>
           ))}
@@ -163,12 +176,17 @@ function CounterSheet({ invite, currency, onClose, onSent }: {
   const [format, setFormat] = useState<'monthly' | 'hourly'>((invite.format as any) ?? 'monthly')
   const [freq, setFreq] = useState(invite.frequency ?? 3)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const primera = !invite.amount || invite.last_offer_by === 'teacher'
 
   async function send() {
     if (!profile?.id) return
+    const valor = leerMonto(amount)
+    if (!(valor > 0)) { setError(t('financeiro:fin.errAmount')); return }
+    setError(null)
     setSaving(true)
     await supabase.from('invites').update({
-      amount: leerMonto(amount) || 0,
+      amount: valor,
       format, frequency: freq,
       status: 'countered', last_offer_by: 'teacher',
     }).eq('id', invite.id)
@@ -181,11 +199,13 @@ function CounterSheet({ invite, currency, onClose, onSent }: {
   }
 
   return (
-    <FullScreenSheet title={t('financeiro:conv.counterTitle')} onClose={onClose}>
+    <FullScreenSheet title={primera ? t('financeiro:conv.propose') : t('financeiro:conv.counterTitle')} onClose={onClose}>
       <div className="flex flex-col gap-6">
-        <div className="card-dark p-3 text-white/70 text-rt-12">
-          {t('financeiro:conv.studentProposal')} <strong className="text-white">{formatMoney(Number(invite.amount ?? 0), currency)}</strong> · {t('financeiro:conv.perWeekShort', { n: invite.frequency })}
-        </div>
+        {!primera && (
+          <div className="card-dark p-3 text-white/70 text-rt-12">
+            {t('financeiro:conv.studentProposal')} <strong className="text-white">{formatMoney(Number(invite.amount ?? 0), currency)}</strong> · {t('financeiro:conv.perWeekShort', { n: invite.frequency })}
+          </div>
+        )}
         <Field label={t('financeiro:c.format')}>
           <div className="flex gap-2">
             {(['monthly', 'hourly'] as const).map((f) => (
@@ -211,8 +231,9 @@ function CounterSheet({ invite, currency, onClose, onSent }: {
         </Field>
       </div>
       <div className="mt-8">
-        <button onClick={send} disabled={saving || !amount} className="btn-save">
-          {saving ? t('financeiro:c.sending') : t('financeiro:conv.sendCounter')}
+        {error && <div className="mb-3 p-3 bg-danger/10 border border-danger rounded-lg text-danger text-rt-13 font-semibold">{error}</div>}
+        <button onClick={send} disabled={saving} className="btn-save">
+          {saving ? t('financeiro:c.sending') : primera ? t('financeiro:conv.propose') : t('financeiro:conv.sendCounter')}
         </button>
       </div>
     </FullScreenSheet>

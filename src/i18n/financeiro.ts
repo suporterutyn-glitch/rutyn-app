@@ -10,7 +10,7 @@ export default textos({
       select: 'Selecione…', dueDate: 'Data de vencimento', sendCharge: 'Enviar cobrança', errStudent: 'Escolha o aluno.', errAmount: 'Digite um valor maior que zero.', errSave: 'Não foi possível criar a cobrança. Tente de novo.',
     },
     conv: {
-      title: 'Convites Recebidos', none: 'Nenhum convite', noneBody: 'Você não tem convites pendentes.', counterSent: 'Contraproposta enviada', perWeekShort: '{{n}}x/sem',
+      title: 'Convites Recebidos', none: 'Nenhum convite', noneBody: 'Você não tem convites pendentes.', counterSent: 'Contraproposta enviada', proposalSent: 'Proposta enviada: aguardando o aluno', noPrice: 'Ainda sem valor: envie sua proposta ao aluno.', propose: 'Enviar proposta', editProposal: 'Editar proposta', perWeekShort: '{{n}}x/sem',
       reject: 'Recusar', counter: 'Contrapor', accept: 'Aceitar', limit: 'Limite de alunos atingido. Faça upgrade do plano.', counterTitle: 'Contraproposta',
       studentProposal: 'Proposta do aluno:', weeklyFreq: 'Frequência semanal', sendCounter: 'Enviar contraproposta',
     },
@@ -24,7 +24,7 @@ export default textos({
       select: 'Seleccioná…', dueDate: 'Fecha de vencimiento', sendCharge: 'Enviar cobro', errStudent: 'Elegí el alumno.', errAmount: 'Ingresá un monto mayor a cero.', errSave: 'No se pudo crear el cobro. Probá de nuevo.',
     },
     conv: {
-      title: 'Invitaciones Recibidas', none: 'Ninguna invitación', noneBody: 'No tenés invitaciones pendientes.', counterSent: 'Contrapropuesta enviada', perWeekShort: '{{n}}x/sem',
+      title: 'Invitaciones Recibidas', none: 'Ninguna invitación', noneBody: 'No tenés invitaciones pendientes.', counterSent: 'Contrapropuesta enviada', proposalSent: 'Propuesta enviada: esperando al alumno', noPrice: 'Todavía sin precio: enviale tu propuesta al alumno.', propose: 'Enviar propuesta', editProposal: 'Editar propuesta', perWeekShort: '{{n}}x/sem',
       reject: 'Rechazar', counter: 'Contraofertar', accept: 'Aceptar', limit: 'Llegaste al límite de alumnos. Mejorá tu plan.', counterTitle: 'Contrapropuesta',
       studentProposal: 'Propuesta del alumno:', weeklyFreq: 'Frecuencia semanal', sendCounter: 'Enviar contrapropuesta',
     },
@@ -38,7 +38,7 @@ export default textos({
       select: 'Select…', dueDate: 'Due date', sendCharge: 'Send charge', errStudent: 'Choose the student.', errAmount: 'Enter an amount greater than zero.', errSave: 'The charge could not be created. Try again.',
     },
     conv: {
-      title: 'Received Invitations', none: 'No invitations', noneBody: "You don't have pending invitations.", counterSent: 'Counteroffer sent', perWeekShort: '{{n}}x/wk',
+      title: 'Received Invitations', none: 'No invitations', noneBody: "You don't have pending invitations.", counterSent: 'Counteroffer sent', proposalSent: 'Proposal sent: waiting for the student', noPrice: 'No price yet: send your proposal to the student.', propose: 'Send proposal', editProposal: 'Edit proposal', perWeekShort: '{{n}}x/wk',
       reject: 'Decline', counter: 'Counteroffer', accept: 'Accept', limit: 'Student limit reached. Upgrade your plan.', counterTitle: 'Counteroffer',
       studentProposal: "Student's proposal:", weeklyFreq: 'Weekly frequency', sendCounter: 'Send counteroffer',
     },
