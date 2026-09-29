@@ -13,7 +13,7 @@
 // deno-lint-ignore-file
 // @ts-ignore
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
-import { stripe, precioDe, monedaDePais, cors, json, MIN_BASIC, MAX_BASIC, type PlanPago, type Moneda } from '../_shared/stripe.ts'
+import { stripe, precioDe, planDePrecio, monedaDePais, cors, json, MIN_BASIC, MAX_BASIC, type PlanPago, type Moneda } from '../_shared/stripe.ts'
 
 // @ts-ignore
 Deno.serve(async (req: Request) => {
@@ -47,8 +47,14 @@ Deno.serve(async (req: Request) => {
       const p = await s.billingPortal.sessions.create({ customer: prof.stripe_customer_id, return_url: `${origin}/professor/assinatura` })
       return json({ url: p.url })
     }
+    // Para bajar de plan cuentan activos y suspendidos: los que sobran se eliminan, no se suspenden.
+    const { count: vinculados } = await admin.from('profiles').select('id', { count: 'exact', head: true })
+      .eq('teacher_id', prof.id).eq('role', 'student').in('link_status', ['active', 'suspended'])
+
     if (action === 'cancel' || action === 'resume') {
       if (!subViva) return json({ error: 'no_subscription' }, 400)
+      if (action === 'cancel' && (vinculados ?? 0) > 1) return json({ error: 'seats_below_active', active: vinculados, min: 1 }, 400)
+      if (action === 'cancel') await soltarAgenda(s, subViva, admin, prof.id)
       await s.subscriptions.update(subViva.id, { cancel_at_period_end: action === 'cancel' })
       await admin.from('profiles').update({ plan_cancel_at_period_end: action === 'cancel' }).eq('id', prof.id)
       return json({ updated: true })
@@ -59,20 +65,43 @@ Deno.serve(async (req: Request) => {
     if (!prof.profile_complete || !prof.country) return json({ error: 'profile_incomplete' }, 400)
     const plan = body.plan as PlanPago
     if (plan !== 'basic' && plan !== 'pro') return json({ error: 'bad_plan' }, 400)
-    const { data: activos } = await admin.rpc('alumnos_activos', { p_teacher: prof.id })
     // Una suscripción no cambia de moneda: si ya existe, se sigue en la suya.
     const moneda: Moneda = subViva ? (subViva.currency as Moneda) : monedaDePais(prof.country)
     let seats = 1
     if (plan === 'basic') {
       seats = Math.round(Number(body.seats) || MIN_BASIC)
       if (seats < MIN_BASIC || seats > MAX_BASIC[moneda]) return json({ error: 'bad_seats' }, 400)
-      if (seats < (activos ?? 0)) return json({ error: 'seats_below_active', active: activos }, 400)
+      if (seats < (vinculados ?? 0)) return json({ error: 'seats_below_active', active: vinculados }, 400)
     }
     const price = await precioDe(s, plan, moneda)
     const meta = { user_id: prof.id, plan }
 
     if (subViva) {
       const item = subViva.items.data[0]
+      const planActual = planDePrecio(item.price)
+      const baja = (planActual === 'pro' && plan === 'basic') || (planActual === 'basic' && plan === 'basic' && seats < item.quantity)
+
+      // Bajar: se paga lo de este mes y el cambio entra en la próxima renovación.
+      if (baja) {
+        const schedId = subViva.schedule
+          ? (typeof subViva.schedule === 'string' ? subViva.schedule : subViva.schedule.id)
+          : (await s.subscriptionSchedules.create({ from_subscription: subViva.id })).id
+        const sched = await s.subscriptionSchedules.retrieve(schedId)
+        const fase = sched.phases[0]
+        await s.subscriptionSchedules.update(schedId, {
+          end_behavior: 'release',
+          phases: [
+            { items: [{ price: item.price.id, quantity: item.quantity }], start_date: fase.start_date, end_date: fase.end_date, proration_behavior: 'none' },
+            { items: [{ price, quantity: seats }], iterations: 1, proration_behavior: 'none', metadata: meta },
+          ],
+        })
+        const cuando = new Date(fase.end_date * 1000).toISOString()
+        await admin.from('profiles').update({ plan_pending_plan: plan, plan_pending_seats: seats, plan_pending_at: cuando }).eq('id', prof.id)
+        return json({ scheduled: true, at: cuando })
+      }
+
+      // Subir: inmediato, cobrando la diferencia proporcional. Anula una bajada agendada.
+      await soltarAgenda(s, subViva, admin, prof.id)
       await s.subscriptions.update(subViva.id, {
         items: [{ id: item.id, price, quantity: seats }],
         proration_behavior: 'always_invoice',
@@ -100,3 +129,10 @@ Deno.serve(async (req: Request) => {
     return json({ error: msg }, msg === 'stripe_not_configured' ? 503 : 500)
   }
 })
+
+/** Deshace un cambio de plan agendado (la suscripción sigue como está hoy). */
+async function soltarAgenda(s: any, sub: any, admin: any, profId: string) {
+  const id = typeof sub.schedule === 'string' ? sub.schedule : sub.schedule?.id
+  if (id) await s.subscriptionSchedules.release(id).catch((e: any) => console.error('release', e?.message))
+  await admin.from('profiles').update({ plan_pending_plan: null, plan_pending_seats: null, plan_pending_at: null }).eq('id', profId)
+}

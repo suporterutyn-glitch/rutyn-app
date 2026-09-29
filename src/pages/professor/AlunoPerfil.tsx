@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { Evaluacion } from '@/components/evaluacion/Evaluacion'
 import { currencyOf, formatMoney } from '@/lib/plans'
-import { ConfirmDialog, ConfirmConMotivo } from '@/components/ConfirmDialog'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { ProgressaoCarga } from '@/components/ProgressaoCarga'
 import { RotinasAluno } from './aluno/RotinasAluno'
@@ -46,7 +46,7 @@ export function AlunoPerfilPage() {
   const [tab, setTab] = useState<TabKey>('perfil')
   const [charge, setCharge] = useState<Charge | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [confirmando, setConfirmando] = useState<'suspender' | 'remover' | null>(null)
+  const [confirmando, setConfirmando] = useState<'suspender' | 'eliminar' | null>(null)
   const [sesiones, setSesiones] = useState<Sesion[]>([])
   const [verProgresso, setVerProgresso] = useState<string | null>(null)
   const [errorAccion, setErrorAccion] = useState<string | null>(null)
@@ -90,16 +90,12 @@ export function AlunoPerfilPage() {
     if (error) { setErrorAccion(mensajeError(error)); return }
     await load(); setMenuOpen(false)
   }
-  async function remove(reason: string) {
+  // Borra la cuenta del alumno para siempre (no se guardan alumnos inactivos).
+  async function eliminar() {
     if (!id) return
-    setConfirmando(null)
-    // El motivo se guarda con el vínculo: es lo que el alumno ve al entrar.
-    const { error } = await supabase.rpc('gestionar_vinculo_aluno', { aluno_id: id, accion: 'desvincular', mensaje: reason || null })
-    if (error) { setErrorAccion(mensajeError(error)); return }
-    await supabase.from('notifications').insert({
-      user_id: id, type: 'warning',
-      ...aviso(reason ? 'removedReason' : 'removed', { who: me?.full_name, reason }),
-    })
+    const { data, error } = await supabase.functions.invoke('delete-student', { body: { student_id: id } })
+    const fallo = (data as any)?.error ?? (error ? error.message : null)
+    if (fallo) { setConfirmando(null); setErrorAccion(mensajeError(fallo)); return }
     nav('/professor/alunos', { replace: true })
   }
 
@@ -129,8 +125,8 @@ export function AlunoPerfilPage() {
             <button onClick={() => { setMenuOpen(false); nav(`/professor/anamnese/${id}`) }} className="w-full flex items-center gap-2 px-4 py-3 text-white text-rt-13 hover:bg-white/5">
               <FileText size={16} className="text-brand-assess" /> {t('alunos:perfil.anamneses')}
             </button>
-            <button onClick={() => { setMenuOpen(false); setConfirmando('remover') }} className="w-full flex items-center gap-2 px-4 py-3 text-danger text-rt-13 hover:bg-white/5">
-              <UserMinus size={16} /> {t('alunos:perfil.removeFromList')}
+            <button onClick={() => { setMenuOpen(false); setConfirmando('eliminar') }} className="w-full flex items-center gap-2 px-4 py-3 text-danger text-rt-13 hover:bg-white/5">
+              <UserMinus size={16} /> {t('alunos:perfil.del.menu')}
             </button>
           </div>
         )}
@@ -228,15 +224,8 @@ export function AlunoPerfilPage() {
         />
       )}
 
-      {confirmando === 'remover' && (
-        <ConfirmConMotivo
-          message={t('alunos:perfil.removeQ')}
-          detail={t('alunos:perfil.removeDetail')}
-          placeholder={t('alunos:perfil.reasonPh')}
-          confirmLabel={t('alunos:perfil.remove')}
-          onConfirm={(motivo) => void remove(motivo)}
-          onCancel={() => setConfirmando(null)}
-        />
+      {confirmando === 'eliminar' && (
+        <ConfirmarEliminar nombre={student?.full_name ?? student?.email ?? ''} onConfirm={eliminar} onCancel={() => setConfirmando(null)} />
       )}
 
       {errorAccion && (
@@ -367,6 +356,34 @@ function DesempenhoAluno({ sesiones, onVerExercicio }: {
             )
           })}
         </ul>
+      </div>
+    </div>
+  )
+}
+
+/** Eliminar es para siempre: se pide escribir ELIMINAR para no hacerlo sin querer. */
+function ConfirmarEliminar({ nombre, onConfirm, onCancel }: { nombre: string; onConfirm: () => Promise<void>; onCancel: () => void }) {
+  const { t } = useTranslation()
+  const [texto, setTexto] = useState('')
+  const [borrando, setBorrando] = useState(false)
+  const listo = texto.trim().toUpperCase() === 'ELIMINAR'
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 px-4" onClick={borrando ? undefined : onCancel}>
+      <div className="w-full max-w-sm rounded-[20px] bg-surface-card border border-danger/50 p-5" onClick={(e) => e.stopPropagation()}>
+        <h2 className="text-white text-rt-18 font-bold">{t('alunos:perfil.del.title', { name: nombre })}</h2>
+        <p className="mt-3 p-3 rounded-lg bg-danger/10 border border-danger text-danger text-rt-13 font-semibold">{t('alunos:perfil.del.warn')}</p>
+        <label className="block text-white/70 text-rt-12 mt-4 mb-1">{t('alunos:perfil.del.type')}</label>
+        <input className="input-dark" value={texto} onChange={(e) => setTexto(e.target.value)} autoFocus />
+        <div className="flex gap-2 mt-5">
+          <button disabled={borrando} onClick={onCancel} className="flex-1 h-11 rounded-btn-pill border border-grey-600 text-white text-rt-13 font-semibold">{t('general:ui.cancel')}</button>
+          <button
+            disabled={!listo || borrando}
+            onClick={async () => { setBorrando(true); await onConfirm(); setBorrando(false) }}
+            className="flex-1 h-11 rounded-btn-pill bg-danger text-white text-rt-13 font-bold disabled:opacity-40"
+          >
+            {borrando ? t('alunos:perfil.del.deleting') : t('alunos:perfil.del.confirm')}
+          </button>
+        </div>
       </div>
     </div>
   )

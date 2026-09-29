@@ -13,6 +13,7 @@
 // @ts-ignore
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
 import { stripe, cors, json } from '../_shared/stripe.ts'
+import { borrarCuenta } from '../_shared/cuentas.ts'
 
 const CAMPOS_PERFIL = [
   'full_name', 'email', 'phone', 'country', 'state', 'city', 'language', 'gender', 'account_status',
@@ -58,8 +59,7 @@ Deno.serve(async (req: Request) => {
 
       case 'user.delete': {
         if (b.id === user.id) return json({ error: 'No podés borrar tu propia cuenta' }, 400)
-        const { error } = await db.auth.admin.deleteUser(b.id)
-        if (error) return json({ error: error.message }, 400)
+        await borrarCuenta(db, b.id)
         return json({ ok: true })
       }
 

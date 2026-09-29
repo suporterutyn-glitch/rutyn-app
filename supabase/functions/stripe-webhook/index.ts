@@ -116,7 +116,7 @@ Deno.serve(async (req: Request) => {
 
 async function sincronizar(admin: any, sub: any, refId?: string | null) {
   const userId = sub.metadata?.user_id ?? refId
-  const q = admin.from('profiles').select('id,plan,stripe_subscription_id')
+  const q = admin.from('profiles').select('id,plan,stripe_subscription_id,plan_pending_plan,plan_pending_seats')
   const { data: prof } = userId ? await q.eq('id', userId).maybeSingle() : await q.eq('stripe_customer_id', sub.customer).maybeSingle()
   if (!prof) return
   // Un evento viejo de otra suscripción no pisa la actual.
@@ -147,6 +147,10 @@ async function sincronizar(admin: any, sub: any, refId?: string | null) {
       plan_cancel_at_period_end: !!sub.cancel_at_period_end,
       stripe_customer_id: sub.customer, stripe_subscription_id: sub.id,
     }).eq('id', prof.id)
+    // La bajada agendada ya entró en vigor.
+    if (prof.plan_pending_plan && prof.plan_pending_plan === plan && (plan !== 'basic' || prof.plan_pending_seats === item.quantity)) {
+      await admin.from('profiles').update({ plan_pending_plan: null, plan_pending_seats: null, plan_pending_at: null }).eq('id', prof.id)
+    }
     if (cambio?.length) {
       await admin.from('notifications').insert({ user_id: prof.id, ...aviso('planActive', { plan }) })
       await admin.from('subscriptions').insert({ teacher_id: prof.id, plan, provider: 'stripe', status: sub.status,

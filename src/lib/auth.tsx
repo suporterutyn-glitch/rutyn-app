@@ -22,6 +22,9 @@ export type Profile = {
   plan_seats?: number | null
   plan_status?: string | null
   plan_cancel_at_period_end?: boolean | null
+  plan_pending_plan?: string | null
+  plan_pending_seats?: number | null
+  plan_pending_at?: string | null
   stripe_customer_id?: string | null
   marketplace_visible: boolean | null
   state?: string | null

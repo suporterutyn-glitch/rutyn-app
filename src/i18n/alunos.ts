@@ -4,7 +4,7 @@ export default textos({
   pt: {
     perfil: {
       tabProfile: 'Perfil', tabRoutines: 'Rotinas', tabDiets: 'Dietas', tabAssessments: 'Avaliações', tabPerformance: 'Desempenho',
-      title: 'Perfil do Aluno', reactivate: 'Reativar aluno', suspend: 'Suspender', anamneses: 'Anamneses', removeFromList: 'Remover da lista', suspended: 'Suspenso',
+      title: 'Perfil do Aluno', reactivate: 'Reativar aluno', suspend: 'Suspender', anamneses: 'Anamneses', removeFromList: 'Remover da lista', del: { menu: 'Eliminar aluno', title: 'Eliminar {{name}}?', warn: 'A conta do aluno será apagada para sempre: rotinas, dietas, avaliações, fotos, conversas e cobranças. Não é possível recuperar.', type: 'Para confirmar, escreva ELIMINAR', confirm: 'Eliminar para sempre', deleting: 'Eliminando…', done: 'Aluno eliminado.' }, suspended: 'Suspenso',
       lastCharge: 'Última cobrança', dueOn: 'Vence {{date}}', seeFinancial: 'Ver financeiro', openAssessment: 'Abrir avaliação física',
       suspendQ: 'Suspender este aluno?', suspendDetail: 'Ele perde acesso aos treinos até você reativá-lo.', removeQ: 'Remover este aluno da sua lista?',
       removeDetail: 'Ele deixa de ser seu aluno. Você pode contar o motivo.', reasonPh: 'Motivo (opcional)', remove: 'Remover',
@@ -17,7 +17,7 @@ export default textos({
   es: {
     perfil: {
       tabProfile: 'Perfil', tabRoutines: 'Rutinas', tabDiets: 'Dietas', tabAssessments: 'Evaluaciones', tabPerformance: 'Desempeño',
-      title: 'Perfil del Alumno', reactivate: 'Reactivar alumno', suspend: 'Suspender', anamneses: 'Anamnesis', removeFromList: 'Quitar de la lista', suspended: 'Suspendido',
+      title: 'Perfil del Alumno', reactivate: 'Reactivar alumno', suspend: 'Suspender', anamneses: 'Anamnesis', removeFromList: 'Quitar de la lista', del: { menu: 'Eliminar alumno', title: '¿Eliminar a {{name}}?', warn: 'La cuenta del alumno se borra para siempre: rutinas, dietas, evaluaciones, fotos, conversaciones y cobros. No se puede recuperar.', type: 'Para confirmar, escribí ELIMINAR', confirm: 'Eliminar para siempre', deleting: 'Eliminando…', done: 'Alumno eliminado.' }, suspended: 'Suspendido',
       lastCharge: 'Último cobro', dueOn: 'Vence {{date}}', seeFinancial: 'Ver finanzas', openAssessment: 'Abrir evaluación física',
       suspendQ: '¿Suspender a este alumno?', suspendDetail: 'Pierde el acceso a los entrenos hasta que lo reactives.', removeQ: '¿Quitar a este alumno de tu lista?',
       removeDetail: 'Deja de ser tu alumno. Podés contarle el motivo.', reasonPh: 'Motivo (opcional)', remove: 'Quitar',
@@ -30,7 +30,7 @@ export default textos({
   en: {
     perfil: {
       tabProfile: 'Profile', tabRoutines: 'Routines', tabDiets: 'Diets', tabAssessments: 'Assessments', tabPerformance: 'Performance',
-      title: 'Student Profile', reactivate: 'Reactivate student', suspend: 'Suspend', anamneses: 'Health questionnaires', removeFromList: 'Remove from list', suspended: 'Suspended',
+      title: 'Student Profile', reactivate: 'Reactivate student', suspend: 'Suspend', anamneses: 'Health questionnaires', removeFromList: 'Remove from list', del: { menu: 'Delete student', title: 'Delete {{name}}?', warn: "The student's account is deleted forever: routines, diets, assessments, photos, chats and charges. It can't be recovered.", type: 'To confirm, type ELIMINAR', confirm: 'Delete forever', deleting: 'Deleting…', done: 'Student deleted.' }, suspended: 'Suspended',
       lastCharge: 'Last charge', dueOn: 'Due {{date}}', seeFinancial: 'View finances', openAssessment: 'Open physical assessment',
       suspendQ: 'Suspend this student?', suspendDetail: 'They lose access to workouts until you reactivate them.', removeQ: 'Remove this student from your list?',
       removeDetail: "They will no longer be your student. You can tell them why.", reasonPh: 'Reason (optional)', remove: 'Remove',

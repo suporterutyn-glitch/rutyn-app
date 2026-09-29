@@ -30,17 +30,21 @@ export function AssinaturaPage() {
   const [aviso, setAviso] = useState<null | { kind: 'error' | 'success'; message: string }>(null)
 
   const fin = profile?.plan_expires_at ? new Date(profile.plan_expires_at).toLocaleDateString(localeDe()) : ''
-  const minN = Math.max(1, activos)
+  // Bajar por debajo de los alumnos vinculados no se puede: primero hay que eliminar.
+  const sobran = Math.max(0, activos - n)
   const elegido: PlanVisible = n <= 1 ? 'free' : n <= MAX_BASIC[moneda] ? 'basic' : 'pro'
   const total = elegido === 'free' ? 0 : elegido === 'pro' ? P.pro : precioBasico(n, moneda)
 
   useEffect(() => {
     if (!profile?.id) return
-    void supabase.rpc('alumnos_activos', { p_teacher: profile.id }).then(({ data }) => {
-      const n = (data as number) ?? 0
-      setActivos(n)
-      setN((x) => Math.max(x, n))
-    })
+    // Activos y suspendidos: los dos ocupan lugar en el plan.
+    void supabase.from('profiles').select('id', { count: 'exact', head: true })
+      .eq('teacher_id', profile.id).eq('role', 'student').in('link_status', ['active', 'suspended'])
+      .then(({ count }) => {
+        const v = count ?? 0
+        setActivos(v)
+        setN((x) => Math.max(x, v))
+      })
   }, [profile?.id])
 
   // Vuelta del Checkout: el webhook puede tardar unos segundos en activar el plan.
@@ -71,7 +75,8 @@ export function AssinaturaPage() {
     if (url) { window.location.href = url; return }
     await refresh()
     setEnviando(false)
-    setAviso({ kind: 'success', message: t('planes:changed') })
+    const agendado = (data as any)?.scheduled ? new Date((data as any).at).toLocaleDateString(localeDe()) : null
+    setAviso({ kind: 'success', message: agendado ? t('planes:scheduled', { date: agendado }) : t('planes:changed') })
   }
 
   const perfilIncompleto = !profile?.profile_complete
@@ -84,7 +89,8 @@ export function AssinaturaPage() {
   function elegir(plan: 'basic' | 'pro', cantidad: number) {
     if (perfilIncompleto) { irACompletar({ plan, cantidad }); return }
     const accion: Accion = { action: 'checkout', plan, ...(plan === 'basic' ? { seats: cantidad } : {}) }
-    if (pago) setConfirmar({ accion, titulo: t('planes:changeQ'), detalle: t('planes:changeDetail') })
+    const baja = (actual === 'pro' && plan === 'basic') || (actual === 'basic' && plan === 'basic' && cantidad < (profile?.plan_seats ?? 0))
+    if (pago) setConfirmar({ accion, titulo: t('planes:changeQ'), detalle: baja ? t('planes:downDetail', { date: fin }) : t('planes:changeDetail') })
     else void ejecutar(accion)
   }
 
@@ -142,6 +148,15 @@ export function AssinaturaPage() {
           {profile?.plan_status === 'past_due'
             ? <div className="text-warning text-rt-12 font-semibold mt-1">{t('planes:pastDue')}</div>
             : fin && <div className="text-white/70 text-rt-12 mt-1">{t(cancelado ? 'planes:ends' : 'planes:renews', { date: fin })}</div>}
+          {profile?.plan_pending_at && (
+            <div className="mt-2 text-warning text-rt-12 font-semibold">
+              {t('planes:pending', {
+                date: new Date(profile.plan_pending_at).toLocaleDateString(localeDe()),
+                plan: t(`planes:name.${planVisible(profile.plan_pending_plan)}`),
+                n: profile.plan_pending_seats ?? '∞',
+              })}
+            </div>
+          )}
           <div className="flex gap-2 mt-3">
             <button disabled={enviando} onClick={() => void ejecutar({ action: 'portal' })} className="flex-1 h-10 rounded-btn-pill bg-white/15 text-white text-rt-13 font-semibold">
               {t('planes:managePayment')}
@@ -167,7 +182,7 @@ export function AssinaturaPage() {
           <span className="text-brand text-rt-24 font-bold">{n}</span>
         </div>
         <input
-          type="range" min={minN} max={100} value={n}
+          type="range" min={1} max={100} value={n}
           onChange={(e) => setN(Number(e.target.value))}
           className="w-full accent-brand"
           aria-label={t('planes:basic.howMany')}
@@ -180,8 +195,15 @@ export function AssinaturaPage() {
           <div><div className="text-white/60 text-rt-11">{t('planes:calc.each')}</div><div className="text-white text-rt-16 font-bold">{fmt(total ? total / n : 0)}</div></div>
         </div>
 
+        {sobran > 0 && (
+          <div className="mt-4 p-3 rounded-lg bg-danger/10 border border-danger text-rt-12">
+            <div className="text-danger font-semibold">{t('planes:mustDelete', { count: sobran, total: activos, n })}</div>
+            <button onClick={() => nav('/professor/alunos')} className="mt-2 text-white underline text-rt-12 font-semibold">{t('planes:goStudents')}</button>
+          </div>
+        )}
+
         <button
-          disabled={enviando || esActual || (elegido === 'free' && cancelado)}
+          disabled={enviando || esActual || sobran > 0 || (elegido === 'free' && cancelado)}
           onClick={elegirCalculado}
           className="btn-save mt-5 disabled:opacity-50"
         >
