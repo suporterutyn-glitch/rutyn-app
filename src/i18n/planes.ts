@@ -1,6 +1,6 @@
 import { textos } from './textos'
 
-// Planes del profesor: Gratis (1 alumno), Básico (US$ 1 o R$ 5,90 por alumno, mín. 5), Pro (ilimitado).
+// Planes del profesor: Gratis (1 alumno), Básico (precio fijo con 2 alumnos + extra por adicional), Pro (ilimitado).
 export default textos({
   pt: {
     completeTitle: 'Termine seu cadastro para assinar', completeBody: 'Seu país define a moeda do pagamento: reais (R$) no Brasil e dólares (US$) nos outros países.',
@@ -10,8 +10,8 @@ export default textos({
     unlimited: 'Alunos ilimitados', activeNow_one: 'Você tem {{count}} aluno ativo', activeNow_other: 'Você tem {{count}} alunos ativos',
     activeCount: '{{n}} ALUNOS', current: 'Seu plano', bestValue: 'Melhor preço',
     free: { tagline: 'Para começar', f1: '1 aluno', f2: 'Rotinas, dietas e chat' },
-    basic: { tagline: 'Pague só pelos alunos que tem', min: 'Mínimo {{n}} alunos', howMany: 'Quantos alunos?', total: '{{n}} alunos · {{price}}/mês', f1: 'Tudo do Grátis', f2: 'Aumente ou diminua quando quiser' },
-    pro: { tagline: 'Para quem vive disso', f1: 'Alunos ilimitados', f2: 'A partir de 30 alunos, menos de {{price}} por aluno', f3: 'Tudo do Básico' },
+    basic: { tagline: 'Pague só pelos alunos que tem', min: 'Mínimo {{n}} alunos', includes: '{{n}} alunos incluídos', extra: '+ {{price}} por aluno adicional', howMany: 'Quantos alunos?', total: '{{n}} alunos · {{price}}/mês', f1: 'Tudo do Grátis', f2: 'Aumente ou diminua quando quiser' },
+    pro: { tagline: 'Para quem vive disso', f1: 'Alunos ilimitados', f2: 'Ideal a partir de {{n}} alunos', f3: 'Tudo do Básico' },
     proHint: 'Por {{price}}/mês o Pro te dá alunos ilimitados.', seePro: 'Ver Pro',
     subscribe: 'Assinar', change: 'Mudar para {{n}} alunos', switchTo: 'Mudar para {{plan}}', currentPlan: 'Plano atual', toFree: 'Voltar ao Grátis',
     renews: 'Renova em {{date}}', ends: 'Termina em {{date}}', pastDue: 'Pagamento pendente: atualize o cartão.',
@@ -32,8 +32,8 @@ export default textos({
     unlimited: 'Alumnos ilimitados', activeNow_one: 'Tenés {{count}} alumno activo', activeNow_other: 'Tenés {{count}} alumnos activos',
     activeCount: '{{n}} ALUMNOS', current: 'Tu plan', bestValue: 'Mejor precio',
     free: { tagline: 'Para empezar', f1: '1 alumno', f2: 'Rutinas, dietas y chat' },
-    basic: { tagline: 'Pagá solo por los alumnos que tenés', min: 'Mínimo {{n}} alumnos', howMany: '¿Cuántos alumnos?', total: '{{n}} alumnos · {{price}}/mes', f1: 'Todo lo del Gratis', f2: 'Subí o bajá cuando quieras' },
-    pro: { tagline: 'Para quien vive de esto', f1: 'Alumnos ilimitados', f2: 'Desde 30 alumnos, menos de {{price}} por alumno', f3: 'Todo lo del Básico' },
+    basic: { tagline: 'Pagá solo por los alumnos que tenés', min: 'Mínimo {{n}} alumnos', includes: '{{n}} alumnos incluidos', extra: '+ {{price}} por alumno adicional', howMany: '¿Cuántos alumnos?', total: '{{n}} alumnos · {{price}}/mes', f1: 'Todo lo del Gratis', f2: 'Subí o bajá cuando quieras' },
+    pro: { tagline: 'Para quien vive de esto', f1: 'Alumnos ilimitados', f2: 'Ideal desde {{n}} alumnos', f3: 'Todo lo del Básico' },
     proHint: 'Por {{price}}/mes el Pro te da alumnos ilimitados.', seePro: 'Ver Pro',
     subscribe: 'Suscribirme', change: 'Cambiar a {{n}} alumnos', switchTo: 'Cambiar a {{plan}}', currentPlan: 'Plan actual', toFree: 'Volver al Gratis',
     renews: 'Se renueva el {{date}}', ends: 'Termina el {{date}}', pastDue: 'Pago pendiente: actualizá la tarjeta.',
@@ -54,8 +54,8 @@ export default textos({
     unlimited: 'Unlimited students', activeNow_one: 'You have {{count}} active student', activeNow_other: 'You have {{count}} active students',
     activeCount: '{{n}} STUDENTS', current: 'Your plan', bestValue: 'Best value',
     free: { tagline: 'To get started', f1: '1 student', f2: 'Routines, diets and chat' },
-    basic: { tagline: 'Pay only for the students you have', min: 'Minimum {{n}} students', howMany: 'How many students?', total: '{{n}} students · {{price}}/mo', f1: 'Everything in Free', f2: 'Scale up or down anytime' },
-    pro: { tagline: 'For full-time trainers', f1: 'Unlimited students', f2: 'From 30 students, under {{price}} per student', f3: 'Everything in Basic' },
+    basic: { tagline: 'Pay only for the students you have', min: 'Minimum {{n}} students', includes: '{{n}} students included', extra: '+ {{price}} per extra student', howMany: 'How many students?', total: '{{n}} students · {{price}}/mo', f1: 'Everything in Free', f2: 'Scale up or down anytime' },
+    pro: { tagline: 'For full-time trainers', f1: 'Unlimited students', f2: 'Best from {{n}} students', f3: 'Everything in Basic' },
     proHint: 'For {{price}}/mo, Pro gives you unlimited students.', seePro: 'See Pro',
     subscribe: 'Subscribe', change: 'Change to {{n}} students', switchTo: 'Switch to {{plan}}', currentPlan: 'Current plan', toFree: 'Back to Free',
     renews: 'Renews on {{date}}', ends: 'Ends on {{date}}', pastDue: 'Payment pending: update your card.',

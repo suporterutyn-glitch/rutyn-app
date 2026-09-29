@@ -5,6 +5,7 @@ import { LayoutDashboard, Users, CreditCard, Apple, Dumbbell, Megaphone, Clipboa
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { CAMPOS_PERFIL, dinero, type Perfil } from './api'
+import { BASIC, PRECIO_PLAN, monedaPlan, precioBasico } from '@/lib/plans'
 import { Tarjeta } from './ui'
 import { Usuarios } from './Usuarios'
 import { Stripe, useStripe, ingresosPorMes } from './Stripe'
@@ -111,12 +112,13 @@ function Contenido({ seccion, perfiles, recargar }: { seccion: Seccion; perfiles
   return <SeccionCatalogo config={CONFIGS[seccion]} />
 }
 
-// Precios de _shared/stripe.ts: BR paga en BRL, el resto en USD.
+// Estimado con los precios actuales; quien se suscribió antes puede seguir con su precio viejo.
 function mrr(p: Perfil) {
   if (p.plan_status !== 'active') return null
-  const br = p.country === 'BR'
-  if (p.plan === 'basic') return { v: (p.plan_seats ?? 0) * (br ? 5.9 : 1), m: br ? 'BRL' : 'USD' }
-  if (p.plan === 'pro') return { v: br ? 149.9 : 29.99, m: br ? 'BRL' : 'USD' }
+  const moneda = monedaPlan(p.country)
+  const m = moneda === 'brl' ? 'BRL' : 'USD'
+  if (p.plan === 'basic') return { v: precioBasico(p.plan_seats ?? BASIC.min, moneda), m }
+  if (p.plan === 'pro') return { v: PRECIO_PLAN[moneda].pro, m }
   return null
 }
 

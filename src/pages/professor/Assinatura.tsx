@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Check, Minus, Plus, Sparkles, UserPen } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
-import { BASIC, PRECIO_PLAN, monedaPlan, precioPlan, planVisible, type PlanVisible } from '@/lib/plans'
+import { BASIC, PRECIO_PLAN, monedaPlan, precioBasico, precioPlan, planVisible, type PlanVisible } from '@/lib/plans'
 import { localeDe } from '@/lib/fechas'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
@@ -109,7 +109,7 @@ export function AssinaturaPage() {
           <div className="text-white/80 text-rt-11 font-semibold uppercase tracking-wider">{t('planes:current')}</div>
           <div className="text-white text-rt-20 font-bold mt-1">
             {t(`planes:name.${actual}`)}
-            {actual === 'basic' && <span className="text-white/80 text-rt-14 font-normal"> · {t('planes:basic.total', { n: profile?.plan_seats ?? BASIC.min, price: fmt((profile?.plan_seats ?? BASIC.min) * P.alumno) })}</span>}
+            {actual === 'basic' && <span className="text-white/80 text-rt-14 font-normal"> · {t('planes:basic.total', { n: profile?.plan_seats ?? BASIC.min, price: fmt(precioBasico(profile?.plan_seats ?? BASIC.min, moneda)) })}</span>}
             {actual === 'pro' && <span className="text-white/80 text-rt-14 font-normal"> · {fmt(P.pro)}{t('planes:perMonth')}</span>}
           </div>
           <div className="text-white/80 text-rt-12 mt-1">{t('planes:activeNow', { count: activos })}</div>
@@ -145,8 +145,8 @@ export function AssinaturaPage() {
         </Tarjeta>
 
         <Tarjeta plan="basic" actual={actual} titulo={t('planes:name.basic')} bajada={t('planes:basic.tagline')}
-          precio={<>{fmt(P.alumno)} <span className="text-rt-13 text-white/70 font-normal">{t('planes:perStudent')}{t('planes:perMonth')}</span></>}
-          rasgos={[t('planes:basic.min', { n: BASIC.min }), t('planes:basic.f1'), t('planes:basic.f2')]}>
+          precio={<>{fmt(P.base)}<span className="text-rt-13 text-white/70 font-normal">{t('planes:perMonth')}</span></>}
+          rasgos={[t('planes:basic.includes', { n: BASIC.incluidos }), t('planes:basic.extra', { price: fmt(P.extra) }), t('planes:basic.f1'), t('planes:basic.f2')]}>
           <div className="rounded-[14px] bg-black/25 p-3 mb-3">
             <div className="text-white/80 text-rt-12 mb-2">{t('planes:basic.howMany')}</div>
             <div className="flex items-center justify-between">
@@ -156,14 +156,14 @@ export function AssinaturaPage() {
               </button>
               <div className="text-center">
                 <div className="text-white text-rt-29 font-bold leading-none">{seats}</div>
-                <div className="text-brand-light text-rt-13 font-semibold mt-1">{fmt(seats * P.alumno)}{t('planes:perMonth')}</div>
+                <div className="text-brand-light text-rt-13 font-semibold mt-1">{fmt(precioBasico(seats, moneda))}{t('planes:perMonth')}</div>
               </div>
               <button onClick={() => setSeats((s) => Math.min(BASIC.max, s + 1))} disabled={seats >= BASIC.max}
                 className="w-10 h-10 rounded-full bg-white/15 text-white flex items-center justify-center disabled:opacity-30" aria-label="+">
                 <Plus size={18} />
               </button>
             </div>
-            {seats >= 25 && (
+            {precioBasico(seats, moneda) >= P.pro * 0.8 && (
               <div className="mt-3 flex items-center gap-2 rounded-[10px] bg-tone-purple-tag/40 px-3 py-2 text-white text-rt-12">
                 <Sparkles size={16} className="shrink-0" />
                 <span>{t('planes:proHint', { price: fmt(P.pro) })}</span>
@@ -177,7 +177,7 @@ export function AssinaturaPage() {
 
         <Tarjeta plan="pro" actual={actual} destacado={t('planes:bestValue')} titulo={t('planes:name.pro')} bajada={t('planes:pro.tagline')}
           precio={<>{fmt(P.pro)}<span className="text-rt-13 text-white/70 font-normal">{t('planes:perMonth')}</span></>}
-          rasgos={[t('planes:pro.f1'), t('planes:pro.f2', { price: fmt(P.alumno) }), t('planes:pro.f3')]}>
+          rasgos={[t('planes:pro.f1'), t('planes:pro.f2', { n: BASIC.max + 1 }), t('planes:pro.f3')]}>
           <Boton activo={actual === 'pro'} deshabilitado={enviando || actual === 'pro'}
             texto={actual === 'pro' ? t('planes:currentPlan') : pago ? t('planes:switchTo', { plan: t('planes:name.pro') }) : t('planes:subscribe')}
             onClick={() => elegir('pro')} />

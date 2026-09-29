@@ -4,11 +4,16 @@ import { localeDe } from './fechas'
 // brasileñas en BRL) y el resto en dólares. Mismos valores que
 // supabase/functions/_shared/stripe.ts y la función SQL limite_alumnos.
 export type PlanVisible = 'free' | 'basic' | 'pro'
-export const BASIC = { min: 5, max: 29 }
+// Básico: precio fijo por los primeros `incluidos` alumnos + `extra` por cada adicional.
+export const BASIC = { min: 2, max: 46, incluidos: 2 }
 export type MonedaPlan = 'usd' | 'brl'
-export const PRECIO_PLAN: Record<MonedaPlan, { alumno: number; pro: number }> = {
-  usd: { alumno: 1, pro: 29.99 },
-  brl: { alumno: 5.9, pro: 149.9 },
+export const PRECIO_PLAN: Record<MonedaPlan, { base: number; extra: number; pro: number }> = {
+  usd: { base: 4.99, extra: 1, pro: 49.99 },
+  brl: { base: 24.9, extra: 5.9, pro: 249.9 },
+}
+export function precioBasico(alumnos: number, moneda: MonedaPlan) {
+  const p = PRECIO_PLAN[moneda]
+  return Math.round((p.base + Math.max(0, alumnos - BASIC.incluidos) * p.extra) * 100) / 100
 }
 export function monedaPlan(pais?: string | null): MonedaPlan {
   return (pais ?? '').toUpperCase() === 'BR' ? 'brl' : 'usd'

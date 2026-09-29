@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { adminApi, dinero, fecha, type Perfil } from './api'
 import { Badge, Error_, Tabla, Tarjeta, useAccion } from './ui'
+import { precioBasico } from '@/lib/plans'
 
 type Factura = {
   id: string; number: string | null; status: string; currency: string
@@ -96,7 +97,7 @@ export function Stripe({ perfiles, stripe }: { perfiles: Perfil[]; stripe: Retur
             { label: 'Profesor', render: (s) => (s.profile_id ? nombres[s.profile_id] : null) ?? s.email ?? '—' },
             { label: 'Estado', render: (s) => <Badge tono={tonoSub(s.status)}>{s.status}{s.cancel_at_period_end ? ' · cancela' : ''}</Badge> },
             { label: 'Cupos', render: (s) => s.quantity },
-            { label: 'Mensual', render: (s) => (s.amount != null ? dinero(s.amount * s.quantity, s.currency, true) : '—') },
+            { label: 'Mensual', render: (s) => (s.amount != null ? dinero(s.amount * s.quantity, s.currency, true) : dinero(precioBasico(s.quantity, s.currency === 'brl' ? 'brl' : 'usd'), s.currency)) },
             { label: 'Próximo cobro', render: (s) => (s.current_period_end ? fecha(s.current_period_end) : '—') },
             {
               label: 'Acciones',
