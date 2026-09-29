@@ -73,14 +73,26 @@ export function AssinaturaPage() {
   }
 
   const perfilIncompleto = !profile?.profile_complete
-  const irACompletar = () => nav('/professor/perfil/completar?volver=/professor/assinatura')
+  const irACompletar = () => nav('/professor/perfil/completar?volver=' + encodeURIComponent('/professor/assinatura' + window.location.search))
 
-  function elegir(plan: 'basic' | 'pro') {
+  function elegir(plan: 'basic' | 'pro', n = seats) {
     if (perfilIncompleto) { irACompletar(); return }
-    const accion: Accion = { action: 'checkout', plan, ...(plan === 'basic' ? { seats } : {}) }
+    const accion: Accion = { action: 'checkout', plan, ...(plan === 'basic' ? { seats: n } : {}) }
     if (pago) setConfirmar({ accion, titulo: t('planes:changeQ'), detalle: t('planes:changeDetail') })
     else void ejecutar(accion)
   }
+
+  // Viene de la landing con un plan elegido: se va directo al checkout (solo si todavía no paga).
+  useEffect(() => {
+    if (params.get('comprar') !== '1' || !profile?.id) return
+    const plan = params.get('plan') === 'pro' ? 'pro' : 'basic'
+    const n = clamp(Number(params.get('seats')) || BASIC.min, moneda)
+    if (perfilIncompleto) { irACompletar(); return }
+    setParams({}, { replace: true })
+    if (pago) return
+    setSeats(n)
+    elegir(plan, n)
+  }, [profile?.id])
 
   const esBasicActual = actual === 'basic' && (profile?.plan_seats ?? BASIC.min) === seats
   const cancelado = !!profile?.plan_cancel_at_period_end

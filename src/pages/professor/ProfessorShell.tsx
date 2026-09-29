@@ -1,4 +1,6 @@
-import { Outlet } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { tomarIntencion } from '@/lib/intencionCompra'
 import { FolderKanban, Users, Home, MessageCircle, Wallet, Crown, Mail } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { OfflineBanner } from '@/components/OfflineBanner'
@@ -7,6 +9,14 @@ import { BarraLateral } from '@/components/BarraLateral'
 
 export function ProfessorShell() {
   const { t } = useTranslation()
+  const nav = useNavigate()
+  const loc = useLocation()
+  useEffect(() => {
+    const i = tomarIntencion()
+    if (i && loc.pathname !== '/professor/assinatura') {
+      nav(`/professor/assinatura?comprar=1&plan=${i.plan}&seats=${i.seats}`, { replace: true })
+    }
+  }, [])
   return (
     <div className="app-shell app-panel app-bg-pro">
       <BarraLateral
