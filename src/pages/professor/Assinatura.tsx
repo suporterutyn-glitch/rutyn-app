@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, Check, Minus, Plus, Sparkles, UserPen } from 'lucide-react'
+import { ArrowLeft, UserPen } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
 import { BASIC, MAX_BASIC, PRECIO_PLAN, monedaPlan, precioBasico, precioPlan, planVisible, type PlanVisible } from '@/lib/plans'
@@ -24,20 +24,22 @@ export function AssinaturaPage() {
   const pago = actual !== 'free'
   const [activos, setActivos] = useState(0)
   const pedidos = Number(params.get('seats')) || 0
-  const [seats, setSeats] = useState(() => clamp(pedidos || profile?.plan_seats || BASIC.min, moneda))
+  const [n, setN] = useState(() => pedidos || (actual === 'pro' ? MAX_BASIC[moneda] + 1 : profile?.plan_seats || 1))
   const [enviando, setEnviando] = useState(false)
   const [confirmar, setConfirmar] = useState<null | { accion: Accion; titulo: string; detalle: string }>(null)
   const [aviso, setAviso] = useState<null | { kind: 'error' | 'success'; message: string }>(null)
 
   const fin = profile?.plan_expires_at ? new Date(profile.plan_expires_at).toLocaleDateString(localeDe()) : ''
-  const minSeats = Math.max(BASIC.min, activos)
+  const minN = Math.max(1, activos)
+  const elegido: PlanVisible = n <= 1 ? 'free' : n <= MAX_BASIC[moneda] ? 'basic' : 'pro'
+  const total = elegido === 'free' ? 0 : elegido === 'pro' ? P.pro : precioBasico(n, moneda)
 
   useEffect(() => {
     if (!profile?.id) return
     void supabase.rpc('alumnos_activos', { p_teacher: profile.id }).then(({ data }) => {
       const n = (data as number) ?? 0
       setActivos(n)
-      setSeats((s) => clamp(Math.max(s, n), moneda))
+      setN((x) => Math.max(x, n))
     })
   }, [profile?.id])
 
@@ -75,9 +77,9 @@ export function AssinaturaPage() {
   const perfilIncompleto = !profile?.profile_complete
   const irACompletar = () => nav('/professor/perfil/completar?volver=' + encodeURIComponent('/professor/assinatura' + window.location.search))
 
-  function elegir(plan: 'basic' | 'pro', n = seats) {
+  function elegir(plan: 'basic' | 'pro', cantidad: number) {
     if (perfilIncompleto) { irACompletar(); return }
-    const accion: Accion = { action: 'checkout', plan, ...(plan === 'basic' ? { seats: n } : {}) }
+    const accion: Accion = { action: 'checkout', plan, ...(plan === 'basic' ? { seats: cantidad } : {}) }
     if (pago) setConfirmar({ accion, titulo: t('planes:changeQ'), detalle: t('planes:changeDetail') })
     else void ejecutar(accion)
   }
@@ -86,16 +88,24 @@ export function AssinaturaPage() {
   useEffect(() => {
     if (params.get('comprar') !== '1' || !profile?.id) return
     const plan = params.get('plan') === 'pro' ? 'pro' : 'basic'
-    const n = clamp(Number(params.get('seats')) || BASIC.min, moneda)
+    const cant = clamp(Number(params.get('seats')) || BASIC.min, moneda)
     if (perfilIncompleto) { irACompletar(); return }
     setParams({}, { replace: true })
     if (pago) return
-    setSeats(n)
-    elegir(plan, n)
+    setN(cant)
+    elegir(plan, cant)
   }, [profile?.id])
 
-  const esBasicActual = actual === 'basic' && (profile?.plan_seats ?? BASIC.min) === seats
   const cancelado = !!profile?.plan_cancel_at_period_end
+  const esActual = elegido === actual && (elegido !== 'basic' || (profile?.plan_seats ?? BASIC.min) === n)
+
+  function elegirCalculado() {
+    if (elegido === 'free') {
+      setConfirmar({ accion: { action: 'cancel' }, titulo: t('planes:cancelQ'), detalle: t('planes:cancelDetail', { date: fin }) })
+      return
+    }
+    elegir(elegido, n)
+  }
 
   return (
     <div className="pt-[calc(env(safe-area-inset-top)+16px)] px-4 pb-8">
@@ -145,55 +155,41 @@ export function AssinaturaPage() {
         </div>
       )}
 
-      <div className="text-white text-rt-22 font-bold mb-1">{t('planes:choose')}</div>
-      {!pago && <div className="text-white/70 text-rt-13 mb-4">{t('planes:activeNow', { count: activos })}</div>}
+      <div className="text-white text-rt-22 font-bold mb-3">{t('planes:choose')}</div>
 
-      <div className="flex flex-col gap-3 mb-6 mt-3 lg:grid lg:grid-cols-3 lg:gap-4 lg:items-stretch">
-        <Tarjeta plan="free" actual={actual} titulo={t('planes:name.free')} bajada={t('planes:free.tagline')}
-          precio={t('planes:name.free')} rasgos={[t('planes:free.f1'), t('planes:free.f2')]}>
-          <Boton activo={actual === 'free'} texto={actual === 'free' ? t('planes:currentPlan') : t('planes:toFree')} tono="claro"
-            onClick={() => !cancelado && setConfirmar({ accion: { action: 'cancel' }, titulo: t('planes:cancelQ'), detalle: t('planes:cancelDetail', { date: fin }) })}
-            deshabilitado={enviando || cancelado} />
-        </Tarjeta>
+      <div className="rounded-card p-5 mb-4 bg-surface-card border border-brand/40 max-w-xl lg:mx-auto">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-white text-rt-14 font-semibold">{t('planes:basic.howMany')}</span>
+          <span className="text-brand text-rt-24 font-bold">{n}</span>
+        </div>
+        <input
+          type="range" min={minN} max={100} value={n}
+          onChange={(e) => setN(Number(e.target.value))}
+          className="w-full accent-brand"
+          aria-label={t('planes:basic.howMany')}
+        />
+        {activos > 1 && <div className="text-white/50 text-rt-11 mt-1">{t('planes:activeNow', { count: activos })}</div>}
 
-        <Tarjeta plan="basic" actual={actual} titulo={t('planes:name.basic')} bajada={t('planes:basic.tagline')}
-          precio={<>{fmt(P.base)}<span className="text-rt-13 text-white/70 font-normal">{t('planes:perMonth')}</span></>}
-          rasgos={[t('planes:basic.includes', { n: BASIC.incluidos }), t('planes:basic.extra', { price: fmt(P.extra) }), t('planes:basic.f1'), t('planes:basic.f2')]}>
-          <div className="rounded-[14px] bg-black/25 p-3 mb-3">
-            <div className="text-white/80 text-rt-12 mb-2">{t('planes:basic.howMany')}</div>
-            <div className="flex items-center justify-between">
-              <button onClick={() => setSeats((s) => Math.max(minSeats, s - 1))} disabled={seats <= minSeats}
-                className="w-10 h-10 rounded-full bg-white/15 text-white flex items-center justify-center disabled:opacity-30" aria-label="-">
-                <Minus size={18} />
-              </button>
-              <div className="text-center">
-                <div className="text-white text-rt-29 font-bold leading-none">{seats}</div>
-                <div className="text-brand-light text-rt-13 font-semibold mt-1">{fmt(precioBasico(seats, moneda))}{t('planes:perMonth')}</div>
-              </div>
-              <button onClick={() => setSeats((s) => Math.min(MAX_BASIC[moneda], s + 1))} disabled={seats >= MAX_BASIC[moneda]}
-                className="w-10 h-10 rounded-full bg-white/15 text-white flex items-center justify-center disabled:opacity-30" aria-label="+">
-                <Plus size={18} />
-              </button>
-            </div>
-            {precioBasico(seats, moneda) >= P.pro * 0.8 && (
-              <div className="mt-3 flex items-center gap-2 rounded-[10px] bg-tone-purple-tag/40 px-3 py-2 text-white text-rt-12">
-                <Sparkles size={16} className="shrink-0" />
-                <span>{t('planes:proHint', { price: fmt(P.pro) })}</span>
-              </div>
-            )}
-          </div>
-          <Boton activo={esBasicActual} deshabilitado={enviando || esBasicActual}
-            texto={esBasicActual ? t('planes:currentPlan') : actual === 'basic' ? t('planes:change', { n: seats }) : pago ? t('planes:switchTo', { plan: t('planes:name.basic') }) : t('planes:subscribe')}
-            onClick={() => elegir('basic')} />
-        </Tarjeta>
+        <div className="grid grid-cols-3 gap-2 mt-4 text-center">
+          <div><div className="text-white/60 text-rt-11">{t('planes:calc.plan')}</div><div className="text-white text-rt-16 font-bold">{t(`planes:name.${elegido}`)}</div></div>
+          <div><div className="text-white/60 text-rt-11">{t('planes:calc.month')}</div><div className="text-white text-rt-16 font-bold">{fmt(total)}</div></div>
+          <div><div className="text-white/60 text-rt-11">{t('planes:calc.each')}</div><div className="text-white text-rt-16 font-bold">{fmt(total ? total / n : 0)}</div></div>
+        </div>
 
-        <Tarjeta plan="pro" actual={actual} destacado={t('planes:bestValue')} titulo={t('planes:name.pro')} bajada={t('planes:pro.tagline')}
-          precio={<>{fmt(P.pro)}<span className="text-rt-13 text-white/70 font-normal">{t('planes:perMonth')}</span></>}
-          rasgos={[t('planes:pro.f1'), t('planes:pro.f2', { n: MAX_BASIC[moneda] + 1 }), t('planes:pro.f3')]}>
-          <Boton activo={actual === 'pro'} deshabilitado={enviando || actual === 'pro'}
-            texto={actual === 'pro' ? t('planes:currentPlan') : pago ? t('planes:switchTo', { plan: t('planes:name.pro') }) : t('planes:subscribe')}
-            onClick={() => elegir('pro')} />
-        </Tarjeta>
+        <button
+          disabled={enviando || esActual || (elegido === 'free' && cancelado)}
+          onClick={elegirCalculado}
+          className="btn-save mt-5 disabled:opacity-50"
+        >
+          {esActual ? t('planes:currentPlan')
+            : elegido === 'free' ? t('planes:toFree')
+            : t('planes:calc.choose', { price: fmt(total) })}
+        </button>
+        <div className="text-white/50 text-rt-11 text-center mt-2">
+          {elegido === 'free' ? t('planes:free.f1')
+            : elegido === 'pro' ? t('planes:pro.f1')
+            : `${t('planes:basic.includes', { n: BASIC.incluidos })} · ${t('planes:basic.extra', { price: fmt(P.extra) })}`}
+        </div>
       </div>
 
       <div className="text-white/50 text-rt-11 text-center">{t('planes:note', { currency: t(moneda === 'brl' ? 'planes:currencyBrl' : 'planes:currencyUsd') })}</div>
@@ -220,47 +216,4 @@ function clamp(n: number, moneda: 'usd' | 'brl') {
 /** supabase.functions.invoke esconde el cuerpo en los errores HTTP. */
 async function leerError(error: any): Promise<unknown> {
   try { return (await error?.context?.json?.())?.error ?? error } catch { return error }
-}
-
-function Tarjeta({ plan, actual, titulo, bajada, precio, rasgos, destacado, children }: {
-  plan: PlanVisible; actual: PlanVisible; titulo: string; bajada: string; precio: React.ReactNode
-  rasgos: string[]; destacado?: string; children: React.ReactNode
-}) {
-  const { t } = useTranslation()
-  const activo = plan === actual
-  return (
-    <div className={
-      'rounded-card p-4 border ' +
-      (activo ? 'bg-plan-premium border-brand shadow-glow-lg' :
-       plan === 'pro' ? 'bg-surface-card border-tone-purple-tag' : 'bg-surface-card border-surface-divider')
-    }>
-      <div className="flex items-center justify-between mb-0.5">
-        <div className="text-white text-rt-18 font-bold">{titulo}</div>
-        {activo ? <span className="text-rt-9 font-bold px-2 py-0.5 rounded-xs bg-brand text-white">{t('planes:current')}</span>
-          : destacado && <span className="text-rt-9 font-bold tracking-[0.5px] px-2 py-0.5 rounded-xs bg-tone-purple-tag text-white">{destacado}</span>}
-      </div>
-      <div className="text-white/60 text-rt-12 mb-2">{bajada}</div>
-      <div className="text-white text-rt-29 font-bold leading-none mb-3">{precio}</div>
-      <ul className="flex flex-col gap-1 mb-4">
-        {rasgos.map((f) => (
-          <li key={f} className="flex items-center gap-2 text-white/90 text-rt-12">
-            <Check size={14} className="text-brand-light shrink-0" /> {f}
-          </li>
-        ))}
-      </ul>
-      {children}
-    </div>
-  )
-}
-
-function Boton({ texto, activo, deshabilitado, onClick, tono }: {
-  texto: string; activo: boolean; deshabilitado?: boolean; onClick: () => void; tono?: 'claro'
-}) {
-  return (
-    <button onClick={onClick} disabled={deshabilitado}
-      className={'w-full h-11 rounded-btn-pill font-bold text-rt-14 disabled:cursor-default ' +
-        (activo ? 'bg-white/20 text-white' : tono === 'claro' ? 'bg-white/95 text-danger-strong disabled:opacity-60' : 'bg-purchase text-white shadow-glow disabled:opacity-60')}>
-      {texto}
-    </button>
-  )
 }

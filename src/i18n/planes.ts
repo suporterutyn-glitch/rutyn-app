@@ -23,6 +23,7 @@ export default textos({
     limitBody_one: 'Seu plano permite {{count}} aluno ativo. Aumente o plano para adicionar mais.',
     limitBody_other: 'Seu plano permite {{count}} alunos ativos. Aumente o plano para adicionar mais.',
     upgrade: 'Aumentar plano',
+    calc: { plan: 'Seu plano', month: 'Por mês', each: 'Por aluno', choose: 'Escolher este plano · {{price}}/mês' },
   },
   es: {
     completeTitle: 'Terminá tu registro para suscribirte', completeBody: 'Tu país define la moneda del pago: reales (R$) en Brasil y dólares (US$) en los demás países.',
@@ -45,6 +46,7 @@ export default textos({
     limitBody_one: 'Tu plan permite {{count}} alumno activo. Ampliá el plan para agregar más.',
     limitBody_other: 'Tu plan permite {{count}} alumnos activos. Ampliá el plan para agregar más.',
     upgrade: 'Ampliar plan',
+    calc: { plan: 'Tu plan', month: 'Por mes', each: 'Por alumno', choose: 'Elegir este plan · {{price}}/mes' },
   },
   en: {
     completeTitle: 'Finish your profile to subscribe', completeBody: 'Your country sets the payment currency: Brazilian reais (R$) in Brazil and US dollars (US$) everywhere else.',
@@ -67,5 +69,6 @@ export default textos({
     limitBody_one: 'Your plan allows {{count}} active student. Upgrade to add more.',
     limitBody_other: 'Your plan allows {{count}} active students. Upgrade to add more.',
     upgrade: 'Upgrade plan',
+    calc: { plan: 'Your plan', month: 'Per month', each: 'Per student', choose: 'Choose this plan · {{price}}/mo' },
   },
 })
