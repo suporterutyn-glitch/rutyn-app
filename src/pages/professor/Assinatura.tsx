@@ -16,7 +16,7 @@ export function AssinaturaPage() {
   const { t } = useTranslation()
   const nav = useNavigate()
   const [params, setParams] = useSearchParams()
-  const { profile, refresh } = useAuth()
+  const { profile, refresh, congeladaDesde } = useAuth()
   const moneda = monedaPlan(profile?.country)
   const P = PRECIO_PLAN[moneda]
   const fmt = (v: number) => precioPlan(v, moneda)
@@ -125,6 +125,21 @@ export function AssinaturaPage() {
         </button>
         <h1 className="text-white text-rt-20 font-bold">{t('planes:title')}</h1>
       </div>
+
+      {congeladaDesde && (
+        <div className="mb-5 p-4 rounded-card bg-danger/15 border border-danger">
+          <div className="text-danger text-rt-15 font-bold">{t('planes:frozen.teacherTitle')}</div>
+          <div className="text-white/85 text-rt-13 mt-1">
+            {t('planes:frozen.teacherBody', {
+              since: new Date(congeladaDesde).toLocaleDateString(localeDe()),
+              until: new Date(new Date(congeladaDesde).getTime() + 60 * 86400000).toLocaleDateString(localeDe()),
+            })}
+          </div>
+          {profile?.stripe_customer_id && (
+            <button disabled={enviando} onClick={() => void ejecutar({ action: 'portal' })} className="btn-save mt-3">{t('planes:frozen.payNow')}</button>
+          )}
+        </div>
+      )}
 
       {perfilIncompleto && (
         <button onClick={() => irACompletar()} className="w-full mb-5 rounded-card bg-warning-card p-4 flex items-center gap-3 text-left">

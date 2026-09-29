@@ -53,6 +53,8 @@ type AuthCtx = {
   session: Session | null
   user: User | null
   profile: Profile | null
+  /** Cuenta congelada por falta de pago (la del profesor, o la del profesor del alumno). */
+  congeladaDesde: string | null
   loading: boolean
   refresh: () => Promise<void>
   signOut: () => Promise<void>
@@ -63,18 +65,20 @@ const Ctx = createContext<AuthCtx | null>(null)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [congeladaDesde, setCongeladaDesde] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   async function loadProfile(userId: string | undefined) {
     if (!userId) {
       setProfile(null)
+      setCongeladaDesde(null)
       return
     }
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .maybeSingle()
+    const [{ data, error }, { data: congelada }] = await Promise.all([
+      supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
+      supabase.rpc('cuenta_congelada'),
+    ])
+    setCongeladaDesde((congelada as string | null) ?? null)
     // Sin perfil los guardas expulsan a /identificacao, asi que un fallo mudo
     // aparece como "login que no entra". Dejar rastro.
     if (error) console.error('No se pudo cargar el perfil:', error.message)
@@ -110,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <Ctx.Provider value={{ session, user: session?.user ?? null, profile, loading, refresh, signOut }}>
+    <Ctx.Provider value={{ session, user: session?.user ?? null, profile, congeladaDesde, loading, refresh, signOut }}>
       {children}
     </Ctx.Provider>
   )

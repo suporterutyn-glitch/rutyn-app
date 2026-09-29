@@ -75,7 +75,8 @@ Deno.serve(async (req: Request) => {
       await sincronizar(admin, await s.subscriptions.retrieve(event.data.object.id).catch(() => event.data.object))
     } else if (event.type === 'invoice.payment_succeeded') {
       const inv = event.data.object
-      const { data: p } = await admin.from('profiles').select('id,plan').eq('stripe_customer_id', inv.customer).maybeSingle()
+      const { data: p } = await admin.from('profiles').select('id,plan,frozen_since').eq('stripe_customer_id', inv.customer).maybeSingle()
+      if (p?.frozen_since && inv.amount_paid > 0) await descongelar(admin, p.id)
       if (p && p.plan !== 'free') {
         await admin.from('notifications').insert({ user_id: p.id, ...aviso('planActive', { plan: p.plan }), type: 'success' })
         // Enviar email de confirmación
@@ -88,7 +89,8 @@ Deno.serve(async (req: Request) => {
       }
     } else if (event.type === 'invoice.payment_failed') {
       const inv = event.data.object
-      const { data: p } = await admin.from('profiles').select('id').eq('stripe_customer_id', inv.customer).maybeSingle()
+      const { data: p } = await admin.from('profiles').select('id,frozen_since').eq('stripe_customer_id', inv.customer).maybeSingle()
+      if (p && !p.frozen_since) await admin.from('profiles').update({ frozen_since: new Date().toISOString() }).eq('id', p.id)
       if (p) {
         await admin.from('notifications').insert({ user_id: p.id, ...aviso('paymentFailed', {}), type: 'warning' })
         // Enviar email de alerta
@@ -116,7 +118,7 @@ Deno.serve(async (req: Request) => {
 
 async function sincronizar(admin: any, sub: any, refId?: string | null) {
   const userId = sub.metadata?.user_id ?? refId
-  const q = admin.from('profiles').select('id,plan,stripe_subscription_id,plan_pending_plan,plan_pending_seats')
+  const q = admin.from('profiles').select('id,plan,stripe_subscription_id,plan_pending_plan,plan_pending_seats,frozen_since')
   const { data: prof } = userId ? await q.eq('id', userId).maybeSingle() : await q.eq('stripe_customer_id', sub.customer).maybeSingle()
   if (!prof) return
   // Un evento viejo de otra suscripción no pisa la actual.
@@ -147,6 +149,7 @@ async function sincronizar(admin: any, sub: any, refId?: string | null) {
       plan_cancel_at_period_end: !!sub.cancel_at_period_end,
       stripe_customer_id: sub.customer, stripe_subscription_id: sub.id,
     }).eq('id', prof.id)
+    if (prof.frozen_since && sub.status === 'active') await descongelar(admin, prof.id)
     // La bajada agendada ya entró en vigor.
     if (prof.plan_pending_plan && prof.plan_pending_plan === plan && (plan !== 'basic' || prof.plan_pending_seats === item.quantity)) {
       await admin.from('profiles').update({ plan_pending_plan: null, plan_pending_seats: null, plan_pending_at: null }).eq('id', prof.id)
@@ -161,6 +164,7 @@ async function sincronizar(admin: any, sub: any, refId?: string | null) {
       plan: 'free', plan_seats: null, plan_status: sub.status, plan_expires_at: null,
       plan_cancel_at_period_end: false, stripe_customer_id: sub.customer, stripe_subscription_id: null,
     }).eq('id', prof.id)
+    // Si terminó por falta de pago la cuenta sigue congelada (frozen_since) hasta que pague o pasen 60 días.
     const { data: n } = await admin.rpc('ajustar_alumnos_al_plan', { p_teacher: prof.id })
     if (prof.plan !== 'free') await admin.from('notifications').insert({ user_id: prof.id, ...aviso('planEnded', { n: n ?? 0 }), type: 'warning' })
   }
@@ -187,4 +191,8 @@ async function rechazarPorPais(sub: any) {
     }
   }
   if (sub.status !== 'canceled') await s.subscriptions.cancel(sub.id).catch((e: any) => console.error('cancel', e?.message))
+}
+
+async function descongelar(admin: any, profId: string) {
+  await admin.from('profiles').update({ frozen_since: null }).eq('id', profId)
 }

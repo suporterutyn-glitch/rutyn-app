@@ -4,7 +4,7 @@ import { useAuth } from '@/lib/auth'
 type Props = { role?: 'teacher' | 'student'; children: React.ReactNode }
 
 export function StatusGate({ role, children }: Props) {
-  const { session, profile, loading } = useAuth()
+  const { session, profile, congeladaDesde, loading } = useAuth()
   const loc = useLocation()
 
   if (loading) return null
@@ -17,6 +17,12 @@ export function StatusGate({ role, children }: Props) {
 
   if (profile.account_status === 'deactivated') return <Navigate to="/bloqueado?motivo=desativada" replace />
   if (profile.account_status === 'deleting') return <Navigate to="/bloqueado?motivo=exclusao" replace />
+
+  // Falta de pago: el profesor solo puede ir a pagar; el alumno solo ve el inicio con el aviso.
+  if (congeladaDesde) {
+    if (profile.role === 'teacher' && loc.pathname !== '/professor/assinatura') return <Navigate to="/professor/assinatura" replace />
+    if (profile.role === 'student' && loc.pathname !== '/aluno') return <Navigate to="/aluno" replace />
+  }
 
   if (role && profile.role !== role) {
     return <Navigate to={profile.role === 'teacher' ? '/professor' : '/aluno'} replace />

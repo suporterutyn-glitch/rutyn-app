@@ -24,7 +24,7 @@ function todayISO() {
 }
 
 export function AlunoHome() {
-  const { profile } = useAuth()
+  const { profile, congeladaDesde } = useAuth()
   const { t, i18n } = useTranslation()
   const nav = useNavigate()
   const [counter, setCounter] = useState<{ id: string; amount: number; format: string; frequency: number; teacher: string } | null>(null)
@@ -140,6 +140,12 @@ export function AlunoHome() {
 
   return (
     <div className="px-4 pt-[calc(env(safe-area-inset-top)+16px)] lg:px-0 lg:pt-4">
+      {congeladaDesde && (
+        <div className="mb-5 p-4 rounded-card bg-danger/15 border border-danger">
+          <div className="text-danger text-rt-15 font-bold">{t('planes:frozen.studentTitle')}</div>
+          <div className="text-white/80 text-rt-13 mt-1">{t('planes:frozen.studentBody')}</div>
+        </div>
+      )}
       {/* Mismo encabezado que la home del profesor */}
       <div className="flex items-center justify-between mb-5">
         <div className="min-w-0">
