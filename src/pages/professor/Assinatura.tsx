@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Check, Minus, Plus, Sparkles, UserPen } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
-import { BASIC, PRECIO_PLAN, monedaPlan, precioBasico, precioPlan, planVisible, type PlanVisible } from '@/lib/plans'
+import { BASIC, MAX_BASIC, PRECIO_PLAN, monedaPlan, precioBasico, precioPlan, planVisible, type PlanVisible } from '@/lib/plans'
 import { localeDe } from '@/lib/fechas'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
@@ -24,7 +24,7 @@ export function AssinaturaPage() {
   const pago = actual !== 'free'
   const [activos, setActivos] = useState(0)
   const pedidos = Number(params.get('seats')) || 0
-  const [seats, setSeats] = useState(() => clamp(pedidos || profile?.plan_seats || BASIC.min))
+  const [seats, setSeats] = useState(() => clamp(pedidos || profile?.plan_seats || BASIC.min, moneda))
   const [enviando, setEnviando] = useState(false)
   const [confirmar, setConfirmar] = useState<null | { accion: Accion; titulo: string; detalle: string }>(null)
   const [aviso, setAviso] = useState<null | { kind: 'error' | 'success'; message: string }>(null)
@@ -37,7 +37,7 @@ export function AssinaturaPage() {
     void supabase.rpc('alumnos_activos', { p_teacher: profile.id }).then(({ data }) => {
       const n = (data as number) ?? 0
       setActivos(n)
-      setSeats((s) => clamp(Math.max(s, n)))
+      setSeats((s) => clamp(Math.max(s, n), moneda))
     })
   }, [profile?.id])
 
@@ -158,7 +158,7 @@ export function AssinaturaPage() {
                 <div className="text-white text-rt-29 font-bold leading-none">{seats}</div>
                 <div className="text-brand-light text-rt-13 font-semibold mt-1">{fmt(precioBasico(seats, moneda))}{t('planes:perMonth')}</div>
               </div>
-              <button onClick={() => setSeats((s) => Math.min(BASIC.max, s + 1))} disabled={seats >= BASIC.max}
+              <button onClick={() => setSeats((s) => Math.min(MAX_BASIC[moneda], s + 1))} disabled={seats >= MAX_BASIC[moneda]}
                 className="w-10 h-10 rounded-full bg-white/15 text-white flex items-center justify-center disabled:opacity-30" aria-label="+">
                 <Plus size={18} />
               </button>
@@ -177,7 +177,7 @@ export function AssinaturaPage() {
 
         <Tarjeta plan="pro" actual={actual} destacado={t('planes:bestValue')} titulo={t('planes:name.pro')} bajada={t('planes:pro.tagline')}
           precio={<>{fmt(P.pro)}<span className="text-rt-13 text-white/70 font-normal">{t('planes:perMonth')}</span></>}
-          rasgos={[t('planes:pro.f1'), t('planes:pro.f2', { n: BASIC.max + 1 }), t('planes:pro.f3')]}>
+          rasgos={[t('planes:pro.f1'), t('planes:pro.f2', { n: MAX_BASIC[moneda] + 1 }), t('planes:pro.f3')]}>
           <Boton activo={actual === 'pro'} deshabilitado={enviando || actual === 'pro'}
             texto={actual === 'pro' ? t('planes:currentPlan') : pago ? t('planes:switchTo', { plan: t('planes:name.pro') }) : t('planes:subscribe')}
             onClick={() => elegir('pro')} />
@@ -201,8 +201,8 @@ export function AssinaturaPage() {
   )
 }
 
-function clamp(n: number) {
-  return Math.min(BASIC.max, Math.max(BASIC.min, Math.round(n)))
+function clamp(n: number, moneda: 'usd' | 'brl') {
+  return Math.min(MAX_BASIC[moneda], Math.max(BASIC.min, Math.round(n)))
 }
 
 /** supabase.functions.invoke esconde el cuerpo en los errores HTTP. */

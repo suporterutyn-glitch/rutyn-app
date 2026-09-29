@@ -8,13 +8,14 @@ import Stripe from 'https://esm.sh/stripe@14.25.0?target=deno'
 // Básico: escalonado (graduated) — `base` cubre los primeros 2 alumnos y `extra` cada alumno adicional.
 // Pro: fijo, alumnos ilimitados. Los precios de Stripe no se editan: al cambiar valores se sube la versión del lookup.
 export const PRECIOS = {
-  basic: { nombre: 'Rutyn Básico', usd: { lookup: 'rutyn_basic_v2_usd', base: 499, extra: 100 }, brl: { lookup: 'rutyn_basic_v2_brl', base: 2490, extra: 590 } },
-  pro: { nombre: 'Rutyn Pro', usd: { lookup: 'rutyn_pro_v2_usd', centavos: 4999 }, brl: { lookup: 'rutyn_pro_v2_brl', centavos: 24990 } },
+  basic: { nombre: 'Rutyn Básico', usd: { lookup: 'rutyn_basic_v2_usd', base: 499, extra: 100 }, brl: { lookup: 'rutyn_basic_v3_brl', base: 999, extra: 200 } },
+  pro: { nombre: 'Rutyn Pro', usd: { lookup: 'rutyn_pro_v2_usd', centavos: 4999 }, brl: { lookup: 'rutyn_pro_v3_brl', centavos: 14900 } },
 } as const
 const INCLUIDOS_BASIC = 2
 // Suscripciones creadas antes del cambio de precios siguen con su precio viejo.
 const LOOKUPS_VIEJOS: Record<string, PlanPago> = {
   rutyn_basic_monthly_usd: 'basic', rutyn_basic_monthly_brl: 'basic', rutyn_pro_monthly_usd: 'pro', rutyn_pro_monthly_brl: 'pro',
+  rutyn_basic_v2_brl: 'basic', rutyn_pro_v2_brl: 'pro',
 }
 export type Moneda = 'usd' | 'brl'
 export function monedaDePais(pais?: string | null): Moneda {
@@ -22,7 +23,8 @@ export function monedaDePais(pais?: string | null): Moneda {
 }
 export type PlanPago = keyof typeof PRECIOS
 export const MIN_BASIC = 2
-export const MAX_BASIC = 46 // con 47 o más el Pro sale más barato
+// Hasta donde el Básico sale más barato que el Pro, en cada moneda.
+export const MAX_BASIC: Record<'usd' | 'brl', number> = { usd: 46, brl: 71 }
 
 export function stripe() {
   // @ts-ignore

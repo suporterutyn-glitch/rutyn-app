@@ -60,14 +60,14 @@ Deno.serve(async (req: Request) => {
     const plan = body.plan as PlanPago
     if (plan !== 'basic' && plan !== 'pro') return json({ error: 'bad_plan' }, 400)
     const { data: activos } = await admin.rpc('alumnos_activos', { p_teacher: prof.id })
+    // Una suscripción no cambia de moneda: si ya existe, se sigue en la suya.
+    const moneda: Moneda = subViva ? (subViva.currency as Moneda) : monedaDePais(prof.country)
     let seats = 1
     if (plan === 'basic') {
       seats = Math.round(Number(body.seats) || MIN_BASIC)
-      if (seats < MIN_BASIC || seats > MAX_BASIC) return json({ error: 'bad_seats' }, 400)
+      if (seats < MIN_BASIC || seats > MAX_BASIC[moneda]) return json({ error: 'bad_seats' }, 400)
       if (seats < (activos ?? 0)) return json({ error: 'seats_below_active', active: activos }, 400)
     }
-    // Una suscripción no cambia de moneda: si ya existe, se sigue en la suya.
-    const moneda: Moneda = subViva ? (subViva.currency as Moneda) : monedaDePais(prof.country)
     const price = await precioDe(s, plan, moneda)
     const meta = { user_id: prof.id, plan }
 

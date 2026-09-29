@@ -5,12 +5,14 @@ import { localeDe } from './fechas'
 // supabase/functions/_shared/stripe.ts y la función SQL limite_alumnos.
 export type PlanVisible = 'free' | 'basic' | 'pro'
 // Básico: precio fijo por los primeros `incluidos` alumnos + `extra` por cada adicional.
-export const BASIC = { min: 2, max: 46, incluidos: 2 }
+export const BASIC = { min: 2, incluidos: 2 }
 export type MonedaPlan = 'usd' | 'brl'
 export const PRECIO_PLAN: Record<MonedaPlan, { base: number; extra: number; pro: number }> = {
   usd: { base: 4.99, extra: 1, pro: 49.99 },
-  brl: { base: 24.9, extra: 5.9, pro: 249.9 },
+  brl: { base: 9.99, extra: 2, pro: 149 },
 }
+// Hasta donde el Básico sale más barato que el Pro.
+export const MAX_BASIC: Record<MonedaPlan, number> = { usd: 46, brl: 71 }
 export function precioBasico(alumnos: number, moneda: MonedaPlan) {
   const p = PRECIO_PLAN[moneda]
   return Math.round((p.base + Math.max(0, alumnos - BASIC.incluidos) * p.extra) * 100) / 100
