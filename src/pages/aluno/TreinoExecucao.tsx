@@ -545,6 +545,13 @@ function PantallaDescanso({ restante, total, corriendo, proximo, onPausar, onAju
         </button>
         <button onClick={() => onAjustar(15)} className="w-16 h-12 rounded-[12px] bg-surface-raised text-white text-rt-15 font-semibold">+15s</button>
       </div>
+      <div className="flex items-center gap-2 mt-4">
+        {[30, 60, 120].map((seg) => (
+          <button key={seg} onClick={() => onAjustar(seg)} className="h-10 px-4 rounded-btn-pill border border-brand/50 text-brand text-rt-13 font-semibold">
+            +{seg < 60 ? `${seg}s` : `${seg / 60} min`}
+          </button>
+        ))}
+      </div>
 
       {proximo && (
         <div className="mt-8 text-center">
