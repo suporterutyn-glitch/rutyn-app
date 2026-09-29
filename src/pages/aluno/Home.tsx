@@ -48,13 +48,15 @@ export function AlunoHome() {
   useEffect(() => {
     if (!profile?.id) return
     void (async () => {
-      const [chargeRes, hydRes, srRes, notifRes] = await Promise.all([
+      const [chargeRes, ultimoRes, hydRes, srRes, notifRes] = await Promise.all([
+        // Primero la más vieja sin pagar; si no hay, la última (ya paga).
+        supabase.from('charges').select('id,amount,due_date,status,format').eq('student_id', profile.id).in('status', ['pending', 'awaiting', 'suspended']).order('due_date').limit(1).maybeSingle(),
         supabase.from('charges').select('id,amount,due_date,status,format').eq('student_id', profile.id).order('due_date', { ascending: false }).limit(1).maybeSingle(),
         supabase.from('hydration_days').select('ml,target_ml').eq('student_id', profile.id).eq('day', today).maybeSingle(),
         supabase.from('student_routines').select('id', { count: 'exact', head: true }).eq('student_id', profile.id).eq('completed_workouts', 0).eq('is_hidden', false),
         supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', profile.id).is('read_at', null),
       ])
-      setCharge((chargeRes.data as Charge) ?? null)
+      setCharge(((chargeRes.data ?? ultimoRes.data) as Charge) ?? null)
       // Sin registro de hoy, la meta es la que definió el profesor.
       setHydration((hydRes.data as Hydration) ?? { ml: 0, target_ml: profile.hydration_goal_ml ?? 2500 })
       setNewRoutines(srRes.count ?? 0)

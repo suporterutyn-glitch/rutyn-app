@@ -26,7 +26,7 @@ export function MensalidadePage() {
     if (!profile?.id || !profile.teacher_id) return
     void (async () => {
       const [{ data: c }, { data: t }, { data: p }] = await Promise.all([
-        supabase.from('charges').select('id,amount,due_date,status').eq('student_id', profile.id).in('status', ['pending', 'awaiting']).order('due_date').limit(1).maybeSingle(),
+        supabase.from('charges').select('id,amount,due_date,status').eq('student_id', profile.id).in('status', ['pending', 'awaiting', 'suspended']).order('due_date').limit(1).maybeSingle(),
         supabase.from('profiles').select('full_name,bank_holder,bank_name,bank_agency,bank_account,pix_key,country').eq('id', profile.teacher_id).single(),
         supabase.from('charge_change_proposals').select('id,new_amount,new_format,reason,teacher_id').eq('student_id', profile.id).eq('status', 'pending').order('created_at', { ascending: false }).limit(1).maybeSingle(),
       ])
