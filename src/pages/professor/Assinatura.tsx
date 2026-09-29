@@ -75,10 +75,14 @@ export function AssinaturaPage() {
   }
 
   const perfilIncompleto = !profile?.profile_complete
-  const irACompletar = () => nav('/professor/perfil/completar?volver=' + encodeURIComponent('/professor/assinatura' + window.location.search))
+  // Al volver de completar el perfil se retoma la compra elegida y se va directo al checkout.
+  const irACompletar = (eleccion?: { plan: 'basic' | 'pro'; cantidad: number }) => {
+    const q = eleccion ? `?comprar=1&plan=${eleccion.plan}&seats=${eleccion.cantidad}` : window.location.search
+    nav('/professor/perfil/completar?volver=' + encodeURIComponent('/professor/assinatura' + q))
+  }
 
   function elegir(plan: 'basic' | 'pro', cantidad: number) {
-    if (perfilIncompleto) { irACompletar(); return }
+    if (perfilIncompleto) { irACompletar({ plan, cantidad }); return }
     const accion: Accion = { action: 'checkout', plan, ...(plan === 'basic' ? { seats: cantidad } : {}) }
     if (pago) setConfirmar({ accion, titulo: t('planes:changeQ'), detalle: t('planes:changeDetail') })
     else void ejecutar(accion)
@@ -117,7 +121,7 @@ export function AssinaturaPage() {
       </div>
 
       {perfilIncompleto && (
-        <button onClick={irACompletar} className="w-full mb-5 rounded-card bg-warning-card p-4 flex items-center gap-3 text-left">
+        <button onClick={() => irACompletar()} className="w-full mb-5 rounded-card bg-warning-card p-4 flex items-center gap-3 text-left">
           <span className="w-10 h-10 rounded-lg bg-white/25 flex items-center justify-center shrink-0"><UserPen size={20} className="text-black" /></span>
           <span className="flex-1">
             <span className="block text-black text-rt-14 font-bold">{t('planes:completeTitle')}</span>
