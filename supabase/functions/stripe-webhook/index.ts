@@ -21,11 +21,15 @@ const AVISOS: Record<string, { title: string; body: string }> = {
   planActive: { title: 'Plano ativado', body: 'Seu plano {{plan}} está ativo.' },
   paymentFailed: { title: 'Falha no pagamento', body: 'Não conseguimos cobrar seu plano. Atualize o cartão para não perder alunos.' },
   planEnded: { title: 'Seu plano terminou', body: 'Voltou ao plano Grátis. {{n}} aluno(s) ficaram suspensos.' },
+  cardCountry: { title: 'Pagamento devolvido', body: 'O preço em reais é só para cartões do Brasil. Devolvemos o valor: assine de novo com o país certo no seu perfil.' },
 }
 function aviso(key: string, params: Record<string, unknown>) {
   const r = (t: string) => t.replace(/\{\{(\w+)\}\}/g, (_, k) => String(params[k] ?? ''))
   return { type: 'info', title: r(AVISOS[key].title), body: r(AVISOS[key].body), data: { key, params } }
 }
+
+// Las suscripciones anteriores a este control no se revisan.
+const DESDE_CONTROL_PAIS = 1790690000 // 2026-09-29
 
 // @ts-ignore
 Deno.serve(async (req: Request) => {
@@ -122,6 +126,18 @@ async function sincronizar(admin: any, sub: any, refId?: string | null) {
   const plan = planDePrecio(item?.price)
   const viva = ['active', 'trialing', 'past_due'].includes(sub.status)
 
+  // El precio en reales es solo para Brasil: el país de la tarjeta lo informa Stripe,
+  // no el perfil (que declara el propio profesor). Si no coincide, se cancela y se devuelve.
+  if (viva && sub.currency === 'brl' && sub.created >= DESDE_CONTROL_PAIS) {
+    const pais = await paisDeTarjeta(sub)
+    if (pais && pais !== 'BR') {
+      await rechazarPorPais(sub)
+      await admin.from('notifications').insert({ user_id: prof.id, ...aviso('cardCountry', {}), type: 'warning' })
+      console.warn('brl con tarjeta de', pais, 'sub', sub.id, 'perfil', prof.id)
+      return
+    }
+  }
+
   if (viva && plan) {
     // Stripe manda varios eventos a la vez: solo el que efectivamente cambia el plan avisa.
     const { data: cambio } = await admin.from('profiles').update({ plan }).eq('id', prof.id).neq('plan', plan).select('id')
@@ -144,4 +160,27 @@ async function sincronizar(admin: any, sub: any, refId?: string | null) {
     const { data: n } = await admin.rpc('ajustar_alumnos_al_plan', { p_teacher: prof.id })
     if (prof.plan !== 'free') await admin.from('notifications').insert({ user_id: prof.id, ...aviso('planEnded', { n: n ?? 0 }), type: 'warning' })
   }
+}
+
+async function paisDeTarjeta(sub: any): Promise<string | null> {
+  const s = stripe()
+  let pm = sub.default_payment_method
+  if (!pm && sub.latest_invoice) {
+    const inv = await s.invoices.retrieve(typeof sub.latest_invoice === 'string' ? sub.latest_invoice : sub.latest_invoice.id, { expand: ['payment_intent'] })
+    pm = inv.payment_intent?.payment_method
+  }
+  if (!pm) return null
+  const metodo = typeof pm === 'string' ? await s.paymentMethods.retrieve(pm) : pm
+  return metodo?.card?.country ?? null
+}
+
+async function rechazarPorPais(sub: any) {
+  const s = stripe()
+  if (sub.latest_invoice) {
+    const inv = await s.invoices.retrieve(typeof sub.latest_invoice === 'string' ? sub.latest_invoice : sub.latest_invoice.id)
+    if (inv.payment_intent && inv.amount_paid > 0) {
+      await s.refunds.create({ payment_intent: typeof inv.payment_intent === 'string' ? inv.payment_intent : inv.payment_intent.id, reason: 'requested_by_customer' }).catch((e: any) => console.error('refund', e?.message))
+    }
+  }
+  if (sub.status !== 'canceled') await s.subscriptions.cancel(sub.id).catch((e: any) => console.error('cancel', e?.message))
 }

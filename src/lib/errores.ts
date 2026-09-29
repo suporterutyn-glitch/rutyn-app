@@ -8,6 +8,7 @@ const REGLAS: [RegExp, string][] = [
   [/student_limit/i, 'studentLimit'],
   [/stripe_not_configured/i, 'paymentsUnavailable'],
   [/seats_below_active/i, 'seatsBelowActive'],
+  [/country_locked/i, 'countryLocked'],
   [/profile_incomplete/i, 'profileIncomplete'],
   [/failed to fetch|networkerror|load failed|network request failed/i, 'offline'],
   [/invalid login credentials/i, 'invalidCredentials'],
