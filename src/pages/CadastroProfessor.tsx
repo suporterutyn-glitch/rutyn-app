@@ -14,6 +14,9 @@ import { mensajeError } from '@/lib/errores'
 export function CadastroProfessorPage() {
   const { t, i18n } = useTranslation()
   const nav = useNavigate()
+  // Incrustado en la landing (rutyn.com.br): lo que sale del formulario abre la app completa, fuera del iframe.
+  const embebido = new URLSearchParams(window.location.search).get('embed') === '1'
+  const abrirFuera = (ruta: string) => { window.open(window.location.origin + ruta, '_top') }
   const lang = idiomaDe(i18n.language)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -61,6 +64,13 @@ export function CadastroProfessorPage() {
       if (updateError) console.error('Error updating profile role:', updateError)
     }
 
+    if (embebido) {
+      // La sesión viaja en el hash: la app la toma al abrir (detectSessionInUrl).
+      const s = data.session
+      if (s) abrirFuera(`/professor#access_token=${s.access_token}&refresh_token=${s.refresh_token}&expires_in=${s.expires_in}&expires_at=${s.expires_at}&token_type=bearer&type=signup`)
+      else abrirFuera('/login')
+      return
+    }
     if (data.session) nav('/professor', { replace: true })
     else nav('/login', { replace: true })
   }
@@ -69,13 +79,13 @@ export function CadastroProfessorPage() {
     <div className="app-shell app-bg-pro flex flex-col">
       <div className="relative z-10 flex flex-col min-h-dvh">
         <div className="relative px-6 pt-[calc(env(safe-area-inset-top)+8px)] pb-5">
-          <button
+          {!embebido && <button
             onClick={() => nav(-1)}
             aria-label={t('back')}
             className="absolute left-2 top-[calc(env(safe-area-inset-top)+8px)] w-9 h-9 flex items-center justify-center text-white"
           >
             <ArrowLeft size={20} />
-          </button>
+          </button>}
           <div className="flex flex-col items-center gap-2.5 pt-2">
             <RutynLogo size={70} />
             <div className="text-white font-bold text-rt-16">{t('signupTeacher:greeting')}</div>
@@ -144,7 +154,7 @@ export function CadastroProfessorPage() {
                 {t('signupTeacher:acceptPrefix')}
                 <button
                   type="button"
-                  onClick={() => nav('/termos')}
+                  onClick={() => (embebido ? window.open(window.location.origin + '/termos', '_blank') : nav('/termos'))}
                   className="text-brand font-semibold underline text-left"
                 >
                   {t('signupTeacher:termsLink')}
@@ -159,7 +169,7 @@ export function CadastroProfessorPage() {
 
               <button
                 type="button"
-                onClick={() => nav('/login')}
+                onClick={() => (embebido ? abrirFuera('/login') : nav('/login'))}
                 className="text-[#4C6524] font-bold text-rt-16"
               >
                 {t('signupTeacher:doLogin')}
