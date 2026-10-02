@@ -6,7 +6,10 @@ const STORAGE_KEY = 'rutyn.lang'
 function initialLang(): 'pt' | 'es' | 'en' {
   // La landing incrusta el registro con ?lang= para que hable el mismo idioma que la página.
   const pedido = new URLSearchParams(window.location.search).get('lang')
-  if (pedido === 'pt' || pedido === 'es' || pedido === 'en') return pedido
+  if (pedido === 'pt' || pedido === 'es' || pedido === 'en') {
+    try { localStorage.setItem(STORAGE_KEY, pedido) } catch { /* sin almacenamiento: solo esta vez */ }
+    return pedido
+  }
   const saved = localStorage.getItem(STORAGE_KEY)
   if (saved === 'pt' || saved === 'es' || saved === 'en') return saved
   const sys = (navigator.language || 'pt').toLowerCase()

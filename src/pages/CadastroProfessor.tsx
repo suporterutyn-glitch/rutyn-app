@@ -67,7 +67,7 @@ export function CadastroProfessorPage() {
     if (embebido) {
       // La sesión viaja en el hash: la app la toma al abrir (detectSessionInUrl).
       const s = data.session
-      if (s) abrirFuera(`/professor#access_token=${s.access_token}&refresh_token=${s.refresh_token}&expires_in=${s.expires_in}&expires_at=${s.expires_at}&token_type=bearer&type=signup`)
+      if (s) abrirFuera(`/professor?lang=${lang}#access_token=${s.access_token}&refresh_token=${s.refresh_token}&expires_in=${s.expires_in}&expires_at=${s.expires_at}&token_type=bearer&type=signup`)
       else abrirFuera('/login')
       return
     }
