@@ -6,6 +6,7 @@ import { IdentificacaoPage } from '@/pages/Identificacao'
 import { LoginPage } from '@/pages/Login'
 import { EsqueciSenhaPage } from '@/pages/EsqueciSenha'
 import { RedefinirSenhaPage } from '@/pages/RedefinirSenha'
+import { ConviteLinkPage } from '@/pages/ConviteLink'
 import { CadastroProfessorPage } from '@/pages/CadastroProfessor'
 import { CadastroAlunoPage } from '@/pages/CadastroAluno'
 import { AguardandoAprovacaoPage } from '@/pages/AguardandoAprovacao'
@@ -59,6 +60,7 @@ export default function App() {
           <Route path="/redefinir-senha" element={<RedefinirSenhaPage />} />
           <Route path="/cadastro/professor" element={<CadastroProfessorPage />} />
           <Route path="/cadastro/aluno" element={<CadastroAlunoPage />} />
+          <Route path="/c/:codigo" element={<ConviteLinkPage />} />
           <Route path="/aguardando" element={<AguardandoAprovacaoPage />} />
           <Route path="/bloqueado" element={<BloqueadoPage />} />
           <Route path="/termos" element={<TermosPage />} />

@@ -3,6 +3,7 @@
 // deno-lint-ignore-file
 // @ts-ignore Deno import
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
+import { enviarCorreo, plantilla, escapar } from '../_shared/correo.ts'
 
 // @ts-ignore Deno global
 Deno.serve(async (req: Request) => {
@@ -51,15 +52,17 @@ Deno.serve(async (req: Request) => {
     ])
     if (lim !== null && (act ?? 0) >= lim) return json({ ok: false, error: 'student_limit' }, 200)
 
-    // Create user with auto-generate password
+    const idioma = ['pt', 'es', 'en'].includes(language) ? language : (['pt', 'es', 'en'].includes(teacher.language) ? teacher.language : 'pt')
+
+    // Contraseña al azar que nadie conoce: el alumno crea la suya con el enlace del correo de bienvenida.
     const { data: created, error: createErr } = await admin.auth.admin.createUser({
       email,
-      password: Math.random().toString(36).slice(-8),
+      password: crypto.randomUUID(),
       email_confirm: false,
       // El idioma del alumno (el de su país) decide en qué idioma le llegan los correos.
       user_metadata: {
         role: 'student', full_name: full_name || email,
-        language: ['pt', 'es', 'en'].includes(language) ? language : (teacher.language ?? 'pt'),
+        language: idioma,
       },
     })
 
@@ -76,11 +79,49 @@ Deno.serve(async (req: Request) => {
 
     if (linkErr) return json({ ok: false, error: `Link error: ${linkErr.message}` }, 200)
 
-    return json({ ok: true, student_id: userId, student_email: email }, 200)
+    // Bienvenida con enlace para crear la contraseña. Si falla, el alumno sigue pudiendo usar "Olvidé mi contraseña".
+    let email_sent = false
+    try {
+      const { data: link, error: linkErr2 } = await admin.auth.admin.generateLink({
+        type: 'recovery', email, options: { redirectTo: 'https://app.rutyn.com.br/redefinir-senha' },
+      })
+      if (linkErr2 || !link?.properties?.action_link) throw linkErr2 ?? new Error('no link')
+      const c = BIENVENIDA[idioma as 'pt' | 'es' | 'en'](escapar(full_name || ''), escapar(teacher.full_name || 'Rutyn'))
+      await enviarCorreo(email, c.subject, plantilla(c.titulo, c.parrafos, c.boton, link.properties.action_link, c.pie))
+      email_sent = true
+    } catch (e) {
+      console.error('bienvenida', email, String(e))
+    }
+
+    return json({ ok: true, student_id: userId, student_email: email, email_sent }, 200)
   } catch (e) {
     return json({ ok: false, error: `Exception: ${String(e)}` }, 200)
   }
 })
+
+const BIENVENIDA = {
+  pt: (alumno: string, prof: string) => ({
+    subject: `${prof} te adicionou no Rutyn`,
+    titulo: alumno ? `Olá, ${alumno}!` : 'Olá!',
+    parrafos: [`<strong>${prof}</strong> criou sua conta no <strong>Rutyn</strong>, o app onde você vai ver seus treinos, sua dieta e sua evolução.`, 'Para entrar, crie sua senha no botão abaixo.'],
+    boton: 'Criar minha senha',
+    pie: 'Se o link expirar, abra app.rutyn.com.br e toque em "Esqueceu a senha?".',
+  }),
+  es: (alumno: string, prof: string) => ({
+    subject: `${prof} te agregó en Rutyn`,
+    titulo: alumno ? `¡Hola, ${alumno}!` : '¡Hola!',
+    parrafos: [`<strong>${prof}</strong> creó tu cuenta en <strong>Rutyn</strong>, la app donde vas a ver tus rutinas, tu dieta y tu progreso.`, 'Para entrar, creá tu contraseña con el botón de abajo.'],
+    boton: 'Crear mi contraseña',
+    pie: 'Si el enlace vence, abrí app.rutyn.com.br y tocá "¿Olvidaste tu contraseña?".',
+  }),
+  en: (alumno: string, prof: string) => ({
+    subject: `${prof} added you on Rutyn`,
+    titulo: alumno ? `Hi, ${alumno}!` : 'Hi!',
+    parrafos: [`<strong>${prof}</strong> created your <strong>Rutyn</strong> account, the app where you'll see your workouts, your diet and your progress.`, 'To sign in, create your password with the button below.'],
+    boton: 'Create my password',
+    pie: 'If the link expires, open app.rutyn.com.br and tap "Forgot your password?".',
+  }),
+}
 
 function cors() {
   return {

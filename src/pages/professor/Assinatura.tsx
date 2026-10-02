@@ -31,8 +31,9 @@ export function AssinaturaPage() {
 
   const fin = profile?.plan_expires_at ? new Date(profile.plan_expires_at).toLocaleDateString(localeDe()) : ''
   // Bajar por debajo de los alumnos vinculados no se puede: primero hay que eliminar.
-  const sobran = Math.max(0, activos - n)
   const elegido: PlanVisible = n <= 1 ? 'free' : n <= MAX_BASIC[moneda] ? 'basic' : 'pro'
+  // Bajar a un plan pago exige eliminar los que sobran; cancelar (pasar a Gratis) solo los suspende.
+  const sobran = elegido === 'free' ? 0 : Math.max(0, activos - n)
   const total = elegido === 'free' ? 0 : elegido === 'pro' ? P.pro : precioBasico(n, moneda)
 
   useEffect(() => {

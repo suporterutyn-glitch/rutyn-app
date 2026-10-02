@@ -12,6 +12,7 @@ export type Profile = {
   account_status: AccountStatus
   link_status: LinkStatus
   full_name: string | null
+  invite_code?: string | null
   email?: string | null
   country: string | null
   language: 'pt' | 'es' | 'en' | null

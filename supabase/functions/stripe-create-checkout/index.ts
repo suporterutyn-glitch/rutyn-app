@@ -47,13 +47,13 @@ Deno.serve(async (req: Request) => {
       const p = await s.billingPortal.sessions.create({ customer: prof.stripe_customer_id, return_url: `${origin}/professor/assinatura` })
       return json({ url: p.url })
     }
-    // Para bajar de plan cuentan activos y suspendidos: los que sobran se eliminan, no se suspenden.
+    // Para bajar de plan (no para cancelar) cuentan activos y suspendidos: los que sobran se eliminan, no se suspenden.
     const { count: vinculados } = await admin.from('profiles').select('id', { count: 'exact', head: true })
       .eq('teacher_id', prof.id).eq('role', 'student').in('link_status', ['active', 'suspended'])
 
     if (action === 'cancel' || action === 'resume') {
       if (!subViva) return json({ error: 'no_subscription' }, 400)
-      if (action === 'cancel' && (vinculados ?? 0) > 1) return json({ error: 'seats_below_active', active: vinculados, min: 1 }, 400)
+      // Cancelar no exige eliminar alumnos: al terminar el período el webhook suspende los que no entran en Gratis.
       if (action === 'cancel') await soltarAgenda(s, subViva, admin, prof.id)
       await s.subscriptions.update(subViva.id, { cancel_at_period_end: action === 'cancel' })
       await admin.from('profiles').update({ plan_cancel_at_period_end: action === 'cancel' }).eq('id', prof.id)

@@ -10,6 +10,8 @@ import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { countryByCode } from '@/lib/countries'
 import { idiomaDe } from '@/lib/catalogos'
 import { mensajeError } from '@/lib/errores'
+import { useAuth } from '@/lib/auth'
+import { leerCodigo, usarCodigo, profesorDelCodigo, mensajeConvite } from '@/lib/convite'
 
 export function CadastroAlunoPage() {
   const { t, i18n } = useTranslation()
@@ -31,6 +33,13 @@ export function CadastroAlunoPage() {
   const [accept, setAccept] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { refresh } = useAuth()
+  // Llegó por el link de invitación de un profesor (/c/<codigo>).
+  const [codigo] = useState(() => leerCodigo())
+  const [invitadoPor, setInvitadoPor] = useState<string | null>(null)
+  useEffect(() => {
+    if (codigo) void profesorDelCodigo(codigo).then((p) => setInvitadoPor(p?.full_name ?? ''))
+  }, [codigo])
 
   // Se consulta con retardo para no disparar una peticion por tecla.
   useEffect(() => {
@@ -51,7 +60,7 @@ export function CadastroAlunoPage() {
     e.preventDefault()
     if (!accept) { setError(t('general:acceptTerms')); return }
     if (password !== confirmPassword) { setError(t('signupTeacher:passwordMismatch')); return }
-    if (hasTeacher && teacherState !== 'ok') { setError(t('signupStudent:teacherNotFound')); return }
+    if (!codigo && hasTeacher && teacherState !== 'ok') { setError(t('signupStudent:teacherNotFound')); return }
     setError(null)
     setLoading(true)
     const { data, error } = await supabase.auth.signUp({
@@ -64,7 +73,8 @@ export function CadastroAlunoPage() {
           country: countryCode,
           phone: `${countryByCode(countryCode)?.dial}${phone}`,
           language: lang,
-          teacher_email: hasTeacher ? teacherEmail : null,
+          teacher_email: !codigo && hasTeacher ? teacherEmail : null,
+          invite_code: codigo,
         },
       },
     })
@@ -80,6 +90,13 @@ export function CadastroAlunoPage() {
       if (updateError) console.error('Error updating profile role:', updateError)
     }
 
+    if (data.session && codigo) {
+      const r = await usarCodigo(codigo)
+      await refresh()
+      if (r === 'ok') { nav('/aluno', { replace: true }); return }
+      nav('/aluno/encontrar-professor', { replace: true, state: { aviso: t(mensajeConvite(r)) } })
+      return
+    }
     if (data.session) nav(hasTeacher ? '/aguardando' : '/aluno/encontrar-professor', { replace: true })
     else nav('/login', { replace: true })
   }
@@ -102,6 +119,11 @@ export function CadastroAlunoPage() {
         </div>
 
         <div className="flex-1 bg-surface-light rounded-t-[10px] px-6 pt-5 pb-[calc(env(safe-area-inset-bottom)+24px)]">
+          {codigo && invitadoPor !== null && (
+            <div className="mb-4 rounded-[12px] bg-brand/10 border border-brand/30 px-4 py-3 text-center text-rt-13 font-semibold text-[#4C6524]">
+              {invitadoPor ? t('signupStudent:invitedBy', { name: invitadoPor }) : t('signupStudent:invitedGeneric')}
+            </div>
+          )}
           <h1 className="text-center text-brand font-bold text-rt-18 mb-4">{t('signupTeacher:fillData')}</h1>
           <form onSubmit={submit} className="flex flex-col gap-6">
             <div>
@@ -139,7 +161,7 @@ export function CadastroAlunoPage() {
               </button>
             </div>
 
-            <SelectSheet
+            {!codigo && <SelectSheet
               label={t('signupStudent:hasTeacher')}
               title={t('signupStudent:hasTeacher')}
               value={hasTeacher ? 'sim' : 'nao'}
@@ -148,9 +170,9 @@ export function CadastroAlunoPage() {
                 { value: 'nao', label: t('no') },
                 { value: 'sim', label: t('yes') },
               ]}
-            />
+            />}
 
-            {hasTeacher && (
+            {!codigo && hasTeacher && (
               <div className="relative">
                 <label className="block text-rt-11 text-ink-placeholder font-semibold">{t('signupStudent:teacherEmail')}</label>
                 <input

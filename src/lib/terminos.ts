@@ -109,5 +109,5 @@ export const terminosEs: BloqueLegal[] = [
   { tag: 'p', text: `El presente documento entra en vigor desde el momento en que el usuario se registra y permanecerá vigente durante todo el uso de la Plataforma.` },
   { tag: 'h', text: `17. CONTACTO` },
   { tag: 'p', text: `Para consultar el ejercicio de derechos:` },
-  { tag: 'p', text: `Correo electrónico: suporte.rutyn@gmail.com Sitio web: www.rutyn.com.brWhatsApp: 5548991074102` },
+  { tag: 'p', text: `Correo electrónico: suporte.rutyn@gmail.com · Sitio web: www.rutyn.com.br · WhatsApp: +55 48 99107-4102` },
 ]

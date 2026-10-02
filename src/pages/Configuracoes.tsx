@@ -1,3 +1,4 @@
+import { URL_SOPORTE } from '@/lib/soporte'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, User, Wallet, Lock, FileText, MessageCircle, LogOut, Trash2, Globe, Bell } from 'lucide-react'
@@ -114,7 +115,7 @@ export function ConfiguracoesPage() {
         <MenuItem icon={FileText} label={t('settings:terms')} onClick={() => nav('/termos')} />
         <li>
           <a
-            href="https://wa.me/5551999999999"
+            href={URL_SOPORTE}
             target="_blank"
             rel="noreferrer"
             className="w-full h-12 rounded-btn-pill bg-whatsapp text-white text-rt-14 font-semibold flex items-center justify-center gap-2"

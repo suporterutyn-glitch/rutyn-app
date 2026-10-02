@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Search, UserPlus, X, User as UserIcon, Phone, MoreVertical } from 'lucide-react'
+import { Search, UserPlus, X, User as UserIcon, Phone, MoreVertical, Link2, Copy, Check } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
@@ -15,6 +15,7 @@ import { aviso } from '@/lib/avisos'
 import { idiomaDe } from '@/lib/catalogos'
 import { mensajeError } from '@/lib/errores'
 import { limiteDePlan } from '@/lib/plans'
+import { urlConvite } from '@/lib/convite'
 
 type Student = {
   id: string
@@ -75,6 +76,8 @@ export function AlunosPage() {
   const [limiteAvisado, setLimiteAvisado] = useState(false)
   const [gestionando, setGestionando] = useState<Student | null>(null)
   const [errorAccion, setErrorAccion] = useState<string | null>(null)
+  const [creado, setCreado] = useState<string | null>(null)
+  const [verLink, setVerLink] = useState(false)
   const nav = useNavigate()
 
   const planLimit = limiteDePlan(profile)
@@ -165,6 +168,15 @@ export function AlunosPage() {
         >
           <UserPlus size={20} className="text-white" />
         </button>
+        {profile?.invite_code && (
+          <button
+            onClick={() => setVerLink(true)}
+            className="w-[42px] h-[42px] rounded-full flex items-center justify-center bg-black/30 border border-brand/40"
+            aria-label={t('students:inviteLink')}
+          >
+            <Link2 size={20} className="text-brand" />
+          </button>
+        )}
         <div className="relative flex-1">
           <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-grey-500" />
           <input
@@ -278,12 +290,16 @@ export function AlunosPage() {
         />
       )}
 
-      {showNew && <NewStudentSheet profile={profile} onClose={() => setShowNew(false)} onCreated={() => { setShowNew(false); void load() }} />}
+      {verLink && profile?.invite_code && <LinkConviteSheet codigo={profile.invite_code} onClose={() => setVerLink(false)} />}
+
+      {creado && <FeedbackDialog kind="success" message={creado} onClose={() => setCreado(null)} />}
+
+      {showNew && <NewStudentSheet profile={profile} onClose={() => setShowNew(false)} onCreated={(m) => { setShowNew(false); setCreado(m); void load() }} />}
     </div>
   )
 }
 
-function NewStudentSheet({ profile, onClose, onCreated }: { profile: any; onClose: () => void; onCreated: () => void }) {
+function NewStudentSheet({ profile, onClose, onCreated }: { profile: any; onClose: () => void; onCreated: (mensaje: string) => void }) {
   const { t, i18n } = useTranslation()
   const lang = idiomaDe(i18n.language)
   const [name, setName] = useState('')
@@ -335,7 +351,7 @@ function NewStudentSheet({ profile, onClose, onCreated }: { profile: any; onClos
         }
       }
       setSaving(false)
-      onCreated()
+      onCreated(t(data?.email_sent ? 'students:createdEmail' : 'students:createdNoEmail', { email: email.trim() }))
     } catch (err) {
       setError(String(err))
       setSaving(false)
@@ -395,5 +411,42 @@ function NewStudentSheet({ profile, onClose, onCreated }: { profile: any; onClos
 
       {error && <FeedbackDialog kind="error" message={error} onClose={() => setError(null)} />}
     </FullScreenSheet>
+  )
+}
+
+function LinkConviteSheet({ codigo, onClose }: { codigo: string; onClose: () => void }) {
+  const { t } = useTranslation()
+  const [copiado, setCopiado] = useState(false)
+  const url = urlConvite(codigo)
+
+  async function copiar() {
+    try { await navigator.clipboard.writeText(url); setCopiado(true); setTimeout(() => setCopiado(false), 2000) } catch { /* sin portapapeles */ }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={onClose}>
+      <div className="w-full max-w-app bg-surface-card rounded-t-[16px] px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+20px)]" onClick={(e) => e.stopPropagation()}>
+        <div className="flex justify-center mb-3"><span className="w-10 h-1 rounded-full bg-grey-600" /></div>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-white text-rt-16 font-bold">{t('students:inviteLink')}</h2>
+          <button onClick={onClose} className="text-grey-500" aria-label={t('close')}><X size={20} /></button>
+        </div>
+        <p className="text-white/60 text-rt-12 mb-4">{t('students:inviteLinkHelp')}</p>
+        <div className="h-12 px-4 rounded-[12px] bg-black/30 border border-surface-line flex items-center text-white text-rt-13 truncate select-all">{url}</div>
+        <div className="grid grid-cols-2 gap-2 mt-4">
+          <button onClick={copiar} className="h-11 rounded-btn-pill border border-brand text-brand text-rt-13 font-semibold flex items-center justify-center gap-2">
+            {copiado ? <Check size={16} /> : <Copy size={16} />} {copiado ? t('students:linkCopied') : t('students:copyLink')}
+          </button>
+          <a
+            href={`https://wa.me/?text=${encodeURIComponent(t('students:shareText', { url }))}`}
+            target="_blank"
+            rel="noreferrer"
+            className="h-11 rounded-btn-pill bg-whatsapp text-white text-rt-13 font-semibold flex items-center justify-center"
+          >
+            {t('students:shareWhatsApp')}
+          </a>
+        </div>
+      </div>
+    </div>
   )
 }

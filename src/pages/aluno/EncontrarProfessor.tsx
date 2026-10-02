@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { Search, User as UserIcon, Filter, X, Bell, ChevronDown } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
@@ -9,6 +9,8 @@ import { LanguageToggle } from '@/components/LanguageToggle'
 import { currencyOf, formatMoneyShort } from '@/lib/plans'
 import { atuacoes, especialidades, formatosTrabalho, etiquetaDe } from '@/lib/catalogos'
 import { countryByCode, nombrePais } from '@/lib/countries'
+import { FeedbackDialog } from '@/components/FeedbackDialog'
+import { leerCodigo, usarCodigo, mensajeConvite } from '@/lib/convite'
 
 type Teacher = {
   id: string
@@ -40,7 +42,24 @@ type Filters = {
 const emptyFilters: Filters = { occupation: '', specialty: '', payFormat: '', gender: '', country: '', state: '', city: '' }
 
 export function EncontrarProfessorPage() {
-  const { signOut, profile } = useAuth()
+  const { signOut, profile, session, refresh } = useAuth()
+  const loc = useLocation()
+  const [avisoConvite, setAvisoConvite] = useState<string | null>((loc.state as { aviso?: string } | null)?.aviso ?? null)
+
+  // Link de invitación pendiente: el del navegador o el guardado al registrarse
+  // (si confirmó el correo en otro dispositivo). Se intenta una sola vez.
+  useEffect(() => {
+    const meta = session?.user.user_metadata?.invite_code as string | undefined
+    const codigo = leerCodigo() ?? meta
+    if (!codigo || !profile?.id) return
+    void (async () => {
+      const r = await usarCodigo(codigo)
+      if (meta) await supabase.auth.updateUser({ data: { invite_code: null } })
+      if (r === 'ok') { await refresh(); nav('/aluno', { replace: true }) }
+      else setAvisoConvite(t(mensajeConvite(r)))
+    })()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.id])
   const { t, i18n } = useTranslation()
   const nav = useNavigate()
   const lang = (i18n.language.startsWith('es') ? 'es' : i18n.language.startsWith('en') ? 'en' : 'pt') as 'pt' | 'es' | 'en'
@@ -98,6 +117,7 @@ export function EncontrarProfessorPage() {
 
   return (
     <div className="app-shell app-bg-pro">
+      {avisoConvite && <FeedbackDialog kind="error" message={avisoConvite} onClose={() => setAvisoConvite(null)} />}
       <div className="relative z-10 min-h-dvh px-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-8">
         <div className="flex items-center justify-between mb-5">
           <div className="min-w-0">

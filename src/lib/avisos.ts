@@ -9,7 +9,7 @@ export type ClaveAviso = { [K in keyof Textos]: Textos[K] extends { title: strin
 export type DatosAviso = Record<string, string | number | null | undefined>
 
 // Quién manda cada aviso: sin nombre, se muestra "Seu professor" o "Aluno".
-const DEL_ALUMNO = new Set<ClaveAviso>(['chargeOverdueTeacher', 'paymentDeclared', 'changeAccepted', 'changeRejected', 'counterAccepted', 'newInvite', 'anamnesisDone'])
+const DEL_ALUMNO = new Set<ClaveAviso>(['chargeOverdueTeacher', 'paymentDeclared', 'changeAccepted', 'changeRejected', 'counterAccepted', 'newInvite', 'anamnesisDone', 'joinedByLink'])
 
 function completar(t: TFunction, clave: ClaveAviso, datos: DatosAviso, lang: string) {
   const p: Record<string, unknown> = { ...datos }

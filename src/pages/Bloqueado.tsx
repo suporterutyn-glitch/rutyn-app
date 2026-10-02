@@ -1,3 +1,4 @@
+import { URL_SOPORTE } from '@/lib/soporte'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -110,7 +111,7 @@ export function BloqueadoPage() {
           acciones={
             <>
               <BotonVerde onClick={() => nav('/professor/assinatura')}>{t('cuenta:bloq.pay')}</BotonVerde>
-              <EnlaceTexto onClick={() => window.open('https://wa.me/', '_blank')}>{t('cuenta:bloq.support')}</EnlaceTexto>
+              <EnlaceTexto onClick={() => window.open(URL_SOPORTE, '_blank')}>{t('cuenta:bloq.support')}</EnlaceTexto>
             </>
           }
         />
@@ -131,7 +132,7 @@ export function BloqueadoPage() {
         cuerpo={textos.cuerpo}
         acciones={
           <>
-            <BotonWhatsapp onClick={() => window.open('https://wa.me/', '_blank')}>
+            <BotonWhatsapp onClick={() => window.open(URL_SOPORTE, '_blank')}>
               <MessageCircle size={18} /> {t('cuenta:bloq.support')}
             </BotonWhatsapp>
             <EnlaceTexto onClick={signOut}>{t('cuenta:bloq.exit')}</EnlaceTexto>

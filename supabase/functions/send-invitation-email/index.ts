@@ -27,7 +27,7 @@ Deno.serve(async (req: Request) => {
     // Templates por idioma
     const templates: Record<string, { subject: string; html: string }> = {
       pt: {
-        subject: `${teacher_name} te invitó a entrenar en Rutyn`,
+        subject: `${teacher_name} te convidou para treinar no Rutyn`,
         html: `
           <div style="font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px;">
             <div style="background: white; border-radius: 8px; padding: 30px; max-width: 600px; margin: 0 auto;">
@@ -35,24 +35,24 @@ Deno.serve(async (req: Request) => {
                 <h1 style="color: #7ec048; margin: 0; font-size: 28px;">Rutyn</h1>
               </div>
               
-              <h2 style="color: #333; font-size: 24px;">Hola ${student_name}!</h2>
+              <h2 style="color: #333; font-size: 24px;">Olá, ${student_name}!</h2>
               
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
-                <strong>${teacher_name}</strong> te ha invitado a entrenar en <strong>Rutyn</strong>.
+                <strong>${teacher_name}</strong> te convidou para treinar no <strong>Rutyn</strong>.
               </p>
               
               <p style="color: #666; font-size: 16px; line-height: 1.6;">
-                Puedes ver los detalles de la propuesta y aceptar o rechazar en tu cuenta.
+                Você pode ver os detalhes da proposta e aceitar ou recusar na sua conta.
               </p>
               
               <div style="text-align: center; margin: 30px 0;">
                 <a href="${inviteLink}" style="background: #7ec048; color: white; padding: 14px 40px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">
-                  Ver propuesta
+                  Ver proposta
                 </a>
               </div>
               
               <p style="color: #999; font-size: 14px;">
-                Si no esperabas este email, puedes ignorarlo.
+                Se você não esperava este e-mail, pode ignorá-lo.
               </p>
             </div>
           </div>
