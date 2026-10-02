@@ -29,7 +29,7 @@ export function SelectSheet<T extends string>({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="w-full flex items-center justify-between border-b border-ink-underline py-3 text-left"
+        className="select-row w-full flex items-center justify-between border-b border-ink-underline py-3 text-left"
       >
         <span className={selected ? 'text-rt-13 text-ink-dark' : 'text-rt-13 text-ink-placeholder'}>
           {selected ? selected.label : placeholder ?? label}

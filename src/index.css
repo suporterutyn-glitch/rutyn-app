@@ -64,6 +64,17 @@
   html, body, #root { min-height: 100dvh; background: #000; overflow-x: hidden; }
   /* Registro incrustado en la landing: sin fondo propio ni alto mínimo. */
   html.embed, html.embed body, html.embed #root { min-height: 0; background: transparent !important; }
+  /* Registro en la landing: campos en caja con el nombre adentro, sin etiqueta arriba. */
+  html.embed form label.block { display: none; }
+  html.embed .input-light-underline,
+  html.embed .wa-row,
+  html.embed .select-row {
+    @apply h-[50px] px-4 py-0 bg-white border border-[#DADADA] rounded-[12px];
+  }
+  html.embed .input-light-underline:focus,
+  html.embed .wa-row:focus-within { @apply border border-brand; }
+  html.embed .wa-row input::placeholder { @apply text-ink-placeholder; }
+  html.embed form .relative > button { @apply right-4 bottom-[15px]; }
   html { -webkit-text-size-adjust: 100%; }
   body {
     @apply bg-background text-foreground antialiased;

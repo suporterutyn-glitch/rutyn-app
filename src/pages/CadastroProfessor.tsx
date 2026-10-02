@@ -116,22 +116,22 @@ export function CadastroProfessorPage() {
           ) : (
             <h1 className="text-center text-brand font-bold text-rt-18 mb-4">{t('signupTeacher:fillData')}</h1>
           )}
-          <form onSubmit={submit} className="flex flex-col gap-6">
+          <form onSubmit={submit} className={'flex flex-col ' + (embebido ? 'gap-3' : 'gap-6')}>
             <div>
               <label className="block text-rt-11 text-ink-placeholder font-semibold">{t('signupTeacher:fullName')}</label>
-              <input required value={name} onChange={(e) => setName(e.target.value)} className="input-light-underline" />
+              <input required value={name} onChange={(e) => setName(e.target.value)} placeholder={embebido ? t('signupTeacher:fullName') : undefined} className="input-light-underline" />
             </div>
 
-            <WhatsAppInput countryCode={countryCode} onCountry={setCountryCode} value={phone} onChange={setPhone} lang={lang} />
+            <WhatsAppInput countryCode={countryCode} onCountry={setCountryCode} value={phone} onChange={setPhone} lang={lang} placeholder={embebido ? 'WhatsApp' : undefined} />
 
             <div>
               <label className="block text-rt-11 text-ink-placeholder font-semibold">{t('email')}</label>
-              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="input-light-underline" />
+              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder={embebido ? t('email') : undefined} className="input-light-underline" />
             </div>
 
             <div className="relative">
               <label className="block text-rt-11 text-ink-placeholder font-semibold">{t('password')}</label>
-              <input type={showPw ? 'text' : 'password'} required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className="input-light-underline pr-8" />
+              <input type={showPw ? 'text' : 'password'} required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} placeholder={embebido ? t('password') : undefined} className="input-light-underline pr-8" />
               <button type="button" onClick={() => setShowPw((v) => !v)} className="absolute right-0 bottom-2 text-brand" aria-label={t('general:showPassword')}>
                 {showPw ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
@@ -145,6 +145,7 @@ export function CadastroProfessorPage() {
                 minLength={6}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder={embebido ? t('signupTeacher:confirmPassword') : undefined}
                 className="input-light-underline pr-8"
               />
               <button type="button" onClick={() => setShowPw2((v) => !v)} className="absolute right-0 bottom-2 text-brand" aria-label={t('general:showPassword')}>

@@ -9,6 +9,8 @@ type Props = {
   value: string
   onChange: (v: string) => void
   label?: string
+  /** Texto dentro del campo en lugar de la máscara (registro incrustado en la landing). */
+  placeholder?: string
   lang: string
   /**
    * 'light' = subrayado sobre tarjeta clara (cadastros).
@@ -18,7 +20,7 @@ type Props = {
   variant?: 'light' | 'dark' | 'dark-underline'
 }
 
-export function WhatsAppInput({ countryCode, onCountry, value, onChange, label = 'WhatsApp', lang, variant = 'light' }: Props) {
+export function WhatsAppInput({ countryCode, onCountry, value, onChange, label = 'WhatsApp', placeholder, lang, variant = 'light' }: Props) {
   const { t } = useTranslation()
   const caja = variant === 'dark'
   const textoClaro = variant !== 'light'
@@ -28,10 +30,10 @@ export function WhatsAppInput({ countryCode, onCountry, value, onChange, label =
   return (
     <div>
       <label className={'block text-rt-11 font-semibold ' + (textoClaro ? 'text-white/60 mb-1' : 'text-ink-placeholder')}>{label}</label>
-      <div className={
+      <div className={'wa-row ' + (
         caja ? 'flex items-center gap-2 h-[52px] px-4 rounded-[12px] bg-surface-input border border-surface-line focus-within:border-brand'
           : textoClaro ? 'flex items-center gap-2 border-b border-brand py-2'
-            : 'flex items-center gap-2 border-b border-ink-underline focus-within:border-brand py-2'}>
+            : 'flex items-center gap-2 border-b border-ink-underline focus-within:border-brand py-2')}>
         <button
           type="button"
           onClick={() => setOpen(true)}
@@ -47,7 +49,7 @@ export function WhatsAppInput({ countryCode, onCountry, value, onChange, label =
           value={value}
           onChange={(e) => onChange(e.target.value.replace(/\D/g, '').slice(0, country.digits))}
           className={'flex-1 bg-transparent outline-none text-rt-13 ' + (textoClaro ? 'text-white placeholder:text-grey-600' : 'text-ink-dark placeholder:text-[#CCCCCC]')}
-          placeholder={country.mask}
+          placeholder={placeholder ?? country.mask}
         />
       </div>
 
