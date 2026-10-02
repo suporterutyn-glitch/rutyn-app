@@ -71,6 +71,7 @@ const pt = {
   signupTeacher: {
     title: 'Cadastro de Professor', gender: 'Gênero', country: 'País',
     greeting: 'Oi Professor, Seja bem-vindo',
+    embedTitle: 'Crie sua conta grátis', embedSub: '1 aluno grátis para sempre · Sem cartão',
     fillData: 'Preencha o seus dados!',
     fullName: 'Nome Completo',
     confirmPassword: 'Confirmar Senha',
@@ -377,6 +378,7 @@ const es: typeof pt = {
   signupTeacher: {
     title: 'Registro de Profesor', gender: 'Género', country: 'País',
     greeting: 'Hola Profesor, Bienvenido',
+    embedTitle: 'Creá tu cuenta gratis', embedSub: '1 alumno gratis para siempre · Sin tarjeta',
     fillData: '¡Completá tus datos!',
     fullName: 'Nombre Completo',
     confirmPassword: 'Confirmar Contraseña',
@@ -683,6 +685,7 @@ const en: typeof pt = {
   signupTeacher: {
     title: 'Trainer Registration', gender: 'Gender', country: 'Country',
     greeting: 'Hi Trainer, Welcome',
+    embedTitle: 'Create your free account', embedSub: '1 student free forever · No card needed',
     fillData: 'Fill in your details!',
     fullName: 'Full Name',
     confirmPassword: 'Confirm Password',

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -17,6 +17,19 @@ export function CadastroProfessorPage() {
   // Incrustado en la landing (rutyn.com.br): lo que sale del formulario abre la app completa, fuera del iframe.
   const embebido = new URLSearchParams(window.location.search).get('embed') === '1'
   const abrirFuera = (ruta: string) => { window.open(window.location.origin + ruta, '_top') }
+  const caja = useRef<HTMLDivElement>(null)
+  // Incrustado: fondo transparente y la landing ajusta el alto del iframe al formulario.
+  useEffect(() => {
+    if (!embebido) return
+    document.documentElement.classList.add('embed')
+    const el = caja.current
+    if (!el) return
+    const avisar = () => window.parent.postMessage({ rutynAltura: Math.ceil(el.getBoundingClientRect().height) }, '*')
+    const ro = new ResizeObserver(avisar)
+    ro.observe(el)
+    avisar()
+    return () => ro.disconnect()
+  }, [embebido])
   const lang = idiomaDe(i18n.language)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -76,9 +89,9 @@ export function CadastroProfessorPage() {
   }
 
   return (
-    <div className="app-shell app-bg-pro flex flex-col">
-      <div className="relative z-10 flex flex-col min-h-dvh">
-        <div className="relative px-6 pt-[calc(env(safe-area-inset-top)+8px)] pb-5">
+    <div className={embebido ? 'w-full' : 'app-shell app-bg-pro flex flex-col'}>
+      <div ref={caja} className={embebido ? 'flex flex-col' : 'relative z-10 flex flex-col min-h-dvh'}>
+        {!embebido && <div className="relative px-6 pt-[calc(env(safe-area-inset-top)+8px)] pb-5">
           {!embebido && <button
             onClick={() => nav(-1)}
             aria-label={t('back')}
@@ -90,10 +103,19 @@ export function CadastroProfessorPage() {
             <RutynLogo size={70} />
             <div className="text-white font-bold text-rt-16">{t('signupTeacher:greeting')}</div>
           </div>
-        </div>
+        </div>}
 
-        <div className="flex-1 bg-surface-light rounded-t-[10px] px-6 pt-5 pb-[calc(env(safe-area-inset-bottom)+24px)]">
-          <h1 className="text-center text-brand font-bold text-rt-18 mb-4">{t('signupTeacher:fillData')}</h1>
+        <div className={embebido
+          ? 'bg-surface-light rounded-[20px] px-6 pt-6 pb-6'
+          : 'flex-1 bg-surface-light rounded-t-[10px] px-6 pt-5 pb-[calc(env(safe-area-inset-bottom)+24px)]'}>
+          {embebido ? (
+            <div className="text-center mb-5">
+              <h1 className="text-ink-dark font-bold text-rt-22">{t('signupTeacher:embedTitle')}</h1>
+              <p className="text-brand font-semibold text-rt-13 mt-1">{t('signupTeacher:embedSub')}</p>
+            </div>
+          ) : (
+            <h1 className="text-center text-brand font-bold text-rt-18 mb-4">{t('signupTeacher:fillData')}</h1>
+          )}
           <form onSubmit={submit} className="flex flex-col gap-6">
             <div>
               <label className="block text-rt-11 text-ink-placeholder font-semibold">{t('signupTeacher:fullName')}</label>
