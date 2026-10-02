@@ -10,13 +10,13 @@ import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { countryByCode } from '@/lib/countries'
 import { idiomaDe } from '@/lib/catalogos'
 import { mensajeError } from '@/lib/errores'
+import { enIframe, abrirFuera } from '@/lib/embed'
 
 export function CadastroProfessorPage() {
   const { t, i18n } = useTranslation()
   const nav = useNavigate()
   // Incrustado en la landing (rutyn.com.br): lo que sale del formulario abre la app completa, fuera del iframe.
-  const embebido = new URLSearchParams(window.location.search).get('embed') === '1'
-  const abrirFuera = (ruta: string) => { window.open(window.location.origin + ruta, '_top') }
+  const embebido = enIframe() || new URLSearchParams(window.location.search).get('embed') === '1'
   const caja = useRef<HTMLDivElement>(null)
   // Incrustado: fondo transparente y la landing ajusta el alto del iframe al formulario.
   useEffect(() => {
@@ -190,13 +190,12 @@ export function CadastroProfessorPage() {
                 {loading ? t('loading') : t('signupTeacher:register')}
               </button>
 
-              <button
-                type="button"
-                onClick={() => (embebido ? abrirFuera('/login') : nav('/login'))}
-                className="text-[#4C6524] font-bold text-rt-16"
-              >
-                {t('signupTeacher:doLogin')}
-              </button>
+              {/* En la landing solo se registra: el login está en la app. */}
+              {!embebido && (
+                <button type="button" onClick={() => nav('/login')} className="text-[#4C6524] font-bold text-rt-16">
+                  {t('signupTeacher:doLogin')}
+                </button>
+              )}
             </div>
           </form>
         </div>

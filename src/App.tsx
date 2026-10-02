@@ -45,8 +45,12 @@ import { PerfilProfessorPublicoPage } from '@/pages/aluno/PerfilProfessor'
 import { AvaliacaoAlunoPage } from '@/pages/aluno/Avaliacao'
 import { EncontrarProfessorPage } from '@/pages/aluno/EncontrarProfessor'
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboard'
+import { FueraDelIframe } from '@/components/FueraDelIframe'
+import { enIframe, RUTA_EMBEBIBLE } from '@/lib/embed'
 
 export default function App() {
+  // En el iframe de la landing solo se muestra el registro; nunca login ni la app.
+  if (enIframe() && window.location.pathname !== RUTA_EMBEBIBLE) return <FueraDelIframe />
   return (
     <AuthProvider>
       <BrowserRouter basename={import.meta.env.BASE_URL}>
