@@ -3,6 +3,7 @@ import { localeDe } from '@/lib/fechas'
 import { useNavigate } from 'react-router-dom'
 import { currencyOf, formatMoney } from '@/lib/plans'
 import { AnnouncementModal } from '@/components/AnnouncementModal'
+import { InstalarApp } from '@/components/InstalarApp'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { Bell, MessageSquare, Settings, Wallet, Dumbbell, ClipboardCheck, Calendar, Droplet, Flame } from 'lucide-react'
 import { VasoAgua, DialogHidratacion } from './HomeCards'
@@ -148,6 +149,7 @@ export function AlunoHome() {
           <div className="text-white/80 text-rt-13 mt-1">{t('planes:frozen.studentBody')}</div>
         </div>
       )}
+      <InstalarApp />
       {/* Mismo encabezado que la home del profesor */}
       <div className="flex items-center justify-between mb-5">
         <div className="min-w-0">

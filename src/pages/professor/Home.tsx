@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { AnnouncementModal } from '@/components/AnnouncementModal'
+import { InstalarApp } from '@/components/InstalarApp'
 import { WeekCalendar } from '@/components/WeekCalendar'
 import { localeDe } from '@/lib/fechas'
 import { limiteDePlan, planVisible } from '@/lib/plans'
@@ -90,6 +91,7 @@ export function ProfessorHome() {
 
   return (
     <div className="px-4 pt-[calc(env(safe-area-inset-top)+16px)] lg:px-0 lg:pt-4">
+      <InstalarApp />
       {/* Header */}
       <div className="flex items-center justify-between mb-5 lg:mb-7">
         <div>

@@ -3,6 +3,7 @@ import { textos } from './textos'
 // Pantallas y componentes compartidos por profesor y alumno.
 export default textos({
   pt: {
+    install: { title: 'Instale o Rutyn no celular', subtitle: 'Abra direto da tela inicial, como um app.', now: 'Instalar', how: 'Ver como', hide: 'Fechar', ok: 'Entendi', iosSafari: 'No iPhone, abra app.rutyn.com.br no Safari para poder instalar.', ios1: 'Toque no botão Compartilhar (o quadrado com a seta para cima), embaixo da tela.', ios2: 'Role e toque em "Adicionar à Tela de Início".', ios3: 'Toque em "Adicionar" no canto superior.', and1: 'Toque no menu ⋮ do Chrome, no canto superior direito.', and2: 'Toque em "Instalar app" ou "Adicionar à tela inicial".', and3: 'Confirme em "Instalar".', after: 'Pronto: o ícone do Rutyn aparece na tela inicial do seu celular.' },
     showPassword: 'Mostrar senha', acceptTerms: 'Aceite os termos', chooseGender: 'Selecione o gênero',
     rs: {
       title: 'Redefinir senha', tooShort: 'Senha muito curta (mínimo 6 caracteres)', mismatch: 'Senhas não coincidem',
@@ -25,6 +26,7 @@ export default textos({
     extra: { tapToChat: 'Toque para conversar', pricesIn: 'Preços na sua moeda ({{c}}). Cobrança mensal via provedor.', perMonth: 'mês', notes: 'Observações: (alguma coisa que queira me contar?)' },
   },
   es: {
+    install: { title: 'Instalá Rutyn en tu celular', subtitle: 'Abrila directo desde la pantalla de inicio, como una app.', now: 'Instalar', how: 'Ver cómo', hide: 'Cerrar', ok: 'Entendido', iosSafari: 'En iPhone, abrí app.rutyn.com.br en Safari para poder instalarla.', ios1: 'Tocá el botón Compartir (el cuadrado con la flecha hacia arriba), abajo de la pantalla.', ios2: 'Bajá y tocá "Agregar a pantalla de inicio".', ios3: 'Tocá "Agregar" arriba a la derecha.', and1: 'Tocá el menú ⋮ de Chrome, arriba a la derecha.', and2: 'Tocá "Instalar app" o "Agregar a la pantalla principal".', and3: 'Confirmá en "Instalar".', after: 'Listo: el ícono de Rutyn aparece en la pantalla de inicio de tu celular.' },
     showPassword: 'Mostrar contraseña', acceptTerms: 'Aceptá los términos', chooseGender: 'Seleccioná el género',
     rs: {
       title: 'Restablecer contraseña', tooShort: 'Contraseña muy corta (mínimo 6 caracteres)', mismatch: 'Las contraseñas no coinciden',
@@ -47,6 +49,7 @@ export default textos({
     extra: { tapToChat: 'Tocá para conversar', pricesIn: 'Precios en tu moneda ({{c}}). Cobro mensual a través del proveedor.', perMonth: 'mes', notes: 'Observaciones: (¿algo que quieras contarme?)' },
   },
   en: {
+    install: { title: 'Install Rutyn on your phone', subtitle: 'Open it straight from your home screen, like an app.', now: 'Install', how: 'Show me', hide: 'Close', ok: 'Got it', iosSafari: 'On iPhone, open app.rutyn.com.br in Safari to install it.', ios1: 'Tap the Share button (the square with the up arrow) at the bottom of the screen.', ios2: 'Scroll and tap "Add to Home Screen".', ios3: 'Tap "Add" in the top corner.', and1: 'Tap Chrome\'s ⋮ menu in the top right corner.', and2: 'Tap "Install app" or "Add to Home screen".', and3: 'Confirm with "Install".', after: 'Done: the Rutyn icon appears on your phone\'s home screen.' },
     showPassword: 'Show password', acceptTerms: 'Please accept the terms', chooseGender: 'Please select a gender',
     rs: {
       title: 'Reset password', tooShort: 'Password too short (minimum 6 characters)', mismatch: "Passwords don't match",
