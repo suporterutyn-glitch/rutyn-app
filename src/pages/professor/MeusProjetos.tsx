@@ -43,7 +43,10 @@ export function MeusProjetosPage() {
   const props = { query, filtro }
 
   return (
-    <div className="pt-[calc(env(safe-area-inset-top)+16px)] px-4 pb-24 md:max-w-form md:mx-auto w-full">
+    <div
+      className="pt-[calc(env(safe-area-inset-top)+16px)] px-4 pb-24 md:max-w-form md:mx-auto w-full"
+      style={{ '--proy-top': 'calc(env(safe-area-inset-top) + 52px)' } as React.CSSProperties}
+    >
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-white text-rt-20 font-bold">{t('projects:title')}</h1>
@@ -73,7 +76,8 @@ export function MeusProjetosPage() {
       </div>
 
       {/* Categorías: Rutinas / Ejercicios / Dietas / etc */}
-      <div className="flex gap-2 mb-6 overflow-x-auto no-scrollbar -mx-4 px-4 md:mx-0 md:px-0 md:justify-center">
+      {/* Queda fija arriba al hacer scroll; los filtros de cada pestaña se pegan justo debajo (--proy-top). */}
+      <div className="sticky top-0 z-20 flex gap-2 mb-2 overflow-x-auto no-scrollbar -mx-4 px-4 pt-[calc(env(safe-area-inset-top)+8px)] pb-2 bg-surface-app/95 backdrop-blur md:justify-center">
         {TABS.map((x) => {
           const on = tab === x.key
           return (

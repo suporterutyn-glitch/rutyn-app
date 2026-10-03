@@ -172,8 +172,9 @@ export function FoodsTab({ query, filtro }: { query: string; filtro: Filtro }) {
 
   return (
     <div className="pb-24">
+      <div className="sticky top-[var(--proy-top)] z-10 -mx-4 px-4 pt-2 pb-1 mb-2 bg-surface-app/95 backdrop-blur">
       {enSeleccion && (
-        <div className="sticky top-0 z-10 -mx-4 px-4 py-2 mb-3 bg-surface-app/95 backdrop-blur flex items-center gap-2">
+        <div className="pb-2 flex items-center gap-2">
           <button onClick={() => setCombinando(true)} className="px-5 py-2.5 rounded-[20px] bg-brand text-white text-rt-13 font-semibold">{t('projetos:c.combine')}</button>
           <button onClick={() => void pedirBorrado()} className="px-5 py-2.5 rounded-[20px] bg-[#D32F2F] text-white text-rt-13 font-semibold">{t('projetos:c.delete')}</button>
           <button onClick={() => setSeleccion(todosMarcados ? [] : filtered.map((f) => f.id))} className="ml-auto text-rt-13 text-grey-400">
@@ -182,7 +183,7 @@ export function FoodsTab({ query, filtro }: { query: string; filtro: Filtro }) {
         </div>
       )}
 
-      <div className="-mx-4 px-4 mb-3 flex gap-2 overflow-x-auto no-scrollbar">
+      <div className="-mx-4 px-4 mb-2 flex gap-2 overflow-x-auto no-scrollbar">
         {[{ id: '', etiqueta: t('projetos:al.allCategories') }, ...categoriasPresentes.map((id) => ({ id, etiqueta: etiquetaDe(categoriasAlimento, id, lang) }))].map((c) => (
           <button
             key={c.id || 'todas'}
@@ -197,7 +198,7 @@ export function FoodsTab({ query, filtro }: { query: string; filtro: Filtro }) {
         ))}
       </div>
 
-      <div className="-mx-4 px-4 mb-3 flex gap-2 overflow-x-auto no-scrollbar items-center">
+      <div className="-mx-4 px-4 mb-1 flex gap-2 overflow-x-auto no-scrollbar items-center">
         {FILTROS_MACRO.map((m) => {
           const activo = macros.includes(m.id)
           return (
@@ -220,6 +221,7 @@ export function FoodsTab({ query, filtro }: { query: string; filtro: Filtro }) {
         >
           {t('projetos:al.sortBy')}: {etiquetaDe(ORDENES, orden, lang)}
         </button>
+      </div>
       </div>
       {macros.length > 0 && (
         <div className="text-grey-500 text-rt-11 mb-3 -mt-1">{t('projetos:al.per100Note')}</div>

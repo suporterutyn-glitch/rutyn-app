@@ -116,7 +116,7 @@ export function RecipesTab({ query, filtro }: { query: string; filtro: Filtro })
   return (
     <div className="pb-24">
       {seleccion.length > 0 && (
-        <div className="sticky top-0 z-10 -mx-4 px-4 py-2.5 mb-3 bg-brand/10 backdrop-blur flex items-center gap-3">
+        <div className="sticky top-[var(--proy-top)] z-10 -mx-4 px-4 py-2.5 mb-3 bg-brand/10 backdrop-blur flex items-center gap-3">
           <span className="text-brand text-rt-13 font-semibold flex-1">{t('projetos:rec.nSelected', { n: seleccion.length })}</span>
           <button onClick={() => setBorrando(items.filter((r) => seleccion.includes(r.id)))} className="px-4 py-1.5 rounded-[8px] bg-danger/10 border border-danger/30 text-[#EF5350] text-rt-13 font-semibold">{t('projetos:c.delete')}</button>
           <button onClick={() => setSeleccion([])} className="text-grey-400 text-rt-13">{t('projetos:c.cancel')}</button>

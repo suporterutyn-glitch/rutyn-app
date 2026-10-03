@@ -134,8 +134,9 @@ export function ExercisesTab({ query, filtro }: { query: string; filtro: Filtro 
 
   return (
     <div className="pb-24">
+      <div className="sticky top-[var(--proy-top)] z-10 -mx-4 px-4 pt-2 pb-1 mb-2 bg-surface-app/95 backdrop-blur">
       {enSeleccion && (
-        <div className="sticky top-0 z-10 -mx-4 px-4 py-2 mb-3 bg-surface-app/95 backdrop-blur flex items-center gap-2">
+        <div className="pb-2 flex items-center gap-2">
           <button onClick={() => setCombinando(true)} className="px-5 py-2.5 rounded-[20px] bg-brand text-white text-rt-13 font-semibold">
             {t('projetos:c.combine')}
           </button>
@@ -151,17 +152,18 @@ export function ExercisesTab({ query, filtro }: { query: string; filtro: Filtro 
         </div>
       )}
 
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-2">
         <FiltroCaja etiqueta={t('projetos:ex.muscleGroup')} valor={fGrupo && etiquetaDe(gruposMusculares, fGrupo, i18n.language)} onClick={() => setAbriendoFiltro('grupo')} />
         <FiltroCaja etiqueta={t('projetos:pick.categories')} valor={fCategoria && etiquetaDe(categoriasExercicio, fCategoria, i18n.language)} onClick={() => setAbriendoFiltro('categoria')} />
         <FiltroCaja etiqueta={t('projetos:ex.equipmentFilter')} valor={fEquipo && etiquetaDe(equipamentos, fEquipo, i18n.language)} onClick={() => setAbriendoFiltro('equipo')} />
       </div>
       {hayFiltro && (
-        <div className="flex items-center justify-between mb-3 -mt-1">
+        <div className="flex items-center justify-between mb-1">
           <span className="text-grey-500 text-rt-12">{t('projetos:ex.resultCount', { count: filtered.length })}</span>
           <button onClick={() => { setFGrupo(''); setFCategoria(''); setFEquipo('') }} className="text-[#EF5350] text-rt-12 font-semibold">{t('projetos:c.clear')}</button>
         </div>
       )}
+      </div>
       {abriendoFiltro === 'grupo' && (
         <HojaRadio lista={gruposMusculares.filter((g) => gruposUsados.has(g.id))} valor={fGrupo} lang={i18n.language} onElegir={(id) => { setFGrupo(id === fGrupo ? '' : id); setAbriendoFiltro(null) }} onCerrar={() => setAbriendoFiltro(null)} />
       )}

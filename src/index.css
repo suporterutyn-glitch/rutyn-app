@@ -61,7 +61,11 @@
 
   /* iOS usa documentElement como contenedor de scroll: sin overflow-x en `html`
      el gesto lateral sigue funcionando aunque `body` lo tenga oculto. */
-  html, body, #root { min-height: 100dvh; background: #000; overflow-x: hidden; }
+  html, body, #root { min-height: 100dvh; background: #000; }
+  /* El desborde lateral se corta con `clip`, no con `hidden`: `hidden` convierte a body y #root en
+     contenedores de scroll y las barras `sticky` dejan de quedar fijas contra la ventana. */
+  html { overflow-x: hidden; }
+  body, #root { overflow-x: clip; }
   /* Registro incrustado en la landing: sin fondo propio ni alto mínimo. */
   html.embed, html.embed body, html.embed #root { min-height: 0; background: transparent !important; }
   /* Registro en la landing: campos en caja con el nombre adentro, sin etiqueta arriba. */
@@ -80,7 +84,6 @@
     @apply bg-background text-foreground antialiased;
     font-family: 'Montserrat', system-ui, sans-serif;
     -webkit-tap-highlight-color: transparent;
-    overflow-x: hidden;
   }
 
   #root { display: flex; justify-content: center; }
