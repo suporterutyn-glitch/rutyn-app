@@ -3,6 +3,7 @@ import { localeDe } from '@/lib/fechas'
 import { useNavigate } from 'react-router-dom'
 import { currencyOf, formatMoney } from '@/lib/plans'
 import { AnnouncementModal } from '@/components/AnnouncementModal'
+import { ActivarAvisos } from '@/components/ActivarAvisos'
 import { InstalarApp } from '@/components/InstalarApp'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { Bell, MessageSquare, Settings, Wallet, Dumbbell, ClipboardCheck, Calendar, Droplet, Flame } from 'lucide-react'
@@ -150,6 +151,7 @@ export function AlunoHome() {
         </div>
       )}
       <InstalarApp />
+      <ActivarAvisos />
       {/* Mismo encabezado que la home del profesor */}
       <div className="flex items-center justify-between mb-5">
         <div className="min-w-0">

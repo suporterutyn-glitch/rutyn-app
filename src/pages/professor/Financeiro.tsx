@@ -61,6 +61,21 @@ export function FinanceiroPage() {
   useEffect(() => { void load() }, [profile?.id])
 
   const filtered = filter === 'all' ? charges : charges.filter((c) => c.status === filter)
+
+  // Resumen para cobrar: atrasados, los que avisaron que pagaron y los que vencen en 7 días.
+  const hoyIso = new Date().toISOString().slice(0, 10)
+  const en7 = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10)
+  const nombreDe = (c: Charge) => (c as unknown as { profiles?: { full_name?: string | null; email?: string | null } }).profiles?.full_name
+    ?? (c as unknown as { profiles?: { email?: string | null } }).profiles?.email ?? '—'
+  const diaMes = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`
+  const atrasados = charges.filter((c) => c.status === 'suspended').sort((a, b) => a.due_date.localeCompare(b.due_date))
+  const avisaron = charges.filter((c) => c.status === 'awaiting')
+  const porVencer = charges.filter((c) => c.status === 'pending' && c.due_date >= hoyIso && c.due_date <= en7).sort((a, b) => a.due_date.localeCompare(b.due_date))
+  const grupos = [
+    { titulo: t('financeiro:fin.overdueList'), color: 'text-danger', filas: atrasados, nota: (c: Charge) => t('financeiro:fin.since', { date: diaMes(c.due_date) }) },
+    { titulo: t('financeiro:fin.awaitingList'), color: 'text-warning', filas: avisaron, nota: () => t('financeiro:fin.confirmIt') },
+    { titulo: t('financeiro:fin.dueList'), color: 'text-brand', filas: porVencer, nota: (c: Charge) => t('financeiro:fin.on', { date: diaMes(c.due_date) }) },
+  ].filter((g) => g.filas.length > 0)
   const totalPeriod = charges
     .filter((c) => c.status === 'paid' && c.paid_at && new Date(c.paid_at).getMonth() === new Date().getMonth())
     .reduce((s, c) => s + Number(c.amount), 0)
@@ -93,6 +108,31 @@ export function FinanceiroPage() {
         <div className="text-grey-600 text-rt-11 font-semibold uppercase tracking-wider">{t('financeiro:fin.received')}</div>
         <div className="text-grey-900 text-rt-32 font-bold">{formatMoney(totalPeriod, currency)}</div>
       </div>
+
+      {!loading && charges.length > 0 && (
+        <div className="card-dark p-4 mb-4">
+          <div className="text-white text-rt-14 font-bold mb-2">{t('financeiro:fin.weekTitle')}</div>
+          {grupos.length === 0 ? (
+            <div className="text-white/60 text-rt-12">{t('financeiro:fin.allGood')}</div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {grupos.map((g) => (
+                <div key={g.titulo}>
+                  <div className={'text-rt-11 font-bold uppercase tracking-wide mb-1 ' + g.color}>{g.titulo} · {g.filas.length}</div>
+                  <ul className="flex flex-col gap-1">
+                    {g.filas.map((c) => (
+                      <li key={c.id} className="flex items-center justify-between gap-3 text-rt-13">
+                        <span className="text-white truncate">{nombreDe(c)}</span>
+                        <span className="text-white/60 whitespace-nowrap">{formatMoney(Number(c.amount), currency)} · {g.nota(c)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="flex gap-2 mb-4 overflow-x-auto no-scrollbar">
         {(['all', 'pending', 'awaiting', 'paid', 'suspended'] as const).map((f) => {

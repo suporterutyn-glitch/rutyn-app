@@ -5,6 +5,7 @@
 // 2) Recordatorios al alumno 5 y 3 días antes y el día del vencimiento.
 // 3) Pendiente vencida -> "atrasada" (status suspended) + aviso al alumno y al profesor.
 //    El alumno NO se suspende: lo decide el profesor.
+// 4) Los lunes, resumen al profesor: cuántos cobros vencen en 7 días y cuántos están atrasados.
 //
 // POST {}                -> ejecuta
 // POST { dry_run: true } -> solo cuenta lo que haría
@@ -93,12 +94,34 @@ Deno.serve(async (req: Request) => {
   }
   r.atrasadas = vencidas.length
 
+  // 4) Lunes: resumen al profesor de lo que vence en 7 días y lo que está atrasado.
+  let resumenes = 0
+  if (new Date().getUTCDay() === 1) {
+    const en7 = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10)
+    const porProfe = new Map<string, { due: number; overdue: number }>()
+    const idsVencidas = new Set(vencidas.map((c: any) => c.id))
+    for (const c of [...(cobros ?? []), ...nuevas]) {
+      const atrasado = c.status === 'suspended' || idsVencidas.has(c.id)
+      const porVencer = c.status === 'pending' && !idsVencidas.has(c.id) && c.due_date >= hoy && c.due_date <= en7
+      if (!atrasado && !porVencer) continue
+      const x = porProfe.get(c.teacher_id) ?? { due: 0, overdue: 0 }
+      if (atrasado) x.overdue++; else x.due++
+      porProfe.set(c.teacher_id, x)
+    }
+    for (const [profe, x] of porProfe) {
+      if ((P.get(profe) as any)?.frozen_since) continue
+      const t = { title: 'Cobranças da semana', body: `${x.due} vencem nos próximos 7 dias · ${x.overdue} atrasadas. Veja quem em Financeiro.` }
+      avisos.push({ user_id: profe, type: 'payment', title: t.title, body: t.body, data: { key: 'weekSummary', params: x } })
+      resumenes++
+    }
+  }
+
   if (!dry_run) {
     if (nuevas.length) await db.from('charges').insert(nuevas)
     if (vencidas.length) await db.from('charges').update({ status: 'suspended' }).in('id', vencidas.map((c: any) => c.id))
     if (avisos.length) await db.from('notifications').insert(avisos)
   }
-  return new Response(JSON.stringify({ ok: true, dry_run: !!dry_run, ...r, avisos: avisos.length, hoy }), { headers: { 'Content-Type': 'application/json' } })
+  return new Response(JSON.stringify({ ok: true, dry_run: !!dry_run, ...r, resumenes, avisos: avisos.length, hoy }), { headers: { 'Content-Type': 'application/json' } })
 })
 
 /** Mismo día del mes siguiente (31/01 -> 28/02). */

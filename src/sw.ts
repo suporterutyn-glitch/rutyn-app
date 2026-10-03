@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching'
 import { clientsClaim } from 'workbox-core'
+import { textoPlano } from '@/lib/avisosTexto'
 
 declare const self: ServiceWorkerGlobalScope
 
@@ -16,13 +17,16 @@ self.addEventListener('message', (event) => {
 precacheAndRoute((self as any).__WB_MANIFEST || [])
 
 self.addEventListener('push', (event: PushEvent) => {
-  let data: { title?: string; body?: string; url?: string } = {}
+  let data: { title?: string; body?: string; url?: string; key?: string; params?: Record<string, unknown>; lang?: string; tag?: string } = {}
   try { data = event.data ? event.data.json() : {} } catch { /* ignore */ }
-  const title = data.title ?? 'Rutyn'
+  // El servidor manda la clave del aviso y el idioma del usuario: se traduce acá, igual que dentro de la app.
+  const texto = textoPlano(data.lang, data.key, data.params ?? {})
+  const title = texto?.title ?? data.title ?? 'Rutyn'
   const options: NotificationOptions = {
-    body: data.body ?? '',
+    body: texto?.body ?? data.body ?? '',
     icon: '/icon-192.png',
     badge: '/icon-192.png',
+    tag: data.tag,
     data: { url: data.url ?? '/' },
   }
   event.waitUntil(self.registration.showNotification(title, options))

@@ -2,7 +2,9 @@ import { supabase } from './supabase'
 import i18n from './i18n'
 import { mensajeError } from './errores'
 
-const VAPID_PUBLIC = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined
+// Clave pública de envío (la privada está en los secretos de Supabase). No es un secreto.
+const VAPID_PUBLIC = (import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined)
+  ?? 'BPON0aO9un5cBmeE0hNbDOa_oiLshMEQ4hodrFIsrrUwXZJNBRXfNFtXyv_rbflSGQOylhkdy0jUtx-zJnZQk6M'
 
 export const isPushSupported = () =>
   typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window
@@ -19,11 +21,17 @@ export async function subscribeToPush(userId: string): Promise<{ ok: boolean; er
   if (perm !== 'granted') return { ok: false, error: i18n.t('general:pushErr.denied') }
 
   const reg = await navigator.serviceWorker.ready
-  const existing = await reg.pushManager.getSubscription()
-  const sub = existing ?? await reg.pushManager.subscribe({
-    userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC),
-  })
+  const opciones = { userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC) }
+  let sub = await reg.pushManager.getSubscription()
+  if (!sub) {
+    try {
+      sub = await reg.pushManager.subscribe(opciones)
+    } catch {
+      // Quedó una suscripción hecha con otra clave: se descarta y se crea de nuevo.
+      await (await reg.pushManager.getSubscription())?.unsubscribe()
+      sub = await reg.pushManager.subscribe(opciones)
+    }
+  }
 
   const json = sub.toJSON() as { endpoint?: string; keys?: { p256dh?: string; auth?: string } }
   if (!json.endpoint || !json.keys?.p256dh || !json.keys.auth) {
@@ -50,6 +58,12 @@ export async function unsubscribeFromPush() {
     await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
     await sub.unsubscribe()
   }
+}
+
+/** Ya dio permiso: se asegura de que este dispositivo esté registrado, sin preguntar nada. */
+export async function asegurarPush(userId: string) {
+  if (!isPushSupported() || Notification.permission !== 'granted') return
+  await subscribeToPush(userId).catch(() => undefined)
 }
 
 function urlBase64ToUint8Array(base64: string) {

@@ -4,6 +4,7 @@ export default textos({
   pt: {
     c: { student: 'Aluno', monthly: 'Mensal', hourly: 'Por hora', monthlyLower: 'mensal', hourlyLower: 'por hora', format: 'Formato', sending: 'Enviando…', loading: 'Carregando…', newValue: 'Novo valor ({{cur}})', value: 'Valor ({{cur}})', reasonOpt: 'Motivo (opcional)' },
     fin: {
+      weekTitle: 'Para cobrar', overdueList: 'Atrasados', dueList: 'Vencem nos próximos 7 dias', awaitingList: 'Avisaram que pagaram', since: 'venceu em {{date}}', on: 'vence em {{date}}', confirmIt: 'confirme o pagamento', allGood: 'Tudo em dia: ninguém atrasado nem vencendo esta semana.',
       title: 'Financeiro', bank: 'Dados bancários', received: 'Recebido no mês', all: 'Todos', pending: 'Pendente', awaiting: 'Aguardando', paid: 'Pago', suspended: 'Atrasado',
       none: 'Sem cobranças', noneBody: 'Cobre seu primeiro aluno para começar.', dueOn: 'Vence: {{date}}', confirm: 'Confirmar', markPaid: 'Marcar paga', change: 'Alterar',
       charge: 'Cobrar Aluno', proposeTitle: 'Propor alteração', current: 'Cobrança atual:', newFormat: 'Novo formato', sendProposal: 'Enviar proposta ao aluno',
@@ -18,6 +19,7 @@ export default textos({
   es: {
     c: { student: 'Alumno', monthly: 'Mensual', hourly: 'Por hora', monthlyLower: 'mensual', hourlyLower: 'por hora', format: 'Formato', sending: 'Enviando…', loading: 'Cargando…', newValue: 'Nuevo valor ({{cur}})', value: 'Valor ({{cur}})', reasonOpt: 'Motivo (opcional)' },
     fin: {
+      weekTitle: 'Para cobrar', overdueList: 'Atrasados', dueList: 'Vencen en los próximos 7 días', awaitingList: 'Avisaron que pagaron', since: 'venció el {{date}}', on: 'vence el {{date}}', confirmIt: 'confirmá el pago', allGood: 'Todo al día: nadie atrasado ni por vencer esta semana.',
       title: 'Finanzas', bank: 'Datos bancarios', received: 'Recibido en el mes', all: 'Todos', pending: 'Pendiente', awaiting: 'En espera', paid: 'Pagado', suspended: 'Atrasado',
       none: 'Sin cobros', noneBody: 'Cobrale a tu primer alumno para empezar.', dueOn: 'Vence: {{date}}', confirm: 'Confirmar', markPaid: 'Marcar pagado', change: 'Cambiar',
       charge: 'Cobrar Alumno', proposeTitle: 'Proponer cambio', current: 'Cobro actual:', newFormat: 'Nuevo formato', sendProposal: 'Enviar propuesta al alumno',
@@ -32,6 +34,7 @@ export default textos({
   en: {
     c: { student: 'Student', monthly: 'Monthly', hourly: 'Hourly', monthlyLower: 'monthly', hourlyLower: 'hourly', format: 'Format', sending: 'Sending…', loading: 'Loading…', newValue: 'New amount ({{cur}})', value: 'Amount ({{cur}})', reasonOpt: 'Reason (optional)' },
     fin: {
+      weekTitle: 'To collect', overdueList: 'Overdue', dueList: 'Due in the next 7 days', awaitingList: 'Said they paid', since: 'was due {{date}}', on: 'due {{date}}', confirmIt: 'confirm the payment', allGood: 'All up to date: nobody overdue or due this week.',
       title: 'Finances', bank: 'Bank details', received: 'Received this month', all: 'All', pending: 'Pending', awaiting: 'Awaiting', paid: 'Paid', suspended: 'Overdue',
       none: 'No charges', noneBody: 'Charge your first student to get started.', dueOn: 'Due: {{date}}', confirm: 'Confirm', markPaid: 'Mark as paid', change: 'Change',
       charge: 'Charge Student', proposeTitle: 'Propose change', current: 'Current charge:', newFormat: 'New format', sendProposal: 'Send proposal to student',

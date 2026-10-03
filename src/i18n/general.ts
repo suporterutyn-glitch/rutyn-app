@@ -3,6 +3,7 @@ import { textos } from './textos'
 // Pantallas y componentes compartidos por profesor y alumno.
 export default textos({
   pt: {
+    alerts: { title: 'Ative as notificações', teacher: 'Saiba na hora quando um aluno paga, atrasa ou tem compromisso.', student: 'Receba lembretes de mensalidade, treinos e compromissos.', on: 'Ativar' },
     install: { title: 'Instale o Rutyn no celular', subtitle: 'Abra direto da tela inicial, como um app.', now: 'Instalar', how: 'Ver como', hide: 'Fechar', ok: 'Entendi', iosSafari: 'No iPhone, abra app.rutyn.com.br no Safari para poder instalar.', ios1: 'Toque no botão Compartilhar (o quadrado com a seta para cima), embaixo da tela.', ios2: 'Role e toque em "Adicionar à Tela de Início".', ios3: 'Toque em "Adicionar" no canto superior.', and1: 'Toque no menu ⋮ do Chrome, no canto superior direito.', and2: 'Toque em "Instalar app" ou "Adicionar à tela inicial".', and3: 'Confirme em "Instalar".', after: 'Pronto: o ícone do Rutyn aparece na tela inicial do seu celular.' },
     verify: {
       title: 'Confirme seu e-mail', sent: 'Enviamos um código de 6 dígitos para', code: 'Código de 6 dígitos', confirm: 'Confirmar',
@@ -33,6 +34,7 @@ export default textos({
     extra: { tapToChat: 'Toque para conversar', pricesIn: 'Preços na sua moeda ({{c}}). Cobrança mensal via provedor.', perMonth: 'mês', notes: 'Observações: (alguma coisa que queira me contar?)' },
   },
   es: {
+    alerts: { title: 'Activá las notificaciones', teacher: 'Enterate al momento cuando un alumno paga, se atrasa o tiene un compromiso.', student: 'Recibí recordatorios de mensualidad, entrenos y compromisos.', on: 'Activar' },
     install: { title: 'Instalá Rutyn en tu celular', subtitle: 'Abrila directo desde la pantalla de inicio, como una app.', now: 'Instalar', how: 'Ver cómo', hide: 'Cerrar', ok: 'Entendido', iosSafari: 'En iPhone, abrí app.rutyn.com.br en Safari para poder instalarla.', ios1: 'Tocá el botón Compartir (el cuadrado con la flecha hacia arriba), abajo de la pantalla.', ios2: 'Bajá y tocá "Agregar a pantalla de inicio".', ios3: 'Tocá "Agregar" arriba a la derecha.', and1: 'Tocá el menú ⋮ de Chrome, arriba a la derecha.', and2: 'Tocá "Instalar app" o "Agregar a la pantalla principal".', and3: 'Confirmá en "Instalar".', after: 'Listo: el ícono de Rutyn aparece en la pantalla de inicio de tu celular.' },
     verify: {
       title: 'Confirmá tu correo', sent: 'Te enviamos un código de 6 dígitos a', code: 'Código de 6 dígitos', confirm: 'Confirmar',
@@ -63,6 +65,7 @@ export default textos({
     extra: { tapToChat: 'Tocá para conversar', pricesIn: 'Precios en tu moneda ({{c}}). Cobro mensual a través del proveedor.', perMonth: 'mes', notes: 'Observaciones: (¿algo que quieras contarme?)' },
   },
   en: {
+    alerts: { title: 'Turn on notifications', teacher: 'Know right away when a student pays, is late or has an appointment.', student: 'Get reminders for payments, workouts and appointments.', on: 'Turn on' },
     install: { title: 'Install Rutyn on your phone', subtitle: 'Open it straight from your home screen, like an app.', now: 'Install', how: 'Show me', hide: 'Close', ok: 'Got it', iosSafari: 'On iPhone, open app.rutyn.com.br in Safari to install it.', ios1: 'Tap the Share button (the square with the up arrow) at the bottom of the screen.', ios2: 'Scroll and tap "Add to Home Screen".', ios3: 'Tap "Add" in the top corner.', and1: 'Tap Chrome\'s ⋮ menu in the top right corner.', and2: 'Tap "Install app" or "Add to Home screen".', and3: 'Confirm with "Install".', after: 'Done: the Rutyn icon appears on your phone\'s home screen.' },
     verify: {
       title: 'Confirm your email', sent: 'We sent a 6-digit code to', code: '6-digit code', confirm: 'Confirm',
