@@ -26,6 +26,23 @@ rm -f /etc/nginx/snippets/rutyn-locations.conf
 # rutyn-relay.conf vive solo en el VPS (tiene la clave) y este script no lo toca.
 cat > /etc/nginx/snippets/rutyn-app.conf <<'SNIPPET'
 include /etc/nginx/snippets/rutyn-rela[y].conf;
+
+# Compresión: el JS de la app pesa 1,8 MB sin comprimir y ~0,5 MB comprimido.
+gzip on;
+gzip_proxied any;
+gzip_vary on;
+gzip_comp_level 6;
+gzip_min_length 1024;
+gzip_types text/css application/javascript application/json application/manifest+json image/svg+xml text/plain;
+
+# JS y CSS llevan un hash en el nombre: el navegador puede guardarlos un año.
+location ~* ^/assets/.+\.(js|css)$ {
+    proxy_pass http://rutynapp;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    add_header Cache-Control "public, max-age=31536000, immutable";
+}
+
 location / {
     proxy_pass http://rutynapp;
     proxy_http_version 1.1;
