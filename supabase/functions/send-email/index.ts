@@ -4,10 +4,8 @@
 // deno-lint-ignore-file
 // @ts-ignore
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
+import { enviarCorreo } from '../_shared/correo.ts'
 
-const VPS_RELAY = Deno.env.get('VPS_RELAY_URL') || 'http://179.197.67.10:3001'
-const FROM = 'suporte@rutyn.com.br'
-const FROM_NAME = 'Rutyn'
 
 // @ts-ignore
 Deno.serve(async (req: Request) => {
@@ -15,6 +13,8 @@ Deno.serve(async (req: Request) => {
 
   // @ts-ignore
   const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  // Solo la llaman otras funciones (el webhook de Stripe), nunca el navegador.
+  if ((req.headers.get('Authorization') ?? '') !== `Bearer ${SERVICE}`) return new Response('unauthorized', { status: 401 })
   const admin = createClient(Deno.env.get('SUPABASE_URL')!, SERVICE)
 
   const { action, userId, plan, amount, currency } = await req.json() as any
@@ -40,17 +40,7 @@ Deno.serve(async (req: Request) => {
 
     if (!subject || !html) return new Response(JSON.stringify({ error: 'invalid action' }), { status: 400 })
 
-    // Llamar relay en VPS
-    const res = await fetch(`${VPS_RELAY}/send`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ to: prof.email, subject, html }),
-    })
-
-    if (!res.ok) {
-      const err = await res.text()
-      throw new Error(err)
-    }
+    await enviarCorreo(prof.email, subject, html)
 
     console.log('📧 enviado a', prof.email)
     return new Response(JSON.stringify({ ok: true }))

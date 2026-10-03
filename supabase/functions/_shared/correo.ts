@@ -1,15 +1,19 @@
 // Envío de correos por el relay SMTP del VPS (suporte@rutyn.com.br).
 
-// @ts-ignore
-const RELAY = Deno.env.get('VPS_RELAY_URL') || 'http://179.197.67.10:3001'
+// El relay escucha solo en 127.0.0.1 del VPS; nginx lo publica en /_relay/send con una clave (RELAY_KEY).
 
 export async function enviarCorreo(to: string, subject: string, html: string) {
-  const res = await fetch(`${RELAY}/send`, {
+  // @ts-ignore
+  const base = Deno.env.get('VPS_RELAY_URL') || 'https://app.rutyn.com.br/_relay'
+  // @ts-ignore
+  const clave = Deno.env.get('RELAY_KEY') ?? ''
+  const res = await fetch(`${base}/send`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'X-Relay-Key': clave },
     body: JSON.stringify({ to, subject, html }),
+    signal: AbortSignal.timeout(15000),
   })
-  if (!res.ok) throw new Error(await res.text())
+  if (!res.ok) throw new Error(`relay ${res.status}: ${(await res.text()).slice(0, 200)}`)
 }
 
 /** Correo con la marca de Rutyn: título, párrafos y un botón. */

@@ -22,7 +22,10 @@ echo "=== 4. Reescribiendo nginx ==="
 mkdir -p /etc/nginx/snippets
 rm -f /etc/nginx/snippets/rutyn-locations.conf
 
+# El relay de correo (127.0.0.1:3001) se publica en /_relay/send con clave.
+# rutyn-relay.conf vive solo en el VPS (tiene la clave) y este script no lo toca.
 cat > /etc/nginx/snippets/rutyn-app.conf <<'SNIPPET'
+include /etc/nginx/snippets/rutyn-rela[y].conf;
 location / {
     proxy_pass http://rutynapp;
     proxy_http_version 1.1;
