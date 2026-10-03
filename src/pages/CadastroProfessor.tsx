@@ -113,7 +113,7 @@ export function CadastroProfessorPage() {
               <p className="text-brand font-semibold text-rt-13 mt-1">{t('signupTeacher:embedSub')}</p>
             </div>
           ) : (
-            <h1 className="text-center text-brand font-bold text-rt-18 mb-4">{t('signupTeacher:fillData')}</h1>
+            !porConfirmar && <h1 className="text-center text-brand font-bold text-rt-18 mb-4">{t('signupTeacher:fillData')}</h1>
           )}
           {porConfirmar && <VerificarCorreo email={porConfirmar} onVerificado={entrar} onCambiar={() => setPorConfirmar(null)} />}
           <form onSubmit={submit} className={'flex-col ' + (porConfirmar ? 'hidden ' : 'flex ') + (embebido ? 'gap-3' : 'gap-6')}>

@@ -31,16 +31,18 @@ export function VerificarCorreo({ email, onVerificado, onCambiar, reenviarAlAbri
     return () => clearTimeout(id)
   }, [espera])
 
-  async function reenviar() {
+  async function reenviar(automatico = false) {
     setError(null); setAviso(null)
     const { error: e } = await supabase.auth.resend({ type: 'signup', email })
+    // Al abrir desde el login puede haber un código recién enviado: ese sigue sirviendo.
+    if (e && automatico && /after \d+ seconds/i.test(e.message)) return
     if (e) { setError(mensajeError(e)); return }
     setAviso(t('general:verify.resent'))
     setEspera(ESPERA)
   }
 
   useEffect(() => {
-    if (reenviarAlAbrir) void reenviar()
+    if (reenviarAlAbrir) void reenviar(true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -76,7 +78,7 @@ export function VerificarCorreo({ email, onVerificado, onCambiar, reenviarAlAbri
       <button type="submit" disabled={ocupado || codigo.length !== 6} className="btn-primary-pill disabled:opacity-50">
         {ocupado ? t('loading') : t('general:verify.confirm')}
       </button>
-      <button type="button" disabled={espera > 0} onClick={reenviar} className="text-[#4C6524] font-semibold text-rt-13 disabled:text-ink-placeholder">
+      <button type="button" disabled={espera > 0} onClick={() => reenviar()} className="text-[#4C6524] font-semibold text-rt-13 disabled:text-ink-placeholder">
         {espera > 0 ? t('general:verify.resendIn', { s: espera }) : t('general:verify.resend')}
       </button>
       <p className="text-ink-placeholder text-rt-11">{t('general:verify.spam')}</p>

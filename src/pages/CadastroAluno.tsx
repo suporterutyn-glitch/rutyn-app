@@ -124,7 +124,7 @@ export function CadastroAlunoPage() {
               {invitadoPor ? t('signupStudent:invitedBy', { name: invitadoPor }) : t('signupStudent:invitedGeneric')}
             </div>
           )}
-          <h1 className="text-center text-brand font-bold text-rt-18 mb-4">{t('signupTeacher:fillData')}</h1>
+          {!porConfirmar && <h1 className="text-center text-brand font-bold text-rt-18 mb-4">{t('signupTeacher:fillData')}</h1>}
           {porConfirmar && <VerificarCorreo email={porConfirmar} onVerificado={entrar} onCambiar={() => setPorConfirmar(null)} />}
           <form onSubmit={submit} className={'flex-col gap-6 ' + (porConfirmar ? 'hidden' : 'flex')}>
             <div>
