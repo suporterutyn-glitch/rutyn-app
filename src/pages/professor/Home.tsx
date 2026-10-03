@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, Plus, Calendar, ChevronRight, Zap, RefreshCw, ClipboardCheck, MessageSquare, Users, Settings, Send, X } from 'lucide-react'
+import { Bell, Plus, Calendar, ChevronRight, Zap, RefreshCw, ClipboardCheck, MessageSquare, Users, Settings, Send } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
