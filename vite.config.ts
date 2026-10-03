@@ -16,7 +16,7 @@ export default defineConfig({
       srcDir: 'src',
       filename: 'sw.ts',
       injectRegister: 'auto',
-      includeAssets: ['favicon.ico'],
+      includeAssets: ['favicon.png', 'apple-touch-icon.png'],
       manifest: {
         name: 'Rutyn',
         short_name: 'Rutyn',
@@ -29,6 +29,8 @@ export default defineConfig({
         icons: [
           { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+          // Con margen: Android lo recorta en círculo u otra forma sin cortar el logo.
+          { src: '/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       injectManifest: {
