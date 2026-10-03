@@ -27,7 +27,10 @@ const mimeTypes = {
 };
 
 http.createServer((req, res) => {
-  let filePath = path.join(distDir, req.url === '/' ? 'index.html' : req.url);
+  // Solo la ruta: sin esto, "/assets/x.js?v=1" no se encuentra y caería en index.html.
+  let ruta = '/';
+  try { ruta = decodeURIComponent(new URL(req.url, 'http://x').pathname); } catch { /* ruta inválida: va a index */ }
+  let filePath = path.join(distDir, ruta === '/' ? 'index.html' : ruta);
 
   if (!path.resolve(filePath).startsWith(distDir)) {
     res.writeHead(403);
@@ -40,14 +43,21 @@ http.createServer((req, res) => {
 
   fs.readFile(filePath, (err, content) => {
     if (err) {
-      if (err.code === 'ENOENT') {
+      if (err.code === 'ENOENT' || err.code === 'EISDIR') {
+        // Un archivo que falta (JS, CSS, imagen) es un 404 de verdad. Si se respondiera con index.html,
+        // el navegador guardaría HTML como si fuera el código de la app y quedaría la pantalla en blanco.
+        if (ext && ext !== '.html') {
+          res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' });
+          res.end('Not found');
+          return;
+        }
         filePath = path.join(distDir, 'index.html');
         fs.readFile(filePath, (indexErr, indexContent) => {
           if (indexErr) {
             res.writeHead(500);
             res.end('Server Error');
           } else {
-            res.writeHead(200, { 'Content-Type': mimeTypes['.html'] });
+            res.writeHead(200, { 'Content-Type': mimeTypes['.html'], 'Cache-Control': 'no-cache' });
             res.end(indexContent);
           }
         });
@@ -56,7 +66,9 @@ http.createServer((req, res) => {
         res.end('Server Error');
       }
     } else {
-      res.writeHead(200, { 'Content-Type': contentType });
+      // El HTML, el service worker y el manifest se revalidan siempre; el resto lo decide nginx.
+      const fijo = /\.(html|webmanifest)$/.test(filePath) || /(^|\/)(sw|registerSW)\.js$/.test(filePath);
+      res.writeHead(200, fijo ? { 'Content-Type': contentType, 'Cache-Control': 'no-cache' } : { 'Content-Type': contentType });
       res.end(content);
     }
   });

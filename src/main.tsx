@@ -6,6 +6,9 @@ import App from './App.tsx'
 import { guardarIntencionDesdeUrl } from '@/lib/intencionCompra'
 import { escucharInstalacion } from '@/lib/instalacion'
 
+// Versión publicada (cambia el nombre del archivo JS y fuerza a los navegadores a bajar el nuevo).
+;(window as unknown as { __RUTYN_BUILD__: string }).__RUTYN_BUILD__ = '2026-10-03.2'
+
 guardarIntencionDesdeUrl()
 escucharInstalacion()
 

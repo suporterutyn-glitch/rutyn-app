@@ -10,7 +10,14 @@ grep -n "base:" vite.config.ts || echo "  ADVERTENCIA: sin base en vite.config.t
 
 echo "=== 2. Reconstruyendo dist ==="
 [ -d node_modules ] || npm install
-npm run build
+# Se construye en una carpeta aparte y se cambia de golpe: la app nunca queda sin archivos
+# mientras compila. Se conservan los JS/CSS de la versión anterior para quien la tenga abierta.
+rm -rf dist-new
+npm run build -- --outDir dist-new
+if [ -d dist/assets ]; then cp -n dist/assets/*.js dist/assets/*.css dist-new/assets/ 2>/dev/null || true; fi
+rm -rf dist-old
+[ -d dist ] && mv dist dist-old
+mv dist-new dist
 
 echo "=== 3. Rutas generadas en dist/index.html ==="
 grep -o 'src="[^"]*"' dist/index.html | head -5
@@ -40,6 +47,8 @@ location ~* ^/assets/.+\.(js|css)$ {
     proxy_pass http://rutynapp;
     proxy_http_version 1.1;
     proxy_set_header Host $host;
+    proxy_intercept_errors off;
+    # add_header sin "always": un 404 no lleva esta caché.
     add_header Cache-Control "public, max-age=31536000, immutable";
 }
 
