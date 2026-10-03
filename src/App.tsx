@@ -85,6 +85,7 @@ export default function App() {
             <Route path="assinatura" element={<AssinaturaPage />} />
             <Route path="perfil/completar" element={<CompletarPerfilPage />} />
             <Route path="compromisso/novo" element={<NovoCompromissoPage />} />
+            <Route path="compromisso/:id" element={<NovoCompromissoPage />} />
             <Route path="rotinas/:id" element={<EditorRotinaPage />} />
             <Route path="dietas/:id" element={<EditorDietaPage />} />
             <Route path="notificar" element={<CriarNotificacaoPage />} />

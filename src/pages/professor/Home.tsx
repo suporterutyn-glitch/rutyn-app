@@ -56,7 +56,8 @@ export function ProfessorHome() {
           .from('appointments')
           .select('id,title,starts_at,kind,location,student_name')
           .eq('teacher_id', profile.id)
-          .gte('starts_at', new Date().toISOString())
+          // También los de las últimas semanas: el calendario deja mirar días pasados.
+          .gte('starts_at', new Date(Date.now() - 60 * 86400000).toISOString())
           .order('starts_at', { ascending: true }),
       ])
       setStats(statsRow ?? { active_students: 0, pending_invites: 0, month_received: 0, unread_notifications: 0 })
@@ -241,7 +242,7 @@ export function ProfessorHome() {
                 const d = new Date(a.starts_at)
                 const timeStr = d.toLocaleTimeString(localeDe(), { hour: '2-digit', minute: '2-digit' })
                 return (
-                  <li key={a.id} className="card-dark p-3 flex items-start gap-3 group relative">
+                  <li key={a.id} onClick={() => nav(`/professor/compromisso/${a.id}`)} className="card-dark p-3 flex items-start gap-3 cursor-pointer active:opacity-80">
                     <div className="text-brand text-rt-15 font-bold min-w-[50px]">{timeStr}</div>
                     <div className="w-px bg-brand" />
                     <div className="flex-1 min-w-0">
@@ -253,15 +254,7 @@ export function ProfessorHome() {
                         <div className="text-white/60 text-rt-11">📍 {a.location}</div>
                       )}
                     </div>
-                    <button
-                      onClick={() => {
-                        // TODO: delete appointment
-                      }}
-                      className="opacity-0 group-hover:opacity-100 transition p-1"
-                      aria-label={t('prof:home.deleteAppointment')}
-                    >
-                      <X size={18} className="text-white/60" />
-                    </button>
+                    <ChevronRight size={18} className="text-white/50 self-center shrink-0" aria-label={t('prof:appt.editTitle')} />
                   </li>
                 )
               })}

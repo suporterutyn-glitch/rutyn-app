@@ -39,7 +39,7 @@ export function AlunoHome() {
   const [assessments, setAssessments] = useState(0)
   const [treinosDelMes, setTreinosDelMes] = useState(0)
   // La agenda es compartida: lo que el profesor marca para el alumno lo ve el alumno.
-  const [compromisos, setCompromisos] = useState<{ id: string; title: string; starts_at: string; kind: string }[]>([])
+  const [compromisos, setCompromisos] = useState<{ id: string; title: string; starts_at: string; kind: string; location: string | null }[]>([])
   const [metaHidratacion, setMetaHidratacion] = useState(false)
   const [errorConvite, setErrorConvite] = useState<string | null>(null)
 
@@ -102,12 +102,12 @@ export function AlunoHome() {
 
       const { data: citas } = await supabase
         .from('appointments')
-        .select('id,title,starts_at,kind')
+        .select('id,title,starts_at,kind,location')
         .eq('student_id', profile.id)
         .gte('starts_at', new Date().toISOString())
         .order('starts_at')
         .limit(5)
-      setCompromisos((citas as { id: string; title: string; starts_at: string; kind: string }[]) ?? [])
+      setCompromisos((citas as { id: string; title: string; starts_at: string; kind: string; location: string | null }[]) ?? [])
 
       const primeroDelMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1)
       const { count: nTreinos } = await supabase
@@ -292,6 +292,7 @@ export function AlunoHome() {
                     <div className="text-white text-rt-14 font-semibold truncate">{c.title}</div>
                     <div className="text-white/60 text-rt-11">
                       {d.toLocaleTimeString(localeDe(), { hour: '2-digit', minute: '2-digit' })}
+                      {c.location ? ` · 📍 ${c.location}` : ''}
                     </div>
                   </div>
                 </li>

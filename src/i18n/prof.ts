@@ -21,6 +21,10 @@ export default textos({
       training: 'Treino', assessment: 'Avaliação', meeting: 'Reunião', other: 'Outro', title: 'Novo Compromisso', name: 'Título', namePh: 'Ex: Treino de peito', type: 'Tipo',
       date: 'Data', time: 'Hora', studentOpt: 'Aluno (opcional)', none: 'Nenhum', notify: 'Notificar aluno', notes: 'Observações', save: 'Salvar Compromisso', saving: 'Salvando…',
       nameRequired: 'Por favor, preencha o título do compromisso', errorSaving: 'Erro ao salvar compromisso',
+      editTitle: 'Editar Compromisso', location: 'Local (opcional)', locationPh: 'Ex: Academia, parque, online', saveChanges: 'Salvar alterações',
+      repeat: 'Repetir toda semana', repeatDays: 'Dias', repeatFor: 'Durante', weeks: '{{n}} semanas', willCreate: 'Serão criados {{n}} compromissos.',
+      delete: 'Excluir compromisso', deleteQ: 'Excluir este compromisso?', deleteDetail: 'O aluno será avisado do cancelamento.',
+      deleteOne: 'Só este', deleteFollowing: 'Este e os seguintes', seriesHint: 'Este compromisso faz parte de uma série semanal.', notFound: 'Compromisso não encontrado.',
     },
     notif: {
       title: 'Nova notificação', name: 'Título', namePh: 'Ex: Aula cancelada', message: 'Mensagem', messagePh: 'Detalhes...', clear: 'Limpar', selectAll: 'Selecionar todos',
@@ -49,6 +53,10 @@ export default textos({
       training: 'Entreno', assessment: 'Evaluación', meeting: 'Reunión', other: 'Otro', title: 'Nuevo Compromiso', name: 'Título', namePh: 'Ej: Entreno de pecho', type: 'Tipo',
       date: 'Fecha', time: 'Hora', studentOpt: 'Alumno (opcional)', none: 'Ninguno', notify: 'Notificar al alumno', notes: 'Observaciones', save: 'Guardar Compromiso', saving: 'Guardando…',
       nameRequired: 'Por favor, rellena el título del compromiso', errorSaving: 'Error al guardar el compromiso',
+      editTitle: 'Editar Compromiso', location: 'Lugar (opcional)', locationPh: 'Ej: Gimnasio, parque, online', saveChanges: 'Guardar cambios',
+      repeat: 'Repetir cada semana', repeatDays: 'Días', repeatFor: 'Durante', weeks: '{{n}} semanas', willCreate: 'Se van a crear {{n}} compromisos.',
+      delete: 'Eliminar compromiso', deleteQ: '¿Eliminar este compromiso?', deleteDetail: 'Se le avisa al alumno que se canceló.',
+      deleteOne: 'Solo este', deleteFollowing: 'Este y los siguientes', seriesHint: 'Este compromiso es parte de una serie semanal.', notFound: 'No se encontró el compromiso.',
     },
     notif: {
       title: 'Nueva notificación', name: 'Título', namePh: 'Ej: Clase cancelada', message: 'Mensaje', messagePh: 'Detalles...', clear: 'Limpiar', selectAll: 'Seleccionar todos',
@@ -77,6 +85,10 @@ export default textos({
       training: 'Workout', assessment: 'Assessment', meeting: 'Meeting', other: 'Other', title: 'New Appointment', name: 'Title', namePh: 'E.g.: Chest workout', type: 'Type',
       date: 'Date', time: 'Time', studentOpt: 'Student (optional)', none: 'None', notify: 'Notify student', notes: 'Notes', save: 'Save Appointment', saving: 'Saving…',
       nameRequired: 'Please fill in the appointment title', errorSaving: 'Error saving appointment',
+      editTitle: 'Edit Appointment', location: 'Location (optional)', locationPh: 'E.g.: Gym, park, online', saveChanges: 'Save changes',
+      repeat: 'Repeat every week', repeatDays: 'Days', repeatFor: 'For', weeks: '{{n}} weeks', willCreate: '{{n}} appointments will be created.',
+      delete: 'Delete appointment', deleteQ: 'Delete this appointment?', deleteDetail: 'The student will be told it was cancelled.',
+      deleteOne: 'Only this one', deleteFollowing: 'This and the following', seriesHint: 'This appointment is part of a weekly series.', notFound: 'Appointment not found.',
     },
     notif: {
       title: 'New notification', name: 'Title', namePh: 'E.g.: Class canceled', message: 'Message', messagePh: 'Details...', clear: 'Clear', selectAll: 'Select all',
