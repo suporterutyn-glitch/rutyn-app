@@ -145,6 +145,14 @@
   .input-light-underline {
     @apply w-full bg-transparent border-0 border-b border-ink-underline text-ink-dark text-rt-13 placeholder:text-ink-placeholder focus:border-b-2 focus:border-brand outline-none py-2;
   }
+/* Barras fijas de Mis Proyectos: sin fondo en reposo; al quedar fijas arriba, un oscuro desenfocado
+     detrás de los botones para que la lista que pasa por debajo no moleste. */
+  .proy-fija { background: transparent; transition: background-color .15s; }
+  [data-fijo] .proy-fija {
+    background: rgba(8, 8, 8, .7);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+  }
   .card-dark { @apply bg-surface-card border border-surface-line-strong rounded-card; }
 }
 

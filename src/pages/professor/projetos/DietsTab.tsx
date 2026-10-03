@@ -121,7 +121,7 @@ export function DietsTab({ query, filtro, alumno }: { query: string; filtro: Fil
         </button>
       )}
       {seleccion.length > 0 && (
-        <div className="sticky top-[var(--proy-top)] z-10 -mx-4 px-4 py-2 mb-3 bg-surface-app/95 backdrop-blur flex items-center gap-2">
+        <div className="sticky top-[var(--proy-top)] z-10 -mx-4 px-4 py-2 mb-3 proy-fija flex items-center gap-2">
           <button onClick={() => setBorrando(items.filter((d) => seleccion.includes(d.id)))} className="px-5 py-2.5 rounded-[20px] bg-[#D32F2F] text-white text-rt-13 font-semibold">{t('projetos:die.delete')}</button>
           <button onClick={() => setSeleccion(todas ? [] : filtered.map((d) => d.id))} className="ml-auto text-rt-13 text-grey-400">{todas ? 'Desselecionar tudo' : 'Selecionar tudo'}</button>
         </div>

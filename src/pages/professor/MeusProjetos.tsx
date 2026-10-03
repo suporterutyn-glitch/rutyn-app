@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { RoutinesTab } from './projetos/RoutinesTab'
 import { ExercisesTab } from './projetos/ExercisesTab'
@@ -42,10 +42,23 @@ export function MeusProjetosPage() {
 
   const props = { query, filtro }
 
+  // Las pestañas y los filtros quedan fijos al hacer scroll. Sin fondo mientras están en su lugar;
+  // el fondo aparece solo cuando la lista empieza a pasar por detrás.
+  const marca = useRef<HTMLDivElement>(null)
+  const [fijo, setFijo] = useState(false)
+  useEffect(() => {
+    const el = marca.current
+    if (!el) return
+    const io = new IntersectionObserver(([e]) => setFijo(!e.isIntersecting), { rootMargin: '-1px 0px 0px 0px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+
   return (
     <div
       className="pt-[calc(env(safe-area-inset-top)+16px)] px-4 pb-24 md:max-w-form md:mx-auto w-full"
       style={{ '--proy-top': 'calc(env(safe-area-inset-top) + 52px)' } as React.CSSProperties}
+      data-fijo={fijo ? '1' : undefined}
     >
       {/* Header */}
       <div className="mb-6">
@@ -76,8 +89,9 @@ export function MeusProjetosPage() {
       </div>
 
       {/* Categorías: Rutinas / Ejercicios / Dietas / etc */}
+      <div ref={marca} aria-hidden="true" />
       {/* Queda fija arriba al hacer scroll; los filtros de cada pestaña se pegan justo debajo (--proy-top). */}
-      <div className="sticky top-0 z-20 flex gap-2 mb-2 overflow-x-auto no-scrollbar -mx-4 px-4 pt-[calc(env(safe-area-inset-top)+8px)] pb-2 bg-surface-app/95 backdrop-blur md:justify-center">
+      <div className="sticky top-0 z-20 flex gap-2 mb-2 overflow-x-auto no-scrollbar -mx-4 px-4 pt-[calc(env(safe-area-inset-top)+8px)] pb-2 proy-fija md:justify-center">
         {TABS.map((x) => {
           const on = tab === x.key
           return (
