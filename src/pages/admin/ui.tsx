@@ -20,31 +20,61 @@ export function Buscador({ value, onChange, placeholder = 'Buscar…' }: { value
   )
 }
 
-export function Tabla<T>({ cols, rows, onRow, vacio = 'Sin resultados' }: {
+export function Tabla<T>({ cols, rows, onRow, vacio = 'Sin resultados', seleccion }: {
   cols: { label: string; render: (r: T) => ReactNode; className?: string }[]
   rows: T[]
   onRow?: (r: T) => void
   vacio?: string
+  /** Casillas para acciones en lote: `ids` marcados y cómo se identifica cada fila. */
+  seleccion?: { ids: Set<string>; idDe: (r: T) => string; cambiar: (ids: Set<string>) => void }
 }) {
+  const todos = seleccion ? rows.map(seleccion.idDe) : []
+  const todosMarcados = !!seleccion && todos.length > 0 && todos.every((id) => seleccion.ids.has(id))
+  const alternar = (id: string) => {
+    if (!seleccion) return
+    const n = new Set(seleccion.ids)
+    if (n.has(id)) n.delete(id); else n.add(id)
+    seleccion.cambiar(n)
+  }
+  const alternarTodos = () => {
+    if (!seleccion) return
+    const n = new Set(seleccion.ids)
+    for (const id of todos) { if (todosMarcados) n.delete(id); else n.add(id) }
+    seleccion.cambiar(n)
+  }
   return (
     <div className="bg-surface-card border border-surface-line rounded-xl overflow-x-auto">
       <table className="w-full min-w-[720px]">
         <thead>
           <tr className="border-b border-surface-line">
+            {seleccion && (
+              <th className="w-10 pl-4 py-3">
+                <input type="checkbox" className="w-4 h-4 accent-brand align-middle" checked={todosMarcados} onChange={alternarTodos} aria-label="Seleccionar todos" />
+              </th>
+            )}
             {cols.map((c) => <th key={c.label} className="text-left px-4 py-3 text-grey-400 text-rt-12 font-semibold whitespace-nowrap">{c.label}</th>)}
           </tr>
         </thead>
         <tbody>
-          {rows.length === 0 && <tr><td colSpan={cols.length} className="px-4 py-6 text-grey-500 text-rt-13">{vacio}</td></tr>}
-          {rows.map((r, i) => (
-            <tr
-              key={i}
-              onClick={onRow ? () => onRow(r) : undefined}
-              className={'border-b border-surface-line last:border-0 ' + (onRow ? 'cursor-pointer hover:bg-white/5' : '')}
-            >
-              {cols.map((c) => <td key={c.label} className={'px-4 py-3 text-white text-rt-13 ' + (c.className ?? '')}>{c.render(r)}</td>)}
-            </tr>
-          ))}
+          {rows.length === 0 && <tr><td colSpan={cols.length + (seleccion ? 1 : 0)} className="px-4 py-6 text-grey-500 text-rt-13">{vacio}</td></tr>}
+          {rows.map((r, i) => {
+            const id = seleccion?.idDe(r)
+            const marcado = !!id && seleccion!.ids.has(id)
+            return (
+              <tr
+                key={id ?? i}
+                onClick={onRow ? () => onRow(r) : undefined}
+                className={'border-b border-surface-line last:border-0 ' + (onRow ? 'cursor-pointer hover:bg-white/5 ' : '') + (marcado ? 'bg-brand/10' : '')}
+              >
+                {seleccion && (
+                  <td className="w-10 pl-4 py-3" onClick={(e) => e.stopPropagation()}>
+                    <input type="checkbox" className="w-4 h-4 accent-brand align-middle" checked={marcado} onChange={() => alternar(id!)} aria-label="Seleccionar" />
+                  </td>
+                )}
+                {cols.map((c) => <td key={c.label} className={'px-4 py-3 text-white text-rt-13 ' + (c.className ?? '')}>{c.render(r)}</td>)}
+              </tr>
+            )
+          })}
         </tbody>
       </table>
     </div>
@@ -61,10 +91,10 @@ export function Badge({ tono, children }: { tono: 'ok' | 'warn' | 'bad' | 'neutr
   return <span className={'inline-block px-2 py-0.5 rounded text-rt-11 font-semibold whitespace-nowrap ' + c}>{children}</span>
 }
 
-export function Panel({ titulo, onCerrar, children, pie }: { titulo: string; onCerrar: () => void; children: ReactNode; pie?: ReactNode }) {
+export function Panel({ titulo, onCerrar, children, pie, ancho }: { titulo: string; onCerrar: () => void; children: ReactNode; pie?: ReactNode; ancho?: boolean }) {
   return (
     <div className="fixed inset-0 z-[80] flex justify-end bg-black/60" onClick={onCerrar}>
-      <div className="w-full max-w-lg h-full bg-surface-card border-l border-surface-line flex flex-col" onClick={(e) => e.stopPropagation()}>
+      <div className={'w-full h-full ' + (ancho ? 'max-w-3xl' : 'max-w-lg') + ' bg-surface-card border-l border-surface-line flex flex-col'} onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 h-16 border-b border-surface-line shrink-0">
           <h2 className="text-white text-rt-18 font-bold truncate">{titulo}</h2>
           <button onClick={onCerrar} aria-label="Cerrar" className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white"><X size={18} /></button>
