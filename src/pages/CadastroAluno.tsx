@@ -12,6 +12,7 @@ import { idiomaDe } from '@/lib/catalogos'
 import { mensajeError } from '@/lib/errores'
 import { useAuth } from '@/lib/auth'
 import { leerCodigo, usarCodigo, profesorDelCodigo, mensajeConvite } from '@/lib/convite'
+import { VerificarCorreo } from '@/components/VerificarCorreo'
 
 export function CadastroAlunoPage() {
   const { t, i18n } = useTranslation()
@@ -33,6 +34,7 @@ export function CadastroAlunoPage() {
   const [accept, setAccept] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [porConfirmar, setPorConfirmar] = useState<string | null>(null)
   const { refresh } = useAuth()
   // Llegó por el link de invitación de un profesor (/c/<codigo>).
   const [codigo] = useState(() => leerCodigo())
@@ -81,24 +83,22 @@ export function CadastroAlunoPage() {
     setLoading(false)
     if (error) { setError(mensajeError(error)); return }
 
-    // Ensure profile has student role
-    if (data.user) {
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ role: 'student' })
-        .eq('id', data.user.id)
-      if (updateError) console.error('Error updating profile role:', updateError)
-    }
+    if (data.user && !data.session && data.user.identities?.length === 0) { setError(t('general:verify.exists')); return }
+    if (data.session) { await entrar(); return }
+    // Falta confirmar el correo con el código que se acaba de enviar.
+    setPorConfirmar(email.trim())
+  }
 
-    if (data.session && codigo) {
+  async function entrar() {
+    if (codigo) {
       const r = await usarCodigo(codigo)
       await refresh()
       if (r === 'ok') { nav('/aluno', { replace: true }); return }
       nav('/aluno/encontrar-professor', { replace: true, state: { aviso: t(mensajeConvite(r)) } })
       return
     }
-    if (data.session) nav(hasTeacher ? '/aguardando' : '/aluno/encontrar-professor', { replace: true })
-    else nav('/login', { replace: true })
+    await refresh()
+    nav(hasTeacher ? '/aguardando' : '/aluno/encontrar-professor', { replace: true })
   }
 
   return (
@@ -125,7 +125,8 @@ export function CadastroAlunoPage() {
             </div>
           )}
           <h1 className="text-center text-brand font-bold text-rt-18 mb-4">{t('signupTeacher:fillData')}</h1>
-          <form onSubmit={submit} className="flex flex-col gap-6">
+          {porConfirmar && <VerificarCorreo email={porConfirmar} onVerificado={entrar} onCambiar={() => setPorConfirmar(null)} />}
+          <form onSubmit={submit} className={'flex-col gap-6 ' + (porConfirmar ? 'hidden' : 'flex')}>
             <div>
               <label className="block text-rt-11 text-ink-placeholder font-semibold">{t('signupTeacher:fullName')}</label>
               <input required value={name} onChange={(e) => setName(e.target.value)} className="input-light-underline" />

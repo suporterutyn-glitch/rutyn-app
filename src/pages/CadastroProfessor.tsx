@@ -11,6 +11,8 @@ import { countryByCode } from '@/lib/countries'
 import { idiomaDe } from '@/lib/catalogos'
 import { mensajeError } from '@/lib/errores'
 import { enIframe, abrirFuera } from '@/lib/embed'
+import { VerificarCorreo } from '@/components/VerificarCorreo'
+import type { Session } from '@supabase/supabase-js'
 
 export function CadastroProfessorPage() {
   const { t, i18n } = useTranslation()
@@ -31,6 +33,7 @@ export function CadastroProfessorPage() {
     return () => ro.disconnect()
   }, [embebido])
   const lang = idiomaDe(i18n.language)
+  const [porConfirmar, setPorConfirmar] = useState<string | null>(null)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -68,24 +71,20 @@ export function CadastroProfessorPage() {
     setLoading(false)
     if (error) { setError(mensajeError(error)); return }
 
-    // Ensure profile has teacher role
-    if (data.user) {
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ role: 'teacher' })
-        .eq('id', data.user.id)
-      if (updateError) console.error('Error updating profile role:', updateError)
-    }
+    // Correo ya registrado: Supabase no lo dice con un error, devuelve un usuario sin identidades.
+    if (data.user && !data.session && data.user.identities?.length === 0) { setError(t('general:verify.exists')); return }
+    if (data.session) { entrar(data.session); return }
+    // Falta confirmar el correo con el código que se acaba de enviar.
+    setPorConfirmar(email.trim())
+  }
 
+  function entrar(s: Session) {
     if (embebido) {
       // La sesión viaja en el hash: la app la toma al abrir (detectSessionInUrl).
-      const s = data.session
-      if (s) abrirFuera(`/professor?lang=${lang}#access_token=${s.access_token}&refresh_token=${s.refresh_token}&expires_in=${s.expires_in}&expires_at=${s.expires_at}&token_type=bearer&type=signup`)
-      else abrirFuera('/login')
+      abrirFuera(`/professor?lang=${lang}#access_token=${s.access_token}&refresh_token=${s.refresh_token}&expires_in=${s.expires_in}&expires_at=${s.expires_at}&token_type=bearer&type=signup`)
       return
     }
-    if (data.session) nav('/professor', { replace: true })
-    else nav('/login', { replace: true })
+    nav('/professor', { replace: true })
   }
 
   return (
@@ -116,7 +115,8 @@ export function CadastroProfessorPage() {
           ) : (
             <h1 className="text-center text-brand font-bold text-rt-18 mb-4">{t('signupTeacher:fillData')}</h1>
           )}
-          <form onSubmit={submit} className={'flex flex-col ' + (embebido ? 'gap-3' : 'gap-6')}>
+          {porConfirmar && <VerificarCorreo email={porConfirmar} onVerificado={entrar} onCambiar={() => setPorConfirmar(null)} />}
+          <form onSubmit={submit} className={'flex-col ' + (porConfirmar ? 'hidden ' : 'flex ') + (embebido ? 'gap-3' : 'gap-6')}>
             <div>
               <label className="block text-rt-11 text-ink-placeholder font-semibold">{t('signupTeacher:fullName')}</label>
               <input required value={name} onChange={(e) => setName(e.target.value)} placeholder={embebido ? t('signupTeacher:fullName') : undefined} className="input-light-underline" />

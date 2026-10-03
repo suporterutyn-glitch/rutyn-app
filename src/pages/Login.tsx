@@ -1,3 +1,4 @@
+import { VerificarCorreo } from '@/components/VerificarCorreo'
 import { useEffect, useState } from 'react'
 import { RutynLogo } from '@/components/RutynLogo'
 import { useNavigate, Link } from 'react-router-dom'
@@ -54,6 +55,8 @@ export function LoginPage() {
     return ok
   }
 
+  const [porConfirmar, setPorConfirmar] = useState<string | null>(null)
+
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     setFeedback(null)
@@ -61,6 +64,11 @@ export function LoginPage() {
     setLoading(true)
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
     setLoading(false)
+    if (error && /email not confirmed/i.test(error.message)) {
+      // Se registró pero no puso el código: se le manda uno nuevo y lo confirma acá mismo.
+      setPorConfirmar(email.trim())
+      return
+    }
     if (error) {
       // Supabase responde siempre en ingles; el modulo pide el mensaje traducido.
       setFeedback({ kind: 'error', message: mensajeError(error) })
@@ -80,6 +88,13 @@ export function LoginPage() {
   return (
     <div className="app-shell app-bg-pro flex flex-col">
       <OfflineBanner />
+      {porConfirmar && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 px-6">
+          <div className="w-full max-w-[380px] bg-surface-light rounded-[20px] p-6">
+            <VerificarCorreo email={porConfirmar} reenviarAlAbrir onVerificado={() => nav('/', { replace: true })} onCambiar={() => setPorConfirmar(null)} />
+          </div>
+        </div>
+      )}
       <div className="relative z-10 flex flex-col min-h-dvh">
         <div className="flex-1 flex flex-col items-center justify-center gap-3 px-6 py-8">
           <RutynLogo size={90} />
