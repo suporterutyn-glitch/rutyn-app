@@ -34,6 +34,13 @@ export function CadastroProfessorPage() {
     return () => ro.disconnect()
   }, [embebido])
   const lang = idiomaDe(i18n.language)
+  // Incrustado: le cuenta a la landing los pasos del registro, para su embudo de visitas.
+  const avisados = useRef(new Set<string>())
+  const avisarLanding = (evento: 'form_start' | 'signup_sent' | 'signup') => {
+    if (!embebido || avisados.current.has(evento)) return
+    avisados.current.add(evento)
+    try { window.parent.postMessage({ rutynEvento: evento }, '*') } catch { /* sin marco */ }
+  }
   const [porConfirmar, setPorConfirmar] = useState<string | null>(null)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -80,13 +87,17 @@ export function CadastroProfessorPage() {
     if (data.user && !data.session && data.user.identities?.length === 0) { setError(t('general:verify.exists')); return }
     if (data.session) { entrar(data.session); return }
     // Falta confirmar el correo con el código que se acaba de enviar.
+    avisarLanding('signup_sent')
     setPorConfirmar(email.trim())
   }
 
   function entrar(s: Session) {
+    avisarLanding('signup')
     if (embebido) {
       // La sesión viaja en el hash: la app la toma al abrir (detectSessionInUrl).
-      abrirFuera(`/professor?lang=${lang}#access_token=${s.access_token}&refresh_token=${s.refresh_token}&expires_in=${s.expires_in}&expires_at=${s.expires_at}&token_type=bearer&type=signup`)
+      const destino = `/professor?lang=${lang}#access_token=${s.access_token}&refresh_token=${s.refresh_token}&expires_in=${s.expires_in}&expires_at=${s.expires_at}&token_type=bearer&type=signup`
+      // Un instante para que la landing alcance a registrar el evento antes de salir de la página.
+      setTimeout(() => abrirFuera(destino), 250)
       return
     }
     nav('/professor', { replace: true })
@@ -121,7 +132,7 @@ export function CadastroProfessorPage() {
             !porConfirmar && <h1 className="text-center text-brand font-bold text-rt-18 mb-4">{t('signupTeacher:fillData')}</h1>
           )}
           {porConfirmar && <VerificarCorreo email={porConfirmar} onVerificado={entrar} onCambiar={() => setPorConfirmar(null)} />}
-          <form ref={formulario} onSubmit={submit} className={'flex-col ' + (porConfirmar ? 'hidden ' : 'flex ') + (embebido ? 'gap-3' : 'gap-6')}>
+          <form ref={formulario} onSubmit={submit} onFocusCapture={() => avisarLanding('form_start')} className={'flex-col ' + (porConfirmar ? 'hidden ' : 'flex ') + (embebido ? 'gap-3' : 'gap-6')}>
             <div>
               <label className="block text-rt-11 text-ink-placeholder font-semibold">{t('signupTeacher:fullName')}</label>
               <input required value={name} onChange={(e) => setName(e.target.value)} placeholder={embebido ? t('signupTeacher:fullName') : undefined} className="input-light-underline" />

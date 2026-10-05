@@ -1,20 +1,22 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import { LayoutDashboard, Users, CreditCard, Apple, Dumbbell, Megaphone, ClipboardList, LogOut, Menu, ArrowLeft } from 'lucide-react'
+import { LayoutDashboard, Users, CreditCard, Apple, Dumbbell, Megaphone, ClipboardList, LogOut, Menu, ArrowLeft, Globe } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { CAMPOS_PERFIL, dinero, type Perfil } from './api'
 import { BASIC, PRECIO_PLAN, monedaPlan, precioBasico } from '@/lib/plans'
 import { Tarjeta } from './ui'
 import { Usuarios } from './Usuarios'
+import { Landing } from './Landing'
 import { Stripe, useStripe, ingresosPorMes } from './Stripe'
 import { CONFIGS, SeccionCatalogo } from './Catalogo'
 
-type Seccion = 'resumen' | 'usuarios' | 'stripe' | 'foods' | 'exercises' | 'announcements' | 'anamnesis_templates'
+type Seccion = 'resumen' | 'landing' | 'usuarios' | 'stripe' | 'foods' | 'exercises' | 'announcements' | 'anamnesis_templates'
 
 const MENU: { id: Seccion; label: string; icon: typeof Users; grupo: string }[] = [
   { id: 'resumen', label: 'Resumen', icon: LayoutDashboard, grupo: 'Negocio' },
+  { id: 'landing', label: 'Visitas a la landing', icon: Globe, grupo: 'Negocio' },
   { id: 'usuarios', label: 'Usuarios', icon: Users, grupo: 'Negocio' },
   { id: 'stripe', label: 'Pagos y planes', icon: CreditCard, grupo: 'Negocio' },
   { id: 'foods', label: 'Alimentos', icon: Apple, grupo: 'Catálogo' },
@@ -136,6 +138,7 @@ export function AdminDashboardPage() {
 function Contenido({ seccion, perfiles, recargar }: { seccion: Seccion; perfiles: Perfil[]; recargar: () => Promise<void> }) {
   const stripe = useStripe()
   if (seccion === 'resumen') return <Resumen perfiles={perfiles} stripe={stripe} />
+  if (seccion === 'landing') return <Landing />
   if (seccion === 'usuarios') return <Usuarios perfiles={perfiles} recargar={recargar} />
   if (seccion === 'stripe') return <Stripe perfiles={perfiles} stripe={stripe} />
   return <SeccionCatalogo config={CONFIGS[seccion]} />
