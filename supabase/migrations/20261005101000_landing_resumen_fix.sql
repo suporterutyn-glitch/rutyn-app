@@ -1,26 +1,4 @@
--- Analítica propia de la landing (rutyn.com.br): visitas, origen, dispositivo y embudo hasta el registro.
--- Sin datos personales: un identificador al azar por navegador, sin IP ni correo.
-
-create table if not exists public.landing_events (
-  id bigserial primary key,
-  created_at timestamptz not null default now(),
-  visitor text not null,          -- id al azar guardado en el navegador
-  session text,                   -- id al azar por visita
-  type text not null check (type in ('view', 'cta', 'form_start', 'signup_sent', 'signup', 'plan_click')),
-  label text,                     -- qué botón, qué plan
-  lang text,
-  device text,                    -- mobile | tablet | desktop
-  referrer text,                  -- solo el dominio de origen
-  utm_source text, utm_medium text, utm_campaign text,
-  tz text                         -- zona horaria del navegador (para país aproximado)
-);
-create index if not exists landing_events_fecha_idx on public.landing_events (created_at);
-create index if not exists landing_events_visitor_idx on public.landing_events (visitor, created_at);
-
-alter table public.landing_events enable row level security;
--- Sin políticas: nadie lee ni escribe desde el navegador. Escribe la Edge Function (service role)
--- y lee la función de abajo, solo para administradores.
-
+-- Corrige landing_resumen: la variable `v` chocaba con la columna `v` de los grupos.
 create or replace function public.landing_resumen(p_dias int default 30)
 returns jsonb
 language plpgsql stable security definer set search_path = public as $$
