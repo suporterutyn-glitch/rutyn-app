@@ -30,6 +30,7 @@ export function AdminDashboardPage() {
   const [perfiles, setPerfiles] = useState<Perfil[] | null>(null)
   const [seccion, setSeccion] = useState<Seccion>('resumen')
   const [menuAbierto, setMenuAbierto] = useState(false)
+  const [sinPermiso, setSinPermiso] = useState(false)
 
   const cargarPerfiles = useCallback(async () => {
     const { data } = await supabase.from('profiles').select(CAMPOS_PERFIL).order('created_at', { ascending: false })
@@ -46,11 +47,31 @@ export function AdminDashboardPage() {
     }
     void (async () => {
       const { data } = await supabase.from('admins').select('id').eq('user_id', user.id).maybeSingle()
-      if (!data) { nav('/'); return }
+      if (!data) { setSinPermiso(true); return }
       setIsAdmin(true)
       await cargarPerfiles()
     })()
   }, [authLoading, user, nav, cargarPerfiles])
+
+  if (sinPermiso) {
+    // Entró con una cuenta que no es administradora (lo típico: la de profesor en el celular).
+    const cambiar = async () => {
+      try { sessionStorage.setItem('rutyn.despues', '/admin') } catch { /* sin almacenamiento */ }
+      await supabase.auth.signOut()
+      nav('/login')
+    }
+    return (
+      <div className="w-full min-h-dvh bg-surface-app flex items-center justify-center p-6">
+        <div className="w-full max-w-sm bg-surface-card border border-surface-line rounded-2xl p-6 text-center">
+          <h1 className="text-white text-rt-18 font-bold">Esta cuenta no es administradora</h1>
+          <p className="text-grey-300 text-rt-13 mt-3">Entraste como <b className="text-white break-all">{user?.email}</b>, que no tiene acceso al panel.</p>
+          <p className="text-grey-400 text-rt-13 mt-2">Iniciá sesión con la cuenta de administrador para continuar.</p>
+          <button onClick={() => void cambiar()} className="btn-save mt-5">Cambiar de cuenta</button>
+          <button onClick={() => nav('/')} className="w-full h-11 mt-2 text-grey-300 text-rt-13 font-semibold">Volver a la app</button>
+        </div>
+      </div>
+    )
+  }
 
   if (!isAdmin || !perfiles) {
     return <div className="w-full flex items-center justify-center min-h-screen bg-surface-app text-white text-rt-16">Cargando...</div>
