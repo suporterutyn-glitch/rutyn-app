@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Eye, EyeOff, Check, X as XIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -13,6 +13,7 @@ import { mensajeError } from '@/lib/errores'
 import { useAuth } from '@/lib/auth'
 import { leerCodigo, usarCodigo, profesorDelCodigo, mensajeConvite } from '@/lib/convite'
 import { VerificarCorreo } from '@/components/VerificarCorreo'
+import { useRevisarCorreo } from '@/components/RevisarCorreo'
 
 export function CadastroAlunoPage() {
   const { t, i18n } = useTranslation()
@@ -58,11 +59,15 @@ export function CadastroAlunoPage() {
     return () => clearTimeout(id)
   }, [teacherEmail, hasTeacher])
 
+  const formulario = useRef<HTMLFormElement>(null)
+  const correo = useRevisarCorreo(setEmail, () => formulario.current?.requestSubmit())
+
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     if (!accept) { setError(t('general:acceptTerms')); return }
     if (password !== confirmPassword) { setError(t('signupTeacher:passwordMismatch')); return }
     if (!codigo && hasTeacher && teacherState !== 'ok') { setError(t('signupStudent:teacherNotFound')); return }
+    if (!correo.revisar(email)) return
     setError(null)
     setLoading(true)
     const { data, error } = await supabase.auth.signUp({
@@ -126,7 +131,7 @@ export function CadastroAlunoPage() {
           )}
           {!porConfirmar && <h1 className="text-center text-brand font-bold text-rt-18 mb-4">{t('signupTeacher:fillData')}</h1>}
           {porConfirmar && <VerificarCorreo email={porConfirmar} onVerificado={entrar} onCambiar={() => setPorConfirmar(null)} />}
-          <form onSubmit={submit} className={'flex-col gap-6 ' + (porConfirmar ? 'hidden' : 'flex')}>
+          <form ref={formulario} onSubmit={submit} className={'flex-col gap-6 ' + (porConfirmar ? 'hidden' : 'flex')}>
             <div>
               <label className="block text-rt-11 text-ink-placeholder font-semibold">{t('signupTeacher:fullName')}</label>
               <input required value={name} onChange={(e) => setName(e.target.value)} className="input-light-underline" />
@@ -238,6 +243,7 @@ export function CadastroAlunoPage() {
           </form>
         </div>
       </div>
+      {correo.dialogo}
       {error && (
         <FeedbackDialog kind="error" message={error} onClose={() => setError(null)} />
       )}

@@ -11,6 +11,7 @@ export default textos({
       wrong: 'O código não está correto ou expirou.', change: 'Corrigir o e-mail', spam: 'Se não chegar, veja a caixa de spam.',
       exists: 'Esse e-mail já tem uma conta. Faça login.',
     },
+    emailCheck: { title: 'Seu e-mail está certo?', detail: 'Você escreveu {{typed}}. Parece ter um erro. Quis dizer {{fixed}}?', use: 'Usar @{{fixed}}', keep: 'Meu e-mail está certo assim', edit: 'Corrigir' },
     openApp: 'Abrir o Rutyn',
     showPassword: 'Mostrar senha', acceptTerms: 'Aceite os termos', chooseGender: 'Selecione o gênero',
     rs: {
@@ -43,6 +44,7 @@ export default textos({
       wrong: 'El código no es correcto o venció.', change: 'Corregir el correo', spam: 'Si no llega, revisá la carpeta de spam.',
       exists: 'Ese correo ya tiene una cuenta. Iniciá sesión.',
     },
+    emailCheck: { title: '¿Tu correo está bien escrito?', detail: 'Escribiste {{typed}}. Parece tener un error. ¿Quisiste decir {{fixed}}?', use: 'Usar @{{fixed}}', keep: 'Mi correo está bien así', edit: 'Corregir' },
     openApp: 'Abrir Rutyn',
     showPassword: 'Mostrar contraseña', acceptTerms: 'Aceptá los términos', chooseGender: 'Seleccioná el género',
     rs: {
@@ -75,6 +77,7 @@ export default textos({
       wrong: "The code isn't correct or has expired.", change: 'Fix the email', spam: "If it doesn't arrive, check your spam folder.",
       exists: 'That email already has an account. Sign in.',
     },
+    emailCheck: { title: 'Is your email right?', detail: 'You typed {{typed}}. It looks like a typo. Did you mean {{fixed}}?', use: 'Use @{{fixed}}', keep: 'My email is correct', edit: 'Edit' },
     openApp: 'Open Rutyn',
     showPassword: 'Show password', acceptTerms: 'Please accept the terms', chooseGender: 'Please select a gender',
     rs: {

@@ -16,6 +16,12 @@ export function Usuarios({ perfiles, recargar }: { perfiles: Perfil[]; recargar:
   const [orden, setOrden] = useState<'reciente' | 'alumnos' | 'nombre'>('reciente')
   const [marcados, setMarcados] = useState<Set<string>>(new Set())
   const [lote, setLote] = useState<Lote | null>(null)
+  // Correo confirmado y último ingreso (vienen de auth). Sin confirmar = nunca puso el código.
+  const [acceso, setAcceso] = useState<Record<string, { c: boolean; l: string | null }>>({})
+  const [soloSinConfirmar, setSoloSinConfirmar] = useState(false)
+  useEffect(() => {
+    adminApi<{ users: Record<string, { c: boolean; l: string | null }> }>('users.auth').then((r) => setAcceso(r.users)).catch(() => undefined)
+  }, [perfiles])
 
   const nombres = useMemo(() => Object.fromEntries(perfiles.map((p) => [p.id, p.full_name ?? p.email ?? '—'])), [perfiles])
   const alumnosPor = useMemo(() => {
@@ -33,13 +39,14 @@ export function Usuarios({ perfiles, recargar }: { perfiles: Perfil[]; recargar:
     const t = q.trim().toLowerCase()
     const lista = perfiles.filter((p) =>
       (rol === 'all' || p.role === rol) &&
+      (!soloSinConfirmar || acceso[p.id]?.c === false) &&
       (plan === 'all' || (p.role === 'teacher' && (p.plan ?? 'free') === plan)) &&
       (!t || (p.full_name ?? '').toLowerCase().includes(t) || (p.email ?? '').toLowerCase().includes(t)),
     )
     if (orden === 'alumnos') return [...lista].sort((a, b) => (alumnosPor[b.id]?.total ?? -1) - (alumnosPor[a.id]?.total ?? -1))
     if (orden === 'nombre') return [...lista].sort((a, b) => (a.full_name ?? '').localeCompare(b.full_name ?? ''))
     return lista
-  }, [perfiles, q, rol, plan, orden, alumnosPor])
+  }, [perfiles, q, rol, plan, orden, alumnosPor, soloSinConfirmar, acceso])
 
   // Lo marcado que sigue visible con los filtros actuales: sobre eso actúan los botones.
   const elegidos = useMemo(() => filas.filter((p) => marcados.has(p.id)), [filas, marcados])
@@ -62,6 +69,9 @@ export function Usuarios({ perfiles, recargar }: { perfiles: Perfil[]; recargar:
           <option value="basic">Básico</option>
           <option value="pro">Pro</option>
         </select>
+        <button className={chip(soloSinConfirmar)} onClick={() => setSoloSinConfirmar((v) => !v)}>
+          Sin confirmar ({perfiles.filter((p) => acceso[p.id]?.c === false).length})
+        </button>
         <select className="input-dark !w-auto h-9" value={orden} onChange={(e) => setOrden(e.target.value as typeof orden)}>
           <option value="reciente">Más recientes</option>
           <option value="alumnos">Más alumnos</option>
@@ -86,7 +96,15 @@ export function Usuarios({ perfiles, recargar }: { perfiles: Perfil[]; recargar:
         seleccion={{ ids: marcados, idDe: (p) => p.id, cambiar: setMarcados }}
         cols={[
           { label: 'Nombre', render: (p) => p.full_name ?? '—' },
-          { label: 'Email', render: (p) => p.email ?? '—' },
+          {
+            label: 'Email',
+            render: (p) => (
+              <span className="flex items-center gap-2">
+                {p.email ?? '—'}
+                {acceso[p.id]?.c === false && <Badge tono="warn">Sin confirmar</Badge>}
+              </span>
+            ),
+          },
           { label: 'Rol', render: (p) => (p.role === 'teacher' ? 'Profesor' : 'Alumno') },
           { label: 'Plan / Profesor', render: (p) => (p.role === 'teacher' ? nombrePlan(p.plan) : p.teacher_id ? nombres[p.teacher_id] : '—') },
           {
@@ -103,6 +121,7 @@ export function Usuarios({ perfiles, recargar }: { perfiles: Perfil[]; recargar:
             render: (p) => <Badge tono={p.account_status === 'active' ? 'ok' : 'bad'}>{ESTADOS.find((e) => e.v === p.account_status)?.l ?? p.account_status}</Badge>,
           },
           { label: 'Registro', render: (p) => fecha(p.created_at), className: 'text-grey-400' },
+          { label: 'Último ingreso', render: (p) => (acceso[p.id]?.l ? fecha(acceso[p.id].l!) : 'nunca'), className: 'text-grey-400' },
         ]}
       />
 

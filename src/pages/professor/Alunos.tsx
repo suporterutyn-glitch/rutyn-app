@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Search, UserPlus, X, User as UserIcon, Phone, MoreVertical, Link2, Copy, Check } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -16,6 +16,7 @@ import { idiomaDe } from '@/lib/catalogos'
 import { mensajeError } from '@/lib/errores'
 import { limiteDePlan } from '@/lib/plans'
 import { urlConvite } from '@/lib/convite'
+import { useRevisarCorreo } from '@/components/RevisarCorreo'
 
 type Student = {
   id: string
@@ -317,8 +318,12 @@ function NewStudentSheet({ profile, onClose, onCreated }: { profile: any; onClos
   const horas = Number(hours.replace(',', '.')) || 0
   const total = format === 'hourly' ? valor * horas : valor
 
+  const correo = useRevisarCorreo(setEmail, () => guardarRef.current())
+  const guardarRef = useRef<() => void>(() => undefined)
+
   async function save() {
     if (!name.trim() || !email.trim()) { setError(t('students:nameHint')); return }
+    if (!correo.revisar(email)) return
     setSaving(true)
     setError(null)
 
@@ -357,6 +362,8 @@ function NewStudentSheet({ profile, onClose, onCreated }: { profile: any; onClos
       setSaving(false)
     }
   }
+
+  guardarRef.current = () => { void save() }
 
   return (
     <FullScreenSheet title={t('students:registerStudent')} onClose={onClose}>
@@ -409,6 +416,7 @@ function NewStudentSheet({ profile, onClose, onCreated }: { profile: any; onClos
         </button>
       </div>
 
+      {correo.dialogo}
       {error && <FeedbackDialog kind="error" message={error} onClose={() => setError(null)} />}
     </FullScreenSheet>
   )

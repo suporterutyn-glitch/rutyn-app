@@ -12,6 +12,7 @@ import { idiomaDe } from '@/lib/catalogos'
 import { mensajeError } from '@/lib/errores'
 import { enIframe, abrirFuera } from '@/lib/embed'
 import { VerificarCorreo } from '@/components/VerificarCorreo'
+import { useRevisarCorreo } from '@/components/RevisarCorreo'
 import type { Session } from '@supabase/supabase-js'
 
 export function CadastroProfessorPage() {
@@ -47,11 +48,15 @@ export function CadastroProfessorPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const formulario = useRef<HTMLFormElement>(null)
+  const correo = useRevisarCorreo(setEmail, () => formulario.current?.requestSubmit())
+
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     if (!accept) { setError(t('general:acceptTerms')); return }
     if (!gender) { setError(t('general:chooseGender')); return }
     if (password !== confirmPassword) { setError(t('signupTeacher:passwordMismatch')); return }
+    if (!correo.revisar(email)) return
     setError(null)
     setLoading(true)
     const { data, error } = await supabase.auth.signUp({
@@ -116,7 +121,7 @@ export function CadastroProfessorPage() {
             !porConfirmar && <h1 className="text-center text-brand font-bold text-rt-18 mb-4">{t('signupTeacher:fillData')}</h1>
           )}
           {porConfirmar && <VerificarCorreo email={porConfirmar} onVerificado={entrar} onCambiar={() => setPorConfirmar(null)} />}
-          <form onSubmit={submit} className={'flex-col ' + (porConfirmar ? 'hidden ' : 'flex ') + (embebido ? 'gap-3' : 'gap-6')}>
+          <form ref={formulario} onSubmit={submit} className={'flex-col ' + (porConfirmar ? 'hidden ' : 'flex ') + (embebido ? 'gap-3' : 'gap-6')}>
             <div>
               <label className="block text-rt-11 text-ink-placeholder font-semibold">{t('signupTeacher:fullName')}</label>
               <input required value={name} onChange={(e) => setName(e.target.value)} placeholder={embebido ? t('signupTeacher:fullName') : undefined} className="input-light-underline" />
@@ -200,6 +205,7 @@ export function CadastroProfessorPage() {
           </form>
         </div>
       </div>
+      {correo.dialogo}
       {error && (
         <FeedbackDialog kind="error" message={error} onClose={() => setError(null)} />
       )}

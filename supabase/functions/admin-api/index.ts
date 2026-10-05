@@ -4,6 +4,7 @@
 //   'user.update'    { id, fields }   edita un perfil (incluye plan, vínculo y estado de cuenta)
 //   'user.delete'    { id }           borra la cuenta (auth + perfil en cascada) y cancela su suscripción de Stripe
 //   'users.bulk'     { ids, op }      op: 'block' | 'unblock' | 'delete' sobre varias cuentas
+//   'users.auth'                      correo confirmado y último ingreso de cada cuenta
 //   'user.detail'    { id }           profesor: sus alumnos y lo que hace con cada uno; alumno: su actividad
 //   'row.save'       { table, row }   crea/edita una fila del catálogo o contenido global
 //   'row.delete'     { table, id }
@@ -86,6 +87,18 @@ Deno.serve(async (req: Request) => {
           hechas = count ?? objetivo.length
         }
         return json({ ok: true, done: hechas, skipped: protegidas.size, failed: fallos })
+      }
+
+      case 'users.auth': {
+        // Qué cuentas confirmaron su correo y cuándo entraron por última vez (eso vive en auth, no en profiles).
+        const out: Record<string, { c: boolean; l: string | null }> = {}
+        for (let pagina = 1; pagina <= 20; pagina++) {
+          const { data: lote, error } = await db.auth.admin.listUsers({ page: pagina, perPage: 1000 })
+          if (error) return json({ error: error.message }, 400)
+          for (const u of lote.users) out[u.id] = { c: !!u.email_confirmed_at, l: u.last_sign_in_at ?? null }
+          if (lote.users.length < 1000) break
+        }
+        return json({ users: out })
       }
 
       case 'user.detail': {
