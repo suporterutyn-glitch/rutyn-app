@@ -86,7 +86,7 @@ export async function asignarRutina(opts: { rutinaId: string; alumnoId: string; 
 }
 
 /** Rutina vacía creada directamente en el alumno. */
-export async function crearRutinaAlumno(opts: { alumnoId: string; profesorId: string; nombre: string; difficulty: string | null; objective: string | null; periodo: Periodo; posicion: number }) {
+export async function crearRutinaAlumno(opts: { alumnoId: string; profesorId: string; profesorNombre?: string | null; nombre: string; difficulty: string | null; objective: string | null; periodo: Periodo; posicion: number }) {
   const { data: r, error } = await supabase.from('routines')
     .insert({ owner_id: opts.profesorId, student_id: opts.alumnoId, name: opts.nombre, difficulty: opts.difficulty, objective: opts.objective })
     .select('id').single()
@@ -96,6 +96,8 @@ export async function crearRutinaAlumno(opts: { alumnoId: string; profesorId: st
     ...opts.periodo, estimated_workouts: estimarTreinos(opts.periodo), position: opts.posicion, data: { exercises: [] },
   })
   if (e2) throw e2
+  // Creada directo en el alumno: también se le avisa (como al asignar una de Mis Proyectos).
+  await avisar(opts.alumnoId, aviso('newRoutine', { who: opts.profesorNombre ?? null, name: opts.nombre }))
   return r.id as string
 }
 
@@ -141,7 +143,7 @@ export async function asignarDieta(opts: { dieta: Dieta; alumnoId: string; profe
 }
 
 /** Dieta vacía creada directamente en el alumno. */
-export async function crearDietaAlumno(opts: { alumnoId: string; profesorId: string; nombre: string; goal: string }) {
+export async function crearDietaAlumno(opts: { alumnoId: string; profesorId: string; profesorNombre?: string | null; nombre: string; goal: string }) {
   const { data, error } = await supabase.from('diets')
     .insert({ owner_id: opts.profesorId, student_id: opts.alumnoId, name: opts.nombre, goal: opts.goal, position: 0 }).select('id').single()
   if (error) throw error
@@ -149,6 +151,7 @@ export async function crearDietaAlumno(opts: { alumnoId: string; profesorId: str
     student_id: opts.alumnoId, teacher_id: opts.profesorId, diet_id: data.id, name: opts.nombre, data: { goal: opts.goal, meals: [] },
   })
   if (e2) throw e2
+  await avisar(opts.alumnoId, aviso('newDiet', { who: opts.profesorNombre ?? null, name: opts.nombre }))
   return data.id as string
 }
 

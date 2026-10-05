@@ -324,7 +324,7 @@ function FormRotinaAluno({ alumno, asignada, contrato, posicion, onCerrar, onLis
       } else {
         let primera: string | undefined
         for (let i = 0; i < validos.length; i++) {
-          const id = await crearRutinaAlumno({ alumnoId: alumno.id, profesorId: profile.id, nombre: validos[i], difficulty: dificultad || null, objective: objetivo || null, periodo, posicion: posicion + i })
+          const id = await crearRutinaAlumno({ alumnoId: alumno.id, profesorId: profile.id, profesorNombre: profile.full_name ?? null, nombre: validos[i], difficulty: dificultad || null, objective: objetivo || null, periodo, posicion: posicion + i })
           primera ??= id
         }
         onListo()

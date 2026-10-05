@@ -308,7 +308,7 @@ function DietSheet({ dieta, alumno, posicion, onClose, onCreada, onEditada }: {
     }
     if (alumno) {
       try {
-        const id = await crearDietaAlumno({ alumnoId: alumno.id, profesorId: profile.id, nombre: nombre.trim(), goal: objetivo })
+        const id = await crearDietaAlumno({ alumnoId: alumno.id, profesorId: profile.id, profesorNombre: profile.full_name ?? null, nombre: nombre.trim(), goal: objetivo })
         if (comidas.length > 0) {
           const { error: e2 } = await supabase.from('meals').insert(comidas.map((c, i) => ({ diet_id: id, name: c.name, time_of_day: c.time, meal_type: c.meal_type, position: i })))
           if (e2) throw e2
