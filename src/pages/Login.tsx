@@ -12,6 +12,16 @@ import { mensajeError } from '@/lib/errores'
 
 const CLAVE_EMAIL = 'rutyn.savedEmail'
 
+// Si llegó al login desde una pantalla que pide sesión (por ejemplo /admin), vuelve ahí al entrar.
+function destinoTrasLogin() {
+  try {
+    const d = sessionStorage.getItem('rutyn.despues')
+    sessionStorage.removeItem('rutyn.despues')
+    if (d && d.startsWith('/') && !d.startsWith('//')) return d
+  } catch { /* sin almacenamiento: va al inicio */ }
+  return '/'
+}
+
 export function LoginPage() {
   const { t } = useTranslation()
   const nav = useNavigate()
@@ -80,7 +90,7 @@ export function LoginPage() {
     } catch {
       // sin almacenamiento no se recuerda, pero el login ya fue exitoso
     }
-    nav('/', { replace: true })
+    nav(destinoTrasLogin(), { replace: true })
   }
 
   const lineaError = 'border-b-2 border-danger'
@@ -91,7 +101,7 @@ export function LoginPage() {
       {porConfirmar && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 px-6">
           <div className="w-full max-w-[380px] bg-surface-light rounded-[20px] p-6">
-            <VerificarCorreo email={porConfirmar} reenviarAlAbrir onVerificado={() => nav('/', { replace: true })} onCambiar={() => setPorConfirmar(null)} />
+            <VerificarCorreo email={porConfirmar} reenviarAlAbrir onVerificado={() => nav(destinoTrasLogin(), { replace: true })} onCambiar={() => setPorConfirmar(null)} />
           </div>
         </div>
       )}

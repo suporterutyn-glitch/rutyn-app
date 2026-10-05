@@ -21,6 +21,7 @@ export default textos({
       done: 'Senha atualizada com sucesso.', newPassword: 'Nova senha', confirmPassword: 'Confirmar senha', save: 'Salvar nova senha',
     },
     cfg: {
+      admin: 'Painel de administração',
       push: 'Notificações push', togglePush: 'Ativar ou desativar notificações push', pushError: 'Erro ao ativar',
       deleteQ: 'Excluir sua conta?', deleteDetail: 'Sua conta fica marcada para exclusão e você sai do aplicativo.', delete: 'Excluir',
     },
@@ -52,6 +53,7 @@ export default textos({
       done: 'Contraseña actualizada.', newPassword: 'Nueva contraseña', confirmPassword: 'Confirmar contraseña', save: 'Guardar nueva contraseña',
     },
     cfg: {
+      admin: 'Panel de administración',
       push: 'Notificaciones push', togglePush: 'Activar o desactivar notificaciones push', pushError: 'Error al activar',
       deleteQ: '¿Eliminar tu cuenta?', deleteDetail: 'Tu cuenta queda marcada para eliminación y salís de la aplicación.', delete: 'Eliminar',
     },
@@ -83,6 +85,7 @@ export default textos({
       done: 'Password updated.', newPassword: 'New password', confirmPassword: 'Confirm password', save: 'Save new password',
     },
     cfg: {
+      admin: 'Admin panel',
       push: 'Push notifications', togglePush: 'Turn push notifications on or off', pushError: 'Could not turn on',
       deleteQ: 'Delete your account?', deleteDetail: 'Your account will be marked for deletion and you will be logged out.', delete: 'Delete',
     },

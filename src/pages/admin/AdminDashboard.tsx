@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import { LayoutDashboard, Users, CreditCard, Apple, Dumbbell, Megaphone, ClipboardList, LogOut, Menu } from 'lucide-react'
+import { LayoutDashboard, Users, CreditCard, Apple, Dumbbell, Megaphone, ClipboardList, LogOut, Menu, ArrowLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { CAMPOS_PERFIL, dinero, type Perfil } from './api'
@@ -38,7 +38,12 @@ export function AdminDashboardPage() {
 
   useEffect(() => {
     if (authLoading) return
-    if (!user) { nav('/login'); return }
+    if (!user) {
+      // Después de iniciar sesión vuelve al panel (en el celular no hay barra para escribir /admin).
+      try { sessionStorage.setItem('rutyn.despues', '/admin') } catch { /* sin almacenamiento */ }
+      nav('/login')
+      return
+    }
     void (async () => {
       const { data } = await supabase.from('admins').select('id').eq('user_id', user.id).maybeSingle()
       if (!data) { nav('/'); return }
@@ -56,7 +61,7 @@ export function AdminDashboardPage() {
   return (
     <div className="w-full min-h-screen bg-surface-app md:flex">
       <aside className={
-        'fixed md:sticky top-0 left-0 z-[70] h-screen w-64 shrink-0 bg-surface-card border-r border-surface-line flex flex-col transition-transform ' +
+        'fixed md:sticky top-0 left-0 z-[70] h-dvh w-64 shrink-0 bg-surface-card border-r border-surface-line flex flex-col transition-transform ' +
         (menuAbierto ? 'translate-x-0' : '-translate-x-full md:translate-x-0')
       }>
         <div className="px-5 h-16 flex items-center border-b border-surface-line">
@@ -81,6 +86,9 @@ export function AdminDashboardPage() {
         </nav>
         <div className="p-4 border-t border-surface-line">
           <div className="text-grey-500 text-rt-11 truncate mb-2">{user?.email}</div>
+          <button onClick={() => nav('/')} className="w-full flex items-center justify-center gap-2 h-9 mb-2 rounded-lg border border-surface-line text-grey-300 text-rt-12 font-semibold">
+            <ArrowLeft size={15} /> Volver a la app
+          </button>
           <button
             onClick={async () => { await supabase.auth.signOut(); nav('/') }}
             className="w-full flex items-center justify-center gap-2 h-9 rounded-lg border border-surface-line text-grey-300 text-rt-12 font-semibold"

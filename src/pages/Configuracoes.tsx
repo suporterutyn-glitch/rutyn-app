@@ -1,7 +1,7 @@
 import { URL_SOPORTE } from '@/lib/soporte'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, User, Wallet, Lock, FileText, MessageCircle, LogOut, Trash2, Globe, Bell } from 'lucide-react'
+import { ArrowLeft, User, Wallet, Lock, FileText, MessageCircle, LogOut, Trash2, Globe, Bell, ShieldCheck } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
@@ -15,6 +15,12 @@ export function ConfiguracoesPage() {
   const nav = useNavigate()
   const { t, i18n } = useTranslation()
   const { profile, signOut } = useAuth()
+  // El panel de administración solo se ofrece a quien está en la tabla admins.
+  const [esAdmin, setEsAdmin] = useState(false)
+  useEffect(() => {
+    if (!profile?.id) return
+    void supabase.from('admins').select('id').eq('user_id', profile.id).maybeSingle().then(({ data }) => setEsAdmin(!!data))
+  }, [profile?.id])
   const isTeacher = profile?.role === 'teacher'
   const [deleting, setDeleting] = useState(false)
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false)
@@ -101,6 +107,7 @@ export function ConfiguracoesPage() {
       )}
 
       <ul className="flex flex-col gap-3">
+        {esAdmin && <MenuItem icon={ShieldCheck} label={t('general:cfg.admin')} onClick={() => nav('/admin')} />}
         <MenuItem icon={User} label={t('settings:profile')} onClick={() => nav(isTeacher ? '/professor/perfil' : '/aluno/perfil')} />
         {isTeacher && (
           <>
