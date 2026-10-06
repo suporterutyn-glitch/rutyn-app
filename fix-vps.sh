@@ -52,6 +52,14 @@ location ~* ^/assets/.+\.(js|css)$ {
     add_header Cache-Control "public, max-age=31536000, immutable";
 }
 
+# Videos de los tutoriales (los usa la landing): nginx los sirve directo del disco porque
+# soporta pedidos por rango, que iPhone exige para reproducir video.
+location /tutoriales/ {
+    alias /var/www/rutyn/app/dist/tutoriales/;
+    add_header Cache-Control "public, max-age=604800";
+    add_header Access-Control-Allow-Origin "*";
+}
+
 location / {
     proxy_pass http://rutynapp;
     proxy_http_version 1.1;
