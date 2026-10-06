@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Share2, Dumbbell, Clock, Weight } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
@@ -8,6 +8,9 @@ import { EsforcoPercebido } from './EsforcoPercebido'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { mensajeError } from '@/lib/errores'
 import { etiquetaDe, gruposMusculares as CATALOGO_GRUPOS } from '@/lib/catalogos'
+import { CompartirTreino } from '@/components/aluno/CompartirTreino'
+import { INSTAGRAM_RUTYN } from '@/lib/compartirTreino'
+import { localeDe } from '@/lib/fechas'
 
 type SerieHecha = { done?: boolean; load?: string; reps?: number }
 type ExHecho = { name: string; muscle_group?: string | null; series?: SerieHecha[] }
@@ -24,6 +27,13 @@ export function TreinoResumoPage() {
   const [ejercicios, setEjercicios] = useState<ExHecho[]>([])
   const [esforcoEnviado, setEsforcoEnviado] = useState(!sid)
   const [error, setError] = useState<string | null>(null)
+  const { id: rutinaId } = useParams()
+  const [rutina, setRutina] = useState<string | null>(null)
+  const [compartiendo, setCompartiendo] = useState(false)
+  useEffect(() => {
+    if (!rutinaId) return
+    void supabase.from('student_routines').select('name').eq('id', rutinaId).maybeSingle().then(({ data }) => setRutina((data as { name?: string } | null)?.name ?? null))
+  }, [rutinaId])
 
   useEffect(() => {
     if (!sid) return
@@ -62,15 +72,29 @@ export function TreinoResumoPage() {
   const s = dur % 60
   const tiempo = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 
-  async function compartir() {
-    const texto = t('treino:shareText', { n: ejercicios.length, kg: pesoTotal, time: tiempo })
-    try {
-      if (navigator.share) await navigator.share({ text: texto })
-      else await navigator.clipboard.writeText(texto)
-    } catch {
-      // Cancelar el compartir no es un error que valga la pena mostrar.
-    }
+  // Datos de la imagen para Instagram: día, peso levantado y resumen de lo hecho hoy.
+  const loc = localeDe(i18n.language)
+  const hoy = new Date()
+  const diaSemana = hoy.toLocaleDateString(loc, { weekday: 'long' })
+  const seriesHechas = Number(sp.get('series')) || ejercicios.reduce((n, ex) => n + (ex.series ?? []).filter((x) => x.done).length, 0)
+  const kgTexto = Math.round(pesoTotal).toLocaleString(loc)
+  const tiempoCorto = h > 0 ? `${h}h ${String(m).padStart(2, '0')}m` : `${m}:${String(s).padStart(2, '0')}`
+  const datosImagen = {
+    titulo: t('treino:cardTitle'),
+    fecha: `${diaSemana} · ${hoy.toLocaleDateString(loc, { day: 'numeric', month: 'long' })}`,
+    rutina,
+    kg: kgTexto,
+    kgEtiqueta: t('treino:kgLifted'),
+    stats: [
+      { valor: String(ejercicios.length), etiqueta: t('treino:statExercises') },
+      { valor: String(seriesHechas), etiqueta: t('treino:statSets') },
+      { valor: tiempoCorto, etiqueta: t('treino:statTime') },
+    ],
+    grupos: gruposMusculares.length ? gruposMusculares.map((g) => etiquetaDe(CATALOGO_GRUPOS, g, i18n.language)).join(' · ') : null,
+    alumno: profile?.full_name ?? null,
+    pie: t('treino:cardFooter'),
   }
+  const leyenda = t('treino:caption', { kg: kgTexto, time: tiempoCorto, ig: INSTAGRAM_RUTYN })
 
   if (!esforcoEnviado) return <EsforcoPercebido onEnviar={(n, o) => void enviarEsforco(n, o)} />
 
@@ -132,7 +156,7 @@ export function TreinoResumoPage() {
 
         <div className="mt-auto pt-8 flex flex-col gap-3">
           <button
-            onClick={() => void compartir()}
+            onClick={() => setCompartiendo(true)}
             className="h-[52px] rounded-[12px] border border-grey-300 text-grey-900 text-rt-15 font-semibold flex items-center justify-center gap-2"
           >
             <Share2 size={18} /> {t('treino:share')}
@@ -143,6 +167,7 @@ export function TreinoResumoPage() {
           >{t('treino:backToWorkouts')}</button>
         </div>
 
+        {compartiendo && <CompartirTreino datos={datosImagen} leyenda={leyenda} onCerrar={() => setCompartiendo(false)} />}
         {error && <FeedbackDialog kind="error" message={error} onClose={() => setError(null)} />}
       </div>
     </div>
