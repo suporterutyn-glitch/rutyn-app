@@ -19,7 +19,8 @@ type Charge = { id: string; amount: number; due_date: string; status: string; fo
 type Hydration = { ml: number; target_ml: number }
 
 /** Portugués: segunda a domingo. El diseño muestra S T Q Q S S D. */
-const DIAS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D']
+// Iniciales de lunes a domingo en el idioma del alumno (el 2024-01-01 fue lunes).
+const diasSemana = () => Array.from({ length: 7 }, (_, i) => new Date(2024, 0, 1 + i).toLocaleDateString(localeDe(), { weekday: 'narrow' }).toUpperCase())
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10)
@@ -29,6 +30,11 @@ export function AlunoHome() {
   const { profile, congeladaDesde } = useAuth()
   const { t, i18n } = useTranslation()
   const nav = useNavigate()
+  const [paisProfe, setPaisProfe] = useState<string | null>(null)
+  useEffect(() => {
+    if (!profile?.teacher_id) return
+    void supabase.from('profiles').select('country').eq('id', profile.teacher_id).maybeSingle().then(({ data }) => setPaisProfe((data as { country?: string | null } | null)?.country ?? null))
+  }, [profile?.teacher_id])
   const [counter, setCounter] = useState<{ id: string; amount: number; format: string; frequency: number; teacher: string } | null>(null)
   const [charge, setCharge] = useState<Charge | null>(null)
   const [hydration, setHydration] = useState<Hydration>({ ml: 0, target_ml: 2500 })
@@ -191,7 +197,7 @@ export function AlunoHome() {
             <div className="text-white text-rt-20 font-bold mt-1">
               {estadoPago === 'ok'
                 ? t('aluno:paymentOk')
-                : formatMoney(Number(charge!.amount), currencyOf(profile?.country))}
+                : formatMoney(Number(charge!.amount), currencyOf(paisProfe ?? profile?.country))}
             </div>
             <div className="text-white/80 text-rt-11 mt-1">
               {estadoPago === 'ok'
@@ -312,7 +318,7 @@ export function AlunoHome() {
         </div>
         <div className="card-dark p-4">
           <div className="flex justify-between">
-            {DIAS.map((d, i) => (
+            {diasSemana().map((d, i) => (
               <div key={i} className="flex flex-col items-center gap-1.5">
                 <span className="text-rt-10 text-white/50">{d}</span>
                 <div className={
@@ -342,7 +348,7 @@ export function AlunoHome() {
       {counter && (
         <CounterModal
           counter={counter}
-          currency={currencyOf(profile?.country)}
+          currency={currencyOf(paisProfe ?? profile?.country)}
           onAccept={async () => {
             if (!profile?.id) return
             const cur = counter
