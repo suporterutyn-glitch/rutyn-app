@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { WhatsAppInput } from '@/components/WhatsAppInput'
 import { RutynLogo } from '@/components/RutynLogo'
+import { SelectorIdioma } from '@/components/SelectorIdioma'
 import { SelectSheet } from '@/components/SelectSheet'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { countryByCode } from '@/lib/countries'
@@ -117,6 +118,7 @@ export function CadastroAlunoPage() {
           >
             <ArrowLeft size={20} />
           </button>
+          <SelectorIdioma className="absolute right-4 top-[calc(env(safe-area-inset-top)+10px)]" />
           <div className="flex flex-col items-center gap-2.5 pt-2">
             <RutynLogo size={70} />
             <div className="text-white font-bold text-rt-16">{t('signupStudent:greeting')}</div>

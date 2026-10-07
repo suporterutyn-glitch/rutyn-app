@@ -1,6 +1,7 @@
 import { VerificarCorreo } from '@/components/VerificarCorreo'
 import { useEffect, useState } from 'react'
 import { RutynLogo } from '@/components/RutynLogo'
+import { SelectorIdioma } from '@/components/SelectorIdioma'
 import { useNavigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Eye, EyeOff } from 'lucide-react'
@@ -106,6 +107,7 @@ export function LoginPage() {
         </div>
       )}
       <div className="relative z-10 flex flex-col min-h-dvh">
+        <SelectorIdioma className="absolute right-4 top-[calc(env(safe-area-inset-top)+12px)]" />
         <div className="flex-1 flex flex-col items-center justify-center gap-3 px-6 py-8">
           <RutynLogo size={90} />
           <div className="text-white font-black text-rt-22 tracking-tight text-center">
