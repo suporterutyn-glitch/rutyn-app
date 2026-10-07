@@ -1,3 +1,4 @@
+import { countryByCode } from '@/lib/countries'
 import { localeDe } from './fechas'
 
 // Planes del profesor: Brasil paga en reales (Stripe BR solo cobra tarjetas
@@ -44,13 +45,9 @@ export function usd(v: number) {
   return `US$ ${n}`
 }
 
-export const COUNTRY_CURRENCY: Record<string, string> = {
-  BR: 'BRL', PT: 'EUR', ES: 'EUR', UY: 'UYU', AR: 'ARS', BO: 'BOB', PY: 'PYG',
-  CL: 'CLP', CO: 'COP', PE: 'PEN', EC: 'USD', VE: 'USD',
-}
-
+/** Moneda local del país (la de las mensualidades que cobra el profesor). */
 export function currencyOf(country?: string | null) {
-  return COUNTRY_CURRENCY[country ?? 'BR'] ?? 'BRL'
+  return countryByCode(country ?? 'BR')?.currency ?? 'BRL'
 }
 
 /** Sin centavos: para rangos de precio, donde ",00" solo agrega ruido. */
@@ -60,7 +57,7 @@ export function formatMoneyShort(v: number, currency: string) {
 
 export function formatMoney(v: number, currency: string, sinDecimales = false) {
   const locale = currency === 'BRL' ? 'pt-BR' : currency === 'EUR' ? 'pt-PT' : 'es-UY'
-  const noDecimals = sinDecimales || currency === 'PYG' || currency === 'CLP'
+  const noDecimals = sinDecimales || currency === 'PYG' || currency === 'CLP' || sinCentavos(currency)
   try {
     return new Intl.NumberFormat(locale, {
       style: 'currency',
@@ -71,6 +68,11 @@ export function formatMoney(v: number, currency: string, sinDecimales = false) {
   } catch {
     return `${v.toFixed(noDecimals ? 0 : 2)}`
   }
+}
+
+/** Monedas que no usan centavos (yen, won...). */
+function sinCentavos(currency: string) {
+  try { return new Intl.NumberFormat('en', { style: 'currency', currency }).resolvedOptions().maximumFractionDigits === 0 } catch { return false }
 }
 
 // Faixas de preço do professor por país
@@ -90,6 +92,14 @@ export const PRICE_RANGES: Record<string, {
   PE: { hourly: { min: 20, max: 300, step: 5 }, monthly: { min: 200, max: 3000, step: 50 } },
   EC: { hourly: { min: 5, max: 100, step: 5 }, monthly: { min: 50, max: 1000, step: 25 } },
   VE: { hourly: { min: 5, max: 100, step: 5 }, monthly: { min: 50, max: 1000, step: 25 } },
+  MX: { hourly: { min: 100, max: 2000, step: 50 }, monthly: { min: 500, max: 10000, step: 100 } },
+}
+
+const MONEDAS_FUERTES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'CHF']
+
+/** Rango de precios del país; sin tabla propia, el de dólares/euros o el genérico. */
+export function rangoDePrecios(country?: string | null) {
+  return PRICE_RANGES[country ?? 'BR'] ?? (MONEDAS_FUERTES.includes(currencyOf(country)) ? PRICE_RANGES.EC : PRICE_RANGES.BR)
 }
 
 /** Lee un monto escrito a mano: "150", "150,50", "1.500,50" o "150.50". NaN si no es un número. */

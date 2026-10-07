@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Profile } from '@/lib/auth'
-import { PRICE_RANGES, currencyOf, formatMoney } from '@/lib/plans'
+import { rangoDePrecios, currencyOf, formatMoney } from '@/lib/plans'
 import { DarkSelectSheet, DarkMultiSheet } from '@/components/DarkSheets'
-import { COUNTRIES, nombrePais } from '@/lib/countries'
+import { CampoInterno } from '@/components/CampoInterno'
+import { buscarPaises, nombrePais } from '@/lib/countries'
 import { atuacoes, especialidades, formatosTrabalho, clientesIdeais, etiqueta } from '@/lib/catalogos'
 import { useEstados } from '@/lib/geo'
 
@@ -13,7 +14,7 @@ type Formato = 'hour' | 'month'
 /** Datos del registro profesional del profesor: los usa "Completar perfil" y "Mi perfil". */
 export function usePerfilProfesional(profile: Profile | null, country: string) {
   const p = profile as any
-  const range = PRICE_RANGES[country] ?? PRICE_RANGES.BR
+  const range = rangoDePrecios(country)
   const [state, setState] = useState(p?.state ?? '')
   const [city, setCity] = useState(p?.city ?? '')
   const [occupation, setOccupation] = useState(p?.occupation ?? '')
@@ -36,7 +37,7 @@ export function usePerfilProfesional(profile: Profile | null, country: string) {
   useEffect(() => {
     if (paisAnterior.current === country) return
     paisAnterior.current = country
-    const r = PRICE_RANGES[country] ?? PRICE_RANGES.BR
+    const r = rangoDePrecios(country)
     setState(''); setCity('')
     setHourly([r.hourly.min, r.hourly.max])
     setMonthly([r.monthly.min, r.monthly.max])
@@ -72,6 +73,7 @@ export function CamposUbicacion({ f, onCountry }: { f: PerfilProfesional; onCoun
   const lang = i18n.language
   const estados = useEstados(f.country)
   const ciudades = estados?.find(([e]) => e === f.state)?.[1] ?? []
+  const sinLista = !!f.country && estados !== null && estados.length === 0
   // Un valor viejo escrito a mano que no está en la lista igual se muestra.
   const conActual = (lista: string[], actual: string) => (actual && !lista.includes(actual) ? [actual, ...lista] : lista)
 
@@ -82,23 +84,39 @@ export function CamposUbicacion({ f, onCountry }: { f: PerfilProfesional; onCoun
           labelInside searchable
           label={t('completeProfile:country')} title={t('completeProfile:country')}
           value={f.country} onChange={onCountry}
-          options={COUNTRIES.map((c) => ({ id: c.code, label: `${c.flag}  ${nombrePais(c, lang)}` }))}
+          options={buscarPaises(lang).map((c) => ({ id: c.code, label: `${c.flag}  ${nombrePais(c, lang)}` }))}
         />
       )}
-      <DarkSelectSheet
-        labelInside searchable
-        label={t('completeProfile:state')} title={t('completeProfile:state')}
-        value={f.state} onChange={(v) => { if (v !== f.state) { f.setState(v); f.setCity('') } }}
-        disabled={!estados}
-        options={conActual((estados ?? []).map(([e]) => e), f.state).map((e) => ({ id: e, label: e }))}
-      />
-      <DarkSelectSheet
-        labelInside searchable
-        label={t('completeProfile:city')} title={t('completeProfile:city')}
-        value={f.city} onChange={f.setCity}
-        disabled={!f.state}
-        options={conActual(ciudades, f.city).map((c) => ({ id: c, label: c }))}
-      />
+      {sinLista ? (
+        // País sin lista de estados y ciudades: se escriben a mano.
+        <>
+          <CampoInterno label={t('completeProfile:state')} filled={!!f.state}>
+            <input value={f.state} onChange={(e) => f.setState(e.target.value)} placeholder={t('completeProfile:state')} maxLength={80}
+              className="w-full bg-transparent text-white text-rt-15 outline-none placeholder:text-grey-500" />
+          </CampoInterno>
+          <CampoInterno label={t('completeProfile:city')} filled={!!f.city}>
+            <input value={f.city} onChange={(e) => f.setCity(e.target.value)} placeholder={t('completeProfile:city')} maxLength={80}
+              className="w-full bg-transparent text-white text-rt-15 outline-none placeholder:text-grey-500" />
+          </CampoInterno>
+        </>
+      ) : (
+        <>
+          <DarkSelectSheet
+            labelInside searchable
+            label={t('completeProfile:state')} title={t('completeProfile:state')}
+            value={f.state} onChange={(v) => { if (v !== f.state) { f.setState(v); f.setCity('') } }}
+            disabled={!estados}
+            options={conActual((estados ?? []).map(([e]) => e), f.state).map((e) => ({ id: e, label: e }))}
+          />
+          <DarkSelectSheet
+            labelInside searchable
+            label={t('completeProfile:city')} title={t('completeProfile:city')}
+            value={f.city} onChange={f.setCity}
+            disabled={!f.state}
+            options={conActual(ciudades, f.city).map((c) => ({ id: c, label: c }))}
+          />
+        </>
+      )}
     </>
   )
 }

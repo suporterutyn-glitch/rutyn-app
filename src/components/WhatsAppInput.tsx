@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronDown, X } from 'lucide-react'
-import { COUNTRIES, nombrePais, type Country } from '@/lib/countries'
+import { ChevronDown, Search, X } from 'lucide-react'
+import { COUNTRIES, buscarPaises, countryByCode, nombrePais, type Country } from '@/lib/countries'
 
 type Props = {
   countryCode: string
@@ -25,7 +25,9 @@ export function WhatsAppInput({ countryCode, onCountry, value, onChange, label =
   const caja = variant === 'dark'
   const textoClaro = variant !== 'light'
   const [open, setOpen] = useState(false)
-  const country = COUNTRIES.find((c) => c.code === countryCode) ?? COUNTRIES[0]
+  const [q, setQ] = useState('')
+  const country = countryByCode(countryCode) ?? COUNTRIES[0]
+  const paises = open ? buscarPaises(lang, q) : []
 
   return (
     <div>
@@ -36,7 +38,7 @@ export function WhatsAppInput({ countryCode, onCountry, value, onChange, label =
             : 'flex items-center gap-2 border-b border-ink-underline focus-within:border-brand py-2')}>
         <button
           type="button"
-          onClick={() => setOpen(true)}
+          onClick={() => { setQ(''); setOpen(true) }}
           className={'flex items-center gap-1 text-rt-13 font-medium ' + (textoClaro ? 'text-white' : 'text-ink-dark')}
         >
           <span className="text-xl leading-none">{country.flag}</span>
@@ -56,7 +58,7 @@ export function WhatsAppInput({ countryCode, onCountry, value, onChange, label =
       {open && (
         <div className="fixed inset-0 z-50 flex items-end bg-black/60" onClick={() => setOpen(false)}>
           <div
-            className="w-full max-w-app mx-auto bg-white rounded-t-card max-h-[70dvh] overflow-y-auto"
+            className="w-full max-w-app mx-auto bg-white rounded-t-card h-[70dvh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="sticky top-0 bg-white pt-3 pb-2 flex flex-col items-center border-b border-grey-200">
@@ -69,9 +71,21 @@ export function WhatsAppInput({ countryCode, onCountry, value, onChange, label =
                   <X size={16} className="text-black/70" />
                 </button>
               </div>
+              <div className="w-full px-4 mt-2">
+                <div className="flex items-center gap-2 rounded-[12px] bg-grey-100 border border-grey-200 focus-within:border-brand px-3 h-10">
+                  <Search size={18} className="text-brand shrink-0" />
+                  <input
+                    value={q}
+                    onChange={(e) => setQ(e.target.value)}
+                    placeholder={t('general:ui.search')}
+                    className="flex-1 bg-transparent text-black/80 text-rt-14 outline-none placeholder:text-grey-500"
+                  />
+                </div>
+              </div>
             </div>
             <ul>
-              {COUNTRIES.map((c: Country) => (
+              {paises.length === 0 && <li className="text-center text-rt-13 text-grey-500 py-6">{t('general:ui.nothingFound')}</li>}
+              {paises.map((c: Country) => (
                 <li
                   key={c.code}
                   className={

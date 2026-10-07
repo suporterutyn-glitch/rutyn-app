@@ -10,7 +10,7 @@ import { ActivarAvisos } from '@/components/ActivarAvisos'
 import { InstalarApp } from '@/components/InstalarApp'
 import { WeekCalendar } from '@/components/WeekCalendar'
 import { localeDe } from '@/lib/fechas'
-import { limiteDePlan, planVisible } from '@/lib/plans'
+import { currencyOf, limiteDePlan, planVisible } from '@/lib/plans'
 
 type Stats = {
   active_students: number
@@ -28,11 +28,6 @@ function formatMoney(v: number, currency: string) {
   } catch { return `${v.toFixed(2)}` }
 }
 
-const COUNTRY_CURRENCY: Record<string, string> = {
-  BR: 'BRL', PT: 'EUR', ES: 'EUR', UY: 'UYU', AR: 'ARS', BO: 'BOB', PY: 'PYG',
-  CL: 'CLP', CO: 'COP', PE: 'PEN', EC: 'USD', VE: 'USD',
-}
-
 export function ProfessorHome() {
   const { profile } = useAuth()
   const { t } = useTranslation()
@@ -43,7 +38,7 @@ export function ProfessorHome() {
   const [loading, setLoading] = useState(true)
   const [showMoreAppointments, setShowMoreAppointments] = useState(false)
 
-  const currency = COUNTRY_CURRENCY[profile?.country ?? 'BR'] ?? 'BRL'
+  const currency = currencyOf(profile?.country)
   const plan = planVisible(profile?.plan)
   const planLimit = limiteDePlan(profile)
   const firstName = profile?.full_name?.split(' ')[0] ?? t('prof:home.teacher')

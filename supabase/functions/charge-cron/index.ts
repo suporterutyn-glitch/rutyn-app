@@ -13,12 +13,8 @@
 // deno-lint-ignore-file
 // @ts-ignore
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
+import { MONEDA } from '../_shared/monedas.ts'
 
-// Mismo mapa que src/lib/plans.ts (COUNTRY_CURRENCY).
-const MONEDA: Record<string, string> = {
-  BR: 'BRL', PT: 'EUR', ES: 'EUR', UY: 'UYU', AR: 'ARS', BO: 'BOB', PY: 'PYG',
-  CL: 'CLP', CO: 'COP', PE: 'PEN', EC: 'USD', VE: 'USD',
-}
 
 // Textos de respaldo (pt); la app muestra la versión traducida usando data.key.
 const AVISOS: Record<string, { title: string; body: string }> = {

@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth, type Profile } from '@/lib/auth'
 import { AvatarUpload } from '@/components/AvatarUpload'
 import { WhatsAppInput } from '@/components/WhatsAppInput'
-import { COUNTRIES, countryByCode, nombrePais } from '@/lib/countries'
+import { COUNTRIES, buscarPaises, countryByCode, nombrePais } from '@/lib/countries'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { idiomaDe } from '@/lib/catalogos'
 import { detalleError } from '@/lib/errores'
@@ -21,7 +21,10 @@ export function MeuPerfilPage() {
 /** El teléfono se guarda con el prefijo pegado ("+59899..."): el prefijo sale del número, no del país del perfil. */
 function separarTelefono(tel: string | null | undefined, paisPerfil: string) {
   const t = tel ?? ''
-  const pais = [...COUNTRIES].sort((a, b) => b.dial.length - a.dial.length).find((c) => t.startsWith(c.dial))
+  // Varios países comparten prefijo (+1, +7, +44): primero el del perfil, después el prefijo más largo.
+  const delPerfil = countryByCode(paisPerfil)
+  const pais = delPerfil && t.startsWith(delPerfil.dial) ? delPerfil
+    : [...COUNTRIES].sort((a, b) => b.dial.length - a.dial.length).find((c) => t.startsWith(c.dial))
   if (pais) return { pais: pais.code, numero: t.slice(pais.dial.length) }
   return { pais: paisPerfil, numero: t }
 }
@@ -191,15 +194,23 @@ function CampoBloqueado({ label, value }: { label: string; value: string }) {
 function SheetPais({ titulo, lang, value, onChange, onClose }: {
   titulo: string; lang: string; value: string; onChange: (c: string) => void; onClose: () => void
 }) {
+  const { t } = useTranslation()
+  const [q, setQ] = useState('')
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/70" onClick={onClose}>
       <div
-        className="w-full max-w-app rounded-t-[28px] bg-surface-card px-5 pt-6 pb-[calc(env(safe-area-inset-bottom)+24px)] max-h-[70dvh] overflow-y-auto"
+        className="w-full max-w-app rounded-t-[28px] bg-surface-card px-5 pt-6 pb-[calc(env(safe-area-inset-bottom)+24px)] h-[70dvh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-white text-rt-18 font-bold mb-4">{titulo}</h2>
+        <h2 className="text-white text-rt-18 font-bold mb-3">{titulo}</h2>
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder={t('general:ui.search')}
+          className="w-full h-11 rounded-[12px] bg-[#252525] border border-[#333333] focus:border-brand px-3 mb-2 text-white text-rt-14 outline-none placeholder:text-grey-500"
+        />
         <ul className="flex flex-col">
-          {COUNTRIES.map((c) => (
+          {buscarPaises(lang, q).map((c) => (
             <li key={c.code}>
               <button
                 onClick={() => onChange(c.code)}
