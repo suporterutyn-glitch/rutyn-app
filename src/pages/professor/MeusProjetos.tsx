@@ -49,7 +49,13 @@ export function MeusProjetosPage() {
   useEffect(() => {
     const el = marca.current
     if (!el) return
-    const io = new IntersectionObserver(([e]) => setFijo(!e.isIntersecting), { rootMargin: '-1px 0px 0px 0px' })
+    // La barra se pega debajo de la zona segura del teléfono (hora, batería): se mide para saber cuándo quedó fija.
+    const sonda = document.createElement('div')
+    sonda.style.cssText = 'position:fixed;top:0;height:env(safe-area-inset-top);visibility:hidden;pointer-events:none'
+    document.body.appendChild(sonda)
+    const zona = sonda.offsetHeight
+    sonda.remove()
+    const io = new IntersectionObserver(([e]) => setFijo(!e.isIntersecting), { rootMargin: `-${zona + 1}px 0px 0px 0px` })
     io.observe(el)
     return () => io.disconnect()
   }, [])
@@ -91,7 +97,8 @@ export function MeusProjetosPage() {
       {/* Categorías: Rutinas / Ejercicios / Dietas / etc */}
       <div ref={marca} aria-hidden="true" />
       {/* Queda fija arriba al hacer scroll; los filtros de cada pestaña se pegan justo debajo (--proy-top). */}
-      <div className="sticky top-0 z-20 flex gap-2 mb-2 overflow-x-auto no-scrollbar -mx-4 px-4 pt-[calc(env(safe-area-inset-top)+8px)] pb-2 proy-fija md:justify-center">
+      <div className="sticky top-[env(safe-area-inset-top)] z-20 -mx-4 -mt-2 mb-2 proy-fija proy-tabs">
+      <div className="flex gap-2 overflow-x-auto no-scrollbar px-4 pt-2 pb-2 md:justify-center">
         {TABS.map((x) => {
           const on = tab === x.key
           return (
@@ -109,6 +116,7 @@ export function MeusProjetosPage() {
             </button>
           )
         })}
+      </div>
       </div>
 
       {/* Contenido */}

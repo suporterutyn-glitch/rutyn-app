@@ -148,6 +148,12 @@
 /* Barras fijas de Mis Proyectos: sin fondo en reposo; al quedar fijas arriba, un oscuro desenfocado
      detrás de los botones para que la lista que pasa por debajo no moleste. */
   .proy-fija { background: transparent; transition: background-color .15s; }
+  /* Con la barra fija, el mismo fondo cubre la franja de la hora y la batería (sin ocupar lugar en reposo). */
+  .proy-tabs { position: sticky; }
+  [data-fijo] .proy-tabs::before {
+    content: ''; position: absolute; left: 0; right: 0; bottom: 100%; height: env(safe-area-inset-top);
+    background: rgba(8, 8, 8, .7); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  }
   [data-fijo] .proy-fija {
     background: rgba(8, 8, 8, .7);
     -webkit-backdrop-filter: blur(14px);
