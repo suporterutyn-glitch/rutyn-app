@@ -41,7 +41,7 @@ Deno.serve(async (req: Request) => {
   if ((count ?? 0) > 150) return ok()
 
   await db.from('landing_events').insert({
-    type: b.type, visitor, page: ['home', 'oferta'].includes(b.page) ? b.page : 'home', session: corto(b.session, 40), label: corto(b.label, 60),
+    type: b.type, visitor, interno: b.interno === true, page: ['home', 'oferta'].includes(b.page) ? b.page : 'home', session: corto(b.session, 40), label: corto(b.label, 60),
     lang: ['pt', 'es', 'en'].includes(b.lang) ? b.lang : null,
     device: ['mobile', 'tablet', 'desktop'].includes(b.device) ? b.device : null,
     referrer: corto(b.referrer, 80), utm_source: corto(b.utm_source, 60), utm_medium: corto(b.utm_medium, 60),

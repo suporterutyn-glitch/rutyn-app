@@ -9,7 +9,7 @@ type Recorrido = {
   visitor: string; primera: string; ultima: string; paginas: string[]; vistas: number
   clic: boolean; formulario: boolean; envio: boolean; registro: boolean; pago: boolean; botones: string[] | null
   device: string | null; tz: string | null; lang: string | null; fuente: string; campana: string | null
-  cuenta: string | null; nombre: string | null; email: string | null
+  cuenta: string | null; nombre: string | null; email: string | null; interno: boolean
 }
 type Profesor = {
   id: string; nombre: string | null; email: string | null; creado: string; origen: 'home' | 'oferta' | 'app'
@@ -18,7 +18,7 @@ type Profesor = {
 }
 type Datos = {
   dias: Dia[]
-  total: { vistas: number; visitantes: number; clics: number; iniciaron: number; enviaron: number; registros: number; planes: number }
+  total: { vistas: number; visitantes: number; clics: number; iniciaron: number; enviaron: number; registros: number; planes: number; equipo: number }
   grupos: Grupo[]
   recorridos: Recorrido[]
 }
@@ -207,7 +207,11 @@ export function Landing() {
                 Solo los que empezaron el registro
               </label>
             </div>
-            <p className="text-grey-500 text-rt-12 mb-3">Cada fila es un navegador (las últimas 300). Muestra hasta dónde llegó y, si se registró, quién es.</p>
+            <p className="text-grey-500 text-rt-12 mb-3">
+              Cada fila es un navegador (las últimas 300). Muestra hasta dónde llegó y, si se registró, quién es.
+              Tus visitas aparecen como <b className="text-warning">Vos / equipo</b> y no suman en los números de arriba{t.equipo ? ` (${t.equipo} en este período)` : ''}.
+              Para marcar un celular o navegador como tuyo, abrí una vez en él <b className="text-white">rutyn.com.br/?soy=equipo</b> (se desmarca con ?soy=visitante). Los navegadores donde entraste a WordPress quedan marcados solos.
+            </p>
             <Tabla<Recorrido>
               rows={d.recorridos.filter((r) => !soloRegistro || r.formulario)}
               vacio="Sin visitas en este período"
@@ -221,7 +225,7 @@ export function Landing() {
                 { label: 'Envió', render: (r) => si(r.envio) },
                 { label: 'Confirmó', render: (r) => si(r.registro) },
                 { label: 'Fue a pagar', render: (r) => si(r.pago) },
-                { label: 'Quién es', render: (r) => (r.nombre || r.email ? <div><div className="text-white">{r.nombre}</div><div className="text-grey-500 text-rt-11">{r.email}</div></div> : <span className="text-grey-600">Anónimo</span>) },
+                { label: 'Quién es', render: (r) => (r.interno ? <span className="text-warning font-semibold">Vos / equipo</span> : r.nombre || r.email ? <div><div className="text-white">{r.nombre}</div><div className="text-grey-500 text-rt-11">{r.email}</div></div> : <span className="text-grey-600">Anónimo</span>) },
               ]}
             />
           </div>
