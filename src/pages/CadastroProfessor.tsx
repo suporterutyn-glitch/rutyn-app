@@ -9,7 +9,6 @@ import { SelectorIdioma } from '@/components/SelectorIdioma'
 import { SelectSheet } from '@/components/SelectSheet'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { countryByCode } from '@/lib/countries'
-import { codigoOferta } from '@/lib/oferta'
 import { idiomaDe } from '@/lib/catalogos'
 import { mensajeError } from '@/lib/errores'
 import { enIframe, abrirFuera } from '@/lib/embed'
@@ -79,7 +78,7 @@ export function CadastroProfessorPage() {
           phone: `${countryByCode(countryCode)?.dial}${phone}`,
           gender,
           language: lang,
-          ...(codigoOferta() ? { oferta: codigoOferta() } : {}),
+          ...origenLanding(),
         },
       },
     })
@@ -228,4 +227,15 @@ export function CadastroProfessorPage() {
       )}
     </div>
   )
+}
+
+/** Registro desde la landing: guarda el id del navegador y la página (portada u oferta) para el panel admin. */
+function origenLanding(): Record<string, string> {
+  const q = new URLSearchParams(window.location.search)
+  if (q.get('embed') !== '1') return {}
+  const v = q.get('v') ?? ''
+  return {
+    landing_page: q.get('oferta') ? 'oferta' : 'home',
+    ...(/^[a-z0-9-]{8,40}$/i.test(v) ? { landing_visitor: v } : {}),
+  }
 }

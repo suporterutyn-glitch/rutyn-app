@@ -1,15 +1,32 @@
 import { useEffect, useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { supabase } from '@/lib/supabase'
-import { Error_, Tarjeta } from './ui'
+import { Error_, Tabla, Tarjeta } from './ui'
 
 type Dia = { dia: string; vistas: number; visitantes: number; iniciaron: number; registros: number }
 type Grupo = { k: string; v: string; n: number; r: number }
+type Recorrido = {
+  visitor: string; primera: string; ultima: string; paginas: string[]; vistas: number
+  clic: boolean; formulario: boolean; envio: boolean; registro: boolean; pago: boolean; botones: string[] | null
+  device: string | null; tz: string | null; lang: string | null; fuente: string; campana: string | null
+  cuenta: string | null; nombre: string | null; email: string | null
+}
+type Profesor = {
+  id: string; nombre: string | null; email: string | null; creado: string; origen: 'home' | 'oferta' | 'app'
+  confirmado: boolean; perfil: boolean; plan: string | null; plan_status: string | null
+  ultimo_ingreso: string | null; alumnos: number; fuente: string | null
+}
 type Datos = {
   dias: Dia[]
   total: { vistas: number; visitantes: number; clics: number; iniciaron: number; enviaron: number; registros: number; planes: number }
   grupos: Grupo[]
+  recorridos: Recorrido[]
 }
+type Pagina = '' | 'home' | 'oferta'
+const PAGINA: Record<string, string> = { home: 'Portada', oferta: 'Oferta', app: 'Directo en la app' }
+const PLAN: Record<string, string> = { free: 'Gratis', basic: 'Básico', pro: 'Pro' }
+const fecha = (iso: string | null) => (iso ? new Date(iso).toLocaleString('es', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—')
+const si = (v: boolean) => (v ? <span className="text-brand font-bold">✓</span> : <span className="text-grey-600">✗</span>)
 
 // País aproximado según la zona horaria del navegador (no se guarda la IP).
 const PAIS: Record<string, string> = {
@@ -67,15 +84,21 @@ function Lista({ titulo, filas, conRegistros = true, total }: { titulo: string; 
 
 export function Landing() {
   const [dias, setDias] = useState(30)
+  const [pagina, setPagina] = useState<Pagina>('')
   const [d, setD] = useState<Datos | null>(null)
+  const [profes, setProfes] = useState<Profesor[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [soloRegistro, setSoloRegistro] = useState(false)
 
   useEffect(() => {
     setD(null); setError(null)
-    supabase.rpc('landing_resumen', { p_dias: dias }).then(({ data, error: e }) => {
+    const p = { p_dias: dias, p_pagina: pagina || null }
+    supabase.rpc('landing_resumen', p).then(({ data, error: e }) => {
       if (e) setError(e.message); else setD(data as Datos)
     })
-  }, [dias])
+    // Profesores registrados: con "Todas" se ven también los que se registraron directo en la app.
+    supabase.rpc('landing_profesores', p).then(({ data }) => setProfes((data as Profesor[]) ?? []))
+  }, [dias, pagina])
 
   const chip = (activo: boolean) =>
     'px-3 h-9 rounded-lg text-rt-12 font-semibold border whitespace-nowrap ' + (activo ? 'bg-brand border-brand text-white' : 'border-grey-700 text-grey-400')
@@ -91,7 +114,11 @@ export function Landing() {
         {[[1, 'Hoy'], [7, '7 días'], [30, '30 días'], [90, '90 días']].map(([n, l]) => (
           <button key={n} className={chip(dias === n)} onClick={() => setDias(n as number)}>{l}</button>
         ))}
-        <span className="text-grey-500 text-rt-12 ml-auto">rutyn.com.br · se cuenta desde el 05/10/2026</span>
+        <span className="w-px h-6 bg-grey-700 mx-1" />
+        {([['', 'Todas'], ['home', 'Portada'], ['oferta', 'Oferta 50%']] as [Pagina, string][]).map(([v, l]) => (
+          <button key={l} className={chip(pagina === v)} onClick={() => setPagina(v)}>{l}</button>
+        ))}
+        <span className="text-grey-500 text-rt-12 ml-auto">{pagina === 'oferta' ? 'rutyn.com.br/oferta · desde el 20/10/2026' : 'rutyn.com.br · se cuenta desde el 05/10/2026'}</span>
       </div>
       <Error_ msg={error} />
       {!d && !error && <div className="text-grey-500 text-rt-13">Cargando…</div>}
@@ -152,9 +179,56 @@ export function Landing() {
             <Lista titulo="Idioma de la página" filas={agrupar(g('idioma'), (v) => IDIOMA[v] ?? v)} total={visitantes} />
             <Lista titulo="Botones más tocados" filas={agrupar(g('boton'), (v) => v)} conRegistros={false} total={Math.max(1, ...g('boton').map((x) => x.n))} />
           </div>
+          <div>
+            <h3 className="text-white text-rt-16 font-bold mb-1">Profesores registrados ({profes.length})</h3>
+            <p className="text-grey-500 text-rt-12 mb-3">Quién se registró en el período, por dónde entró y qué hizo después en la app.</p>
+            <Tabla<Profesor>
+              rows={profes}
+              vacio="Nadie se registró en este período"
+              cols={[
+                { label: 'Profesor', render: (r) => <div><div className="text-white">{r.nombre || '—'}</div><div className="text-grey-500 text-rt-11">{r.email}</div></div> },
+                { label: 'Registro', render: (r) => fecha(r.creado) },
+                { label: 'Entró por', render: (r) => <span className={r.origen === 'oferta' ? 'text-warning font-semibold' : ''}>{PAGINA[r.origen] ?? r.origen}</span> },
+                { label: 'Origen', render: (r) => (r.fuente ? nombreFuente(r.fuente) : '—') },
+                { label: 'Correo', render: (r) => si(r.confirmado) },
+                { label: 'Perfil', render: (r) => si(r.perfil) },
+                { label: 'Alumnos', render: (r) => r.alumnos },
+                { label: 'Plan', render: (r) => <span className={r.plan && r.plan !== 'free' ? 'text-brand font-bold' : ''}>{PLAN[r.plan ?? 'free'] ?? r.plan}</span> },
+                { label: 'Último ingreso', render: (r) => fecha(r.ultimo_ingreso) },
+              ]}
+            />
+          </div>
+
+          <div>
+            <div className="flex flex-wrap items-center gap-3 mb-1">
+              <h3 className="text-white text-rt-16 font-bold">Persona por persona</h3>
+              <label className="flex items-center gap-2 text-grey-400 text-rt-12 ml-auto">
+                <input type="checkbox" className="accent-brand" checked={soloRegistro} onChange={(e) => setSoloRegistro(e.target.checked)} />
+                Solo los que empezaron el registro
+              </label>
+            </div>
+            <p className="text-grey-500 text-rt-12 mb-3">Cada fila es un navegador (las últimas 300). Muestra hasta dónde llegó y, si se registró, quién es.</p>
+            <Tabla<Recorrido>
+              rows={d.recorridos.filter((r) => !soloRegistro || r.formulario)}
+              vacio="Sin visitas en este período"
+              cols={[
+                { label: 'Última visita', render: (r) => fecha(r.ultima) },
+                { label: 'Página', render: (r) => r.paginas.map((p) => PAGINA[p] ?? p).join(' + ') },
+                { label: 'Origen', render: (r) => <div>{nombreFuente(r.fuente)}{r.campana && <div className="text-grey-500 text-rt-11">{r.campana}</div>}</div> },
+                { label: 'Dispositivo', render: (r) => <div>{DISPOSITIVO[r.device ?? ''] ?? '—'}<div className="text-grey-500 text-rt-11">{r.tz ? (PAIS[r.tz] ?? r.tz.replace(/^.*\//, '').replace(/_/g, ' ')) : ''}</div></div> },
+                { label: 'Tocó botón', render: (r) => <span title={(r.botones ?? []).join(' · ')}>{si(r.clic)}</span> },
+                { label: 'Empezó form.', render: (r) => si(r.formulario) },
+                { label: 'Envió', render: (r) => si(r.envio) },
+                { label: 'Confirmó', render: (r) => si(r.registro) },
+                { label: 'Fue a pagar', render: (r) => si(r.pago) },
+                { label: 'Quién es', render: (r) => (r.nombre || r.email ? <div><div className="text-white">{r.nombre}</div><div className="text-grey-500 text-rt-11">{r.email}</div></div> : <span className="text-grey-600">Anónimo</span>) },
+              ]}
+            />
+          </div>
+
           <p className="text-grey-500 text-rt-11">
             Sin cookies ni datos personales: cada navegador tiene un identificador al azar. No se cuentan tus propias visitas cuando estás logueado en WordPress, ni los robots.
-            "reg." = registros completados de quienes llegaron por esa vía.
+            "reg." = registros completados de quienes llegaron por esa vía. El nombre de una persona aparece solo si se registró desde la landing (desde el 20/10/2026).
           </p>
         </>
       )}
