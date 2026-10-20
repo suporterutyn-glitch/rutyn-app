@@ -117,7 +117,8 @@ Deno.serve(async (req: Request) => {
       client_reference_id: prof.id,
       ...(prof.stripe_customer_id ? { customer: prof.stripe_customer_id } : { customer_email: prof.email ?? user.email ?? undefined }),
       line_items: [{ price, quantity: seats }],
-      allow_promotion_codes: true,
+      // Con la oferta el cupón va puesto; Stripe no deja sumar además un código promocional.
+      ...(conOferta(body, user) ? { discounts: [{ coupon: await cuponOferta(s) }] } : { allow_promotion_codes: true }),
       success_url: `${origin}/professor/assinatura?ok=1`,
       cancel_url: `${origin}/professor/assinatura`,
       metadata: meta,
@@ -129,6 +130,28 @@ Deno.serve(async (req: Request) => {
     return json({ error: msg }, msg === 'stripe_not_configured' ? 503 : 500)
   }
 })
+
+// Oferta de lanzamiento (misma que src/lib/oferta.ts): 50% los primeros 3 meses para quien
+// llega por rutyn.com.br/oferta y contrata hasta el 1/11/2026 23:59 (UTC-3).
+const OFERTA = { codigo: 'lanzamiento50', cupon: 'rutyn_lanzamiento50_3m', hasta: Date.parse('2026-11-02T02:59:59Z') }
+
+function conOferta(body: any, user: any) {
+  if (Date.now() > OFERTA.hasta) return false
+  return body.oferta === OFERTA.codigo || user?.user_metadata?.oferta === OFERTA.codigo
+}
+
+/** El cupón se crea solo la primera vez (vence junto con la oferta). */
+async function cuponOferta(s: any): Promise<string> {
+  const c = await s.coupons.retrieve(OFERTA.cupon).catch(() => null)
+  if (c && c.valid) return c.id
+  if (!c) {
+    await s.coupons.create({
+      id: OFERTA.cupon, name: 'Lanzamiento 50% x 3 meses', percent_off: 50,
+      duration: 'repeating', duration_in_months: 3, redeem_by: Math.floor(OFERTA.hasta / 1000),
+    })
+  }
+  return OFERTA.cupon
+}
 
 /** Deshace un cambio de plan agendado (la suscripción sigue como está hoy). */
 async function soltarAgenda(s: any, sub: any, admin: any, profId: string) {

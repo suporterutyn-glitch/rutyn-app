@@ -3,6 +3,7 @@ import { textos } from './textos'
 // Planes del profesor: Gratis (1 alumno), Básico (precio fijo con 2 alumnos + extra por adicional), Pro (ilimitado).
 export default textos({
   pt: {
+    oferta: { title: '{{pct}}% OFF por {{n}} meses', body: 'Oferta de lançamento: assine até {{date}} e pague a metade nos primeiros {{n}} meses. O desconto é aplicado no pagamento.', after: 'Depois de {{n}} meses: {{price}}/mês' },
     completeTitle: 'Termine seu cadastro para assinar', completeBody: 'Seu país define a moeda do pagamento: reais (R$) no Brasil e dólares (US$) nos outros países.',
     title: 'Meu plano', choose: 'Escolha seu plano',
     name: { free: 'Grátis', basic: 'Básico', pro: 'Pro' },
@@ -26,6 +27,7 @@ export default textos({
     calc: { plan: 'Seu plano', month: 'Por mês', each: 'Por aluno', choose: 'Escolher este plano · {{price}}/mês' },
   },
   es: {
+    oferta: { title: '{{pct}}% OFF por {{n}} meses', body: 'Oferta de lanzamiento: contratá hasta el {{date}} y pagá la mitad los primeros {{n}} meses. El descuento se aplica en el pago.', after: 'Después de {{n}} meses: {{price}}/mes' },
     completeTitle: 'Terminá tu registro para suscribirte', completeBody: 'Tu país define la moneda del pago: reales (R$) en Brasil y dólares (US$) en los demás países.',
     title: 'Mi plan', choose: 'Elegí tu plan',
     name: { free: 'Gratis', basic: 'Básico', pro: 'Pro' },
@@ -49,6 +51,7 @@ export default textos({
     calc: { plan: 'Tu plan', month: 'Por mes', each: 'Por alumno', choose: 'Elegir este plan · {{price}}/mes' },
   },
   en: {
+    oferta: { title: '{{pct}}% OFF for {{n}} months', body: 'Launch offer: subscribe by {{date}} and pay half for the first {{n}} months. The discount is applied at checkout.', after: 'After {{n}} months: {{price}}/month' },
     completeTitle: 'Finish your profile to subscribe', completeBody: 'Your country sets the payment currency: Brazilian reais (R$) in Brazil and US dollars (US$) everywhere else.',
     title: 'My plan', choose: 'Choose your plan',
     name: { free: 'Free', basic: 'Basic', pro: 'Pro' },

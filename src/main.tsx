@@ -4,12 +4,14 @@ import '@/lib/i18n'
 import './index.css'
 import App from './App.tsx'
 import { guardarIntencionDesdeUrl } from '@/lib/intencionCompra'
+import { guardarOfertaDesdeUrl } from '@/lib/oferta'
 import { escucharInstalacion } from '@/lib/instalacion'
 
 // Versión publicada (cambia el nombre del archivo JS y fuerza a los navegadores a bajar el nuevo).
 ;(window as unknown as { __RUTYN_BUILD__: string }).__RUTYN_BUILD__ = '2026-10-06.1'
 
 guardarIntencionDesdeUrl()
+guardarOfertaDesdeUrl()
 escucharInstalacion()
 
 // Versión nueva publicada: se busca al volver a la app y se aplica sola si recién se abrió y nadie está escribiendo

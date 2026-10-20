@@ -9,6 +9,7 @@ import { SelectorIdioma } from '@/components/SelectorIdioma'
 import { SelectSheet } from '@/components/SelectSheet'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { countryByCode } from '@/lib/countries'
+import { codigoOferta } from '@/lib/oferta'
 import { idiomaDe } from '@/lib/catalogos'
 import { mensajeError } from '@/lib/errores'
 import { enIframe, abrirFuera } from '@/lib/embed'
@@ -78,6 +79,7 @@ export function CadastroProfessorPage() {
           phone: `${countryByCode(countryCode)?.dial}${phone}`,
           gender,
           language: lang,
+          ...(codigoOferta() ? { oferta: codigoOferta() } : {}),
         },
       },
     })

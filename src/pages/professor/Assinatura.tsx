@@ -9,19 +9,23 @@ import { localeDe } from '@/lib/fechas'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { mensajeError } from '@/lib/errores'
+import { OFERTA, codigoOferta } from '@/lib/oferta'
 
-type Accion = { action: 'checkout'; plan: 'basic' | 'pro'; seats?: number } | { action: 'cancel' | 'resume' | 'portal' }
+type Accion = { action: 'checkout'; plan: 'basic' | 'pro'; seats?: number; oferta?: string } | { action: 'cancel' | 'resume' | 'portal' }
 
 export function AssinaturaPage() {
   const { t } = useTranslation()
   const nav = useNavigate()
   const [params, setParams] = useSearchParams()
-  const { profile, refresh, congeladaDesde } = useAuth()
+  const { profile, refresh, congeladaDesde, user } = useAuth()
   const moneda = monedaPlan(profile?.country)
   const P = PRECIO_PLAN[moneda]
   const fmt = (v: number) => precioPlan(v, moneda)
   const actual = planVisible(profile?.plan)
   const pago = actual !== 'free'
+  // La oferta es para la primera contratación (sin plan pago).
+  const oferta = !pago ? codigoOferta(user) : null
+  const conOferta = (v: number) => (oferta ? v * (100 - OFERTA.porcentaje) / 100 : v)
   const [activos, setActivos] = useState(0)
   const pedidos = Number(params.get('seats')) || 0
   const [n, setN] = useState(() => pedidos || (actual === 'pro' ? MAX_BASIC[moneda] + 1 : profile?.plan_seats || 1))
@@ -89,7 +93,7 @@ export function AssinaturaPage() {
 
   function elegir(plan: 'basic' | 'pro', cantidad: number) {
     if (perfilIncompleto) { irACompletar({ plan, cantidad }); return }
-    const accion: Accion = { action: 'checkout', plan, ...(plan === 'basic' ? { seats: cantidad } : {}) }
+    const accion: Accion = { action: 'checkout', plan, ...(plan === 'basic' ? { seats: cantidad } : {}), ...(oferta ? { oferta } : {}) }
     const baja = (actual === 'pro' && plan === 'basic') || (actual === 'basic' && plan === 'basic' && cantidad < (profile?.plan_seats ?? 0))
     if (pago) setConfirmar({ accion, titulo: t('planes:changeQ'), detalle: baja ? t('planes:downDetail', { date: fin }) : t('planes:changeDetail') })
     else void ejecutar(accion)
@@ -192,6 +196,13 @@ export function AssinaturaPage() {
 
       <div className="text-white text-rt-22 font-bold mb-3">{t('planes:choose')}</div>
 
+      {oferta && (
+        <div className="rounded-card p-4 mb-4 bg-brand/15 border border-brand max-w-xl lg:mx-auto">
+          <div className="text-brand text-rt-16 font-bold">{t('planes:oferta.title', { pct: OFERTA.porcentaje, n: OFERTA.meses })}</div>
+          <div className="text-white/85 text-rt-12 mt-1">{t('planes:oferta.body', { n: OFERTA.meses, date: new Date(OFERTA.hasta).toLocaleDateString(localeDe(), { day: 'numeric', month: 'long' }) })}</div>
+        </div>
+      )}
+
       <div className="rounded-card p-5 mb-4 bg-surface-card border border-brand/40 max-w-xl lg:mx-auto">
         <div className="flex items-center justify-between mb-3">
           <span className="text-white text-rt-14 font-semibold">{t('planes:basic.howMany')}</span>
@@ -207,8 +218,12 @@ export function AssinaturaPage() {
 
         <div className="grid grid-cols-3 gap-2 mt-4 text-center">
           <div><div className="text-white/60 text-rt-11">{t('planes:calc.plan')}</div><div className="text-white text-rt-16 font-bold">{t(`planes:name.${elegido}`)}</div></div>
-          <div><div className="text-white/60 text-rt-11">{t('planes:calc.month')}</div><div className="text-white text-rt-16 font-bold">{fmt(total)}</div></div>
-          <div><div className="text-white/60 text-rt-11">{t('planes:calc.each')}</div><div className="text-white text-rt-16 font-bold">{fmt(total ? total / n : 0)}</div></div>
+          <div>
+            <div className="text-white/60 text-rt-11">{t('planes:calc.month')}</div>
+            {oferta && total > 0 && <div className="text-white/40 text-rt-11 line-through">{fmt(total)}</div>}
+            <div className={'text-rt-16 font-bold ' + (oferta && total > 0 ? 'text-brand' : 'text-white')}>{fmt(conOferta(total))}</div>
+          </div>
+          <div><div className="text-white/60 text-rt-11">{t('planes:calc.each')}</div><div className="text-white text-rt-16 font-bold">{fmt(total ? conOferta(total) / n : 0)}</div></div>
         </div>
 
         {sobran > 0 && (
@@ -225,13 +240,16 @@ export function AssinaturaPage() {
         >
           {esActual ? t('planes:currentPlan')
             : elegido === 'free' ? t('planes:toFree')
-            : t('planes:calc.choose', { price: fmt(total) })}
+            : t('planes:calc.choose', { price: fmt(conOferta(total)) })}
         </button>
         <div className="text-white/50 text-rt-11 text-center mt-2">
           {elegido === 'free' ? t('planes:free.f1')
             : elegido === 'pro' ? t('planes:pro.f1')
             : `${t('planes:basic.includes', { n: BASIC.incluidos })} · ${t('planes:basic.extra', { price: fmt(P.extra) })}`}
         </div>
+        {oferta && elegido !== 'free' && (
+          <div className="text-brand text-rt-11 text-center mt-1">{t('planes:oferta.after', { n: OFERTA.meses, price: fmt(total) })}</div>
+        )}
       </div>
 
       <div className="text-white/50 text-rt-11 text-center">{t('planes:note', { currency: t(moneda === 'brl' ? 'planes:currencyBrl' : 'planes:currencyUsd') })}</div>
