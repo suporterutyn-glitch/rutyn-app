@@ -98,7 +98,9 @@ export function CadastroProfessorPage() {
     avisarLanding('signup')
     if (embebido) {
       // La sesión viaja en el hash: la app la toma al abrir (detectSessionInUrl).
-      const destino = `/professor?lang=${lang}#access_token=${s.access_token}&refresh_token=${s.refresh_token}&expires_in=${s.expires_in}&expires_at=${s.expires_at}&token_type=bearer&type=signup`
+      // Desde la página de la oferta va directo a elegir el plan.
+      const inicio = new URLSearchParams(window.location.search).get('oferta') ? '/professor/assinatura' : '/professor'
+      const destino = `${inicio}?lang=${lang}#access_token=${s.access_token}&refresh_token=${s.refresh_token}&expires_in=${s.expires_in}&expires_at=${s.expires_at}&token_type=bearer&type=signup`
       // Un instante para que la landing alcance a registrar el evento antes de salir de la página.
       setTimeout(() => abrirFuera(destino), 250)
       return

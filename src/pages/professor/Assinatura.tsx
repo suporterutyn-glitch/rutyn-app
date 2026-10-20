@@ -25,7 +25,7 @@ export function AssinaturaPage() {
   const pago = actual !== 'free'
   // La oferta es para la primera contratación (sin plan pago).
   const oferta = !pago ? codigoOferta(user) : null
-  const conOferta = (v: number) => (oferta ? v * (100 - OFERTA.porcentaje) / 100 : v)
+  const mitad = (v: number) => v * (100 - OFERTA.porcentaje) / 100
   const [activos, setActivos] = useState(0)
   const pedidos = Number(params.get('seats')) || 0
   const [n, setN] = useState(() => pedidos || (actual === 'pro' ? MAX_BASIC[moneda] + 1 : profile?.plan_seats || 1))
@@ -198,8 +198,8 @@ export function AssinaturaPage() {
 
       {oferta && (
         <div className="rounded-card p-4 mb-4 bg-brand/15 border border-brand max-w-xl lg:mx-auto">
-          <div className="text-brand text-rt-16 font-bold">{t('planes:oferta.title', { pct: OFERTA.porcentaje, n: OFERTA.meses })}</div>
-          <div className="text-white/85 text-rt-12 mt-1">{t('planes:oferta.body', { n: OFERTA.meses, date: new Date(OFERTA.hasta).toLocaleDateString(localeDe(), { day: 'numeric', month: 'long' }) })}</div>
+          <div className="text-brand text-rt-16 font-bold">{t('planes:oferta.title', { free: OFERTA.mesesGratis, pct: OFERTA.porcentaje, n: OFERTA.meses })}</div>
+          <div className="text-white/85 text-rt-12 mt-1">{t('planes:oferta.body', { free: OFERTA.mesesGratis, pct: OFERTA.porcentaje, n: OFERTA.meses, date: new Date(OFERTA.hasta).toLocaleDateString(localeDe(), { day: 'numeric', month: 'long' }) })}</div>
         </div>
       )}
 
@@ -221,9 +221,9 @@ export function AssinaturaPage() {
           <div>
             <div className="text-white/60 text-rt-11">{t('planes:calc.month')}</div>
             {oferta && total > 0 && <div className="text-white/40 text-rt-11 line-through">{fmt(total)}</div>}
-            <div className={'text-rt-16 font-bold ' + (oferta && total > 0 ? 'text-brand' : 'text-white')}>{fmt(conOferta(total))}</div>
+            <div className={'text-rt-16 font-bold ' + (oferta && total > 0 ? 'text-brand' : 'text-white')}>{oferta && total > 0 ? t('planes:oferta.free') : fmt(total)}</div>
           </div>
-          <div><div className="text-white/60 text-rt-11">{t('planes:calc.each')}</div><div className="text-white text-rt-16 font-bold">{fmt(total ? conOferta(total) / n : 0)}</div></div>
+          <div><div className="text-white/60 text-rt-11">{t('planes:calc.each')}</div><div className="text-white text-rt-16 font-bold">{fmt(total && !oferta ? total / n : 0)}</div></div>
         </div>
 
         {sobran > 0 && (
@@ -240,7 +240,8 @@ export function AssinaturaPage() {
         >
           {esActual ? t('planes:currentPlan')
             : elegido === 'free' ? t('planes:toFree')
-            : t('planes:calc.choose', { price: fmt(conOferta(total)) })}
+            : oferta ? t('planes:oferta.cta', { n: OFERTA.mesesGratis })
+            : t('planes:calc.choose', { price: fmt(total) })}
         </button>
         <div className="text-white/50 text-rt-11 text-center mt-2">
           {elegido === 'free' ? t('planes:free.f1')
@@ -248,7 +249,21 @@ export function AssinaturaPage() {
             : `${t('planes:basic.includes', { n: BASIC.incluidos })} · ${t('planes:basic.extra', { price: fmt(P.extra) })}`}
         </div>
         {oferta && elegido !== 'free' && (
-          <div className="text-brand text-rt-11 text-center mt-1">{t('planes:oferta.after', { n: OFERTA.meses, price: fmt(total) })}</div>
+          <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+            {[
+              [t('planes:oferta.phase1', { n: OFERTA.mesesGratis }), t('planes:oferta.free')],
+              [t('planes:oferta.phase2', { from: OFERTA.mesesGratis + 1, to: OFERTA.mesesGratis + OFERTA.meses }), fmt(mitad(total))],
+              [t('planes:oferta.phase3', { from: OFERTA.mesesGratis + OFERTA.meses + 1 }), fmt(total)],
+            ].map(([a, b], i) => (
+              <div key={i} className={'rounded-lg p-2 ' + (i === 0 ? 'bg-brand/20 border border-brand' : 'bg-white/5')}>
+                <div className="text-white/60 text-rt-10">{a}</div>
+                <div className={'text-rt-13 font-bold ' + (i === 0 ? 'text-brand' : 'text-white')}>{b}</div>
+              </div>
+            ))}
+          </div>
+        )}
+        {oferta && elegido !== 'free' && (
+          <div className="text-white/50 text-rt-11 text-center mt-2">{t('planes:oferta.card', { n: OFERTA.mesesGratis })}</div>
         )}
       </div>
 

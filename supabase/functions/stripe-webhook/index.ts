@@ -79,13 +79,15 @@ Deno.serve(async (req: Request) => {
       if (p?.frozen_since && inv.amount_paid > 0) await descongelar(admin, p.id)
       if (p && p.plan !== 'free') {
         await admin.from('notifications').insert({ user_id: p.id, ...aviso('planActive', { plan: p.plan }), type: 'success' })
-        // Enviar email de confirmación
-        const url = new URL(Deno.env.get('SUPABASE_URL')! + '/functions/v1/send-email')
-        await fetch(url, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!}` },
-          body: JSON.stringify({ action: 'payment_confirmed', userId: p.id, plan: p.plan, amount: inv.total, currency: inv.currency })
-        }).catch(e => console.error('send-email failed', e))
+        // Correo de pago confirmado (no para la factura en cero del inicio de una prueba gratis).
+        if (inv.amount_paid > 0) {
+          const url = new URL(Deno.env.get('SUPABASE_URL')! + '/functions/v1/send-email')
+          await fetch(url, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!}` },
+            body: JSON.stringify({ action: 'payment_confirmed', userId: p.id, plan: p.plan, amount: inv.total, currency: inv.currency })
+          }).catch(e => console.error('send-email failed', e))
+        }
       }
     } else if (event.type === 'invoice.payment_failed') {
       const inv = event.data.object
@@ -122,7 +124,7 @@ async function sincronizar(admin: any, sub: any, refId?: string | null) {
   const { data: prof } = userId ? await q.eq('id', userId).maybeSingle() : await q.eq('stripe_customer_id', sub.customer).maybeSingle()
   if (!prof) return
   // Un evento viejo de otra suscripción no pisa la actual.
-  if (prof.stripe_subscription_id && prof.stripe_subscription_id !== sub.id && sub.status !== 'active') return
+  if (prof.stripe_subscription_id && prof.stripe_subscription_id !== sub.id && !['active', 'trialing'].includes(sub.status)) return
 
   const item = sub.items?.data?.[0]
   const plan = planDePrecio(item?.price)

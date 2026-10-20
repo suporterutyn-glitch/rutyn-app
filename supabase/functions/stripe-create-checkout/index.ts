@@ -112,17 +112,18 @@ Deno.serve(async (req: Request) => {
       return json({ updated: true })
     }
 
+    const oferta = conOferta(body, user)
     const session = await s.checkout.sessions.create({
       mode: 'subscription',
       client_reference_id: prof.id,
       ...(prof.stripe_customer_id ? { customer: prof.stripe_customer_id } : { customer_email: prof.email ?? user.email ?? undefined }),
       line_items: [{ price, quantity: seats }],
       // Con la oferta el cupón va puesto; Stripe no deja sumar además un código promocional.
-      ...(conOferta(body, user) ? { discounts: [{ coupon: await cuponOferta(s) }] } : { allow_promotion_codes: true }),
+      ...(oferta ? { discounts: [{ coupon: await cuponOferta(s) }] } : { allow_promotion_codes: true }),
       success_url: `${origin}/professor/assinatura?ok=1`,
       cancel_url: `${origin}/professor/assinatura`,
       metadata: meta,
-      subscription_data: { metadata: meta },
+      subscription_data: { metadata: meta, ...(oferta ? { trial_end: finPrueba() } : {}) },
     })
     return json({ url: session.url })
   } catch (e) {
@@ -131,9 +132,18 @@ Deno.serve(async (req: Request) => {
   }
 })
 
-// Oferta de lanzamiento (misma que src/lib/oferta.ts): 50% los primeros 3 meses para todo
-// profesor que contrate su primer plan hasta el 1/11/2026 23:59 (UTC-3).
-const OFERTA = { codigo: 'lanzamiento50', cupon: 'rutyn_lanzamiento50_3m', hasta: Date.parse('2026-11-02T02:59:59Z') }
+// Oferta de lanzamiento (misma que src/lib/oferta.ts) para todo profesor que contrate su primer
+// plan hasta el 1/11/2026 23:59 (UTC-3): 3 meses gratis, 3 meses al 50% y después el precio normal.
+// En Stripe: prueba de 3 meses (pide tarjeta, no cobra) + cupón del 50% por 6 meses desde el alta.
+// El cupón corre también durante la prueba, así que cubre las facturas de los meses 4, 5 y 6.
+const OFERTA = { codigo: 'lanzamiento50', cupon: 'rutyn_lanzamiento_3gratis_3x50', hasta: Date.parse('2026-11-02T02:59:59Z') }
+
+/** Fin de la prueba: mismo día, 3 meses después. */
+function finPrueba() {
+  const d = new Date()
+  d.setUTCMonth(d.getUTCMonth() + 3)
+  return Math.floor(d.getTime() / 1000)
+}
 
 function conOferta(_body: any, _user: any) {
   return Date.now() <= OFERTA.hasta
@@ -145,8 +155,8 @@ async function cuponOferta(s: any): Promise<string> {
   if (c && c.valid) return c.id
   if (!c) {
     await s.coupons.create({
-      id: OFERTA.cupon, name: 'Lanzamiento 50% x 3 meses', percent_off: 50,
-      duration: 'repeating', duration_in_months: 3, redeem_by: Math.floor(OFERTA.hasta / 1000),
+      id: OFERTA.cupon, name: 'Lanzamiento: 3 meses gratis + 3 al 50%', percent_off: 50,
+      duration: 'repeating', duration_in_months: 6, redeem_by: Math.floor(OFERTA.hasta / 1000),
     })
   }
   return OFERTA.cupon
