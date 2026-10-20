@@ -131,13 +131,12 @@ Deno.serve(async (req: Request) => {
   }
 })
 
-// Oferta de lanzamiento (misma que src/lib/oferta.ts): 50% los primeros 3 meses para quien
-// llega por rutyn.com.br/oferta y contrata hasta el 1/11/2026 23:59 (UTC-3).
+// Oferta de lanzamiento (misma que src/lib/oferta.ts): 50% los primeros 3 meses para todo
+// profesor que contrate su primer plan hasta el 1/11/2026 23:59 (UTC-3).
 const OFERTA = { codigo: 'lanzamiento50', cupon: 'rutyn_lanzamiento50_3m', hasta: Date.parse('2026-11-02T02:59:59Z') }
 
-function conOferta(body: any, user: any) {
-  if (Date.now() > OFERTA.hasta) return false
-  return body.oferta === OFERTA.codigo || user?.user_metadata?.oferta === OFERTA.codigo
+function conOferta(_body: any, _user: any) {
+  return Date.now() <= OFERTA.hasta
 }
 
 /** El cupón se crea solo la primera vez (vence junto con la oferta). */

@@ -1,5 +1,5 @@
-// Oferta de lanzamiento: 50% durante 3 meses para quien llega por la página de la oferta
-// (rutyn.com.br/oferta) y contrata hasta el 1/11/2026 23:59 (UTC-3). Mismo código y fecha
+// Oferta de lanzamiento: 50% durante 3 meses para todo profesor que contrate su primer plan
+// hasta el 1/11/2026 23:59 (UTC-3). Se anuncia en rutyn.com.br/oferta y dentro de la app. Mismo código y fecha
 // que supabase/functions/stripe-create-checkout. El descuento lo aplica Stripe.
 import type { User } from '@supabase/supabase-js'
 
@@ -17,11 +17,7 @@ export function guardarOfertaDesdeUrl() {
   } catch { /* sin almacenamiento: queda la del registro (user_metadata) */ }
 }
 
-/** El código de la oferta si este profesor la tiene y sigue vigente. */
-export function codigoOferta(user?: User | null): string | null {
-  if (!ofertaVigente()) return null
-  let local: string | null = null
-  try { local = localStorage.getItem(CLAVE) } catch { /* nada */ }
-  const enUrl = new URLSearchParams(window.location.search).get('oferta')
-  return [local, enUrl, user?.user_metadata?.oferta].includes(OFERTA.codigo) ? OFERTA.codigo : null
+/** El código de la oferta mientras está vigente: vale para todos los profesores que todavía no pagan. */
+export function codigoOferta(_user?: User | null): string | null {
+  return ofertaVigente() ? OFERTA.codigo : null
 }
