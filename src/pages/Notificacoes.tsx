@@ -13,7 +13,7 @@ type N = {
   type: string
   title: string
   body: string | null
-  data: { image_url?: string; key?: string; params?: DatosAviso } | null
+  data: { image_url?: string; key?: string; params?: DatosAviso; conversation_id?: string } | null
   read_at: string | null
   created_at: string
 }
@@ -105,7 +105,12 @@ export function NotificacoesPage() {
     return (
       <li>
         <button
-          onClick={() => setAbierta(n)}
+          onClick={() => {
+            // Un mensaje del chat abre directo esa conversación.
+            const conv = n.data?.key?.startsWith('newMessage') ? n.data?.conversation_id : undefined
+            if (conv) nav(profile?.role === 'teacher' ? `/professor/mensagens/${conv}` : `/aluno/chat/${conv}`)
+            else setAbierta(n)
+          }}
           className="w-full card-dark p-3 flex items-start gap-3 text-left active:scale-[0.99]"
         >
           <div className={'w-11 h-11 rounded-full flex items-center justify-center shrink-0 ' + tono.fondo}>

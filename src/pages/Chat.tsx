@@ -52,6 +52,21 @@ function useHace() {
   }
 }
 
+/**
+ * Canal en vivo con la sesión ya cargada: si se abre antes, la base lo trata como anónimo
+ * y no manda nada (los mensajes nuevos no aparecían solos).
+ */
+function enVivo(nombre: string, armar: (c: ReturnType<typeof supabase.channel>) => ReturnType<typeof supabase.channel>) {
+  let canal: ReturnType<typeof supabase.channel> | null = null
+  let activo = true
+  void supabase.auth.getSession().then(async ({ data }) => {
+    if (data.session) await supabase.realtime.setAuth(data.session.access_token)
+    if (!activo) return
+    canal = armar(supabase.channel(nombre)).subscribe()
+  })
+  return () => { activo = false; if (canal) void supabase.removeChannel(canal) }
+}
+
 /** Texto del último mensaje en la lista ("::image" → "📷 Foto"). */
 function textoPrevio(m: string | null, t: (k: string) => string) {
   if (!m) return ''
@@ -86,11 +101,8 @@ function ListaConversas({ activoId }: { activoId?: string }) {
   useEffect(() => {
     if (!profile?.id) return
     void loadOrBoot()
-    const ch = supabase
-      .channel('conv-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, () => { void loadOrBoot(false) })
-      .subscribe()
-    return () => { void supabase.removeChannel(ch) }
+    return enVivo('conv-changes', (c) => c
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, () => { void loadOrBoot(false) }))
   }, [profile?.id])
 
   async function loadOrBoot(primeraVez = true) {
@@ -288,22 +300,27 @@ export function ConversaPage() {
       setMsgs((m as Msg[]) ?? [])
     })()
 
-    const ch = supabase
-      .channel(`msg-${id}`)
+    return enVivo(`msg-${id}`, (c) => c
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `conversation_id=eq.${id}` }, (payload) => {
         const n = payload.new as Msg
         setMsgs((prev) => (prev.some((x) => x.id === n.id) ? prev : [...prev, n]))
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'conversations', filter: `id=eq.${id}` }, (payload) => {
         setConv((prev) => (prev ? { ...prev, ...(payload.new as Conv) } : prev))
-      })
-      .subscribe()
-    return () => { void supabase.removeChannel(ch) }
+      }))
   }, [id, profile?.id])
 
   // Leído: al abrir y cada vez que llega un mensaje del otro.
   const ultimoDelOtro = [...msgs].reverse().find((m) => m.sender_id !== profile?.id && !m.local)?.id
   useEffect(() => { void marcarLeido() }, [conv?.id, ultimoDelOtro])
+
+  // Al abrir la conversación, sus avisos de "mensaje nuevo" quedan leídos.
+  useEffect(() => {
+    if (!id || !profile?.id) return
+    void supabase.from('notifications').update({ read_at: new Date().toISOString() })
+      .eq('user_id', profile.id).is('read_at', null).eq('data->>conversation_id', id)
+      .then(() => {}) // la consulta solo corre con then/await
+  }, [id, profile?.id, ultimoDelOtro])
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [msgs.length])
 

@@ -14,9 +14,11 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
 import webpush from 'npm:web-push@3.6.7'
 
 // A dónde lleva tocar la notificación, según el aviso y si la recibe el profesor o el alumno.
-function destino(clave: string | undefined, rol: string) {
+function destino(clave: string | undefined, rol: string, conversacion?: string) {
   const profe = rol === 'teacher'
   const k = clave ?? ''
+  // Mensaje del chat: abre directo esa conversación.
+  if (k.startsWith('newMessage')) return conversacion ? (profe ? `/professor/mensagens/${conversacion}` : `/aluno/chat/${conversacion}`) : (profe ? '/professor/mensagens' : '/aluno/chat')
   if (/^(charge|payment|change|weekSummary)/.test(k)) return profe ? '/professor/financeiro' : '/aluno/mensalidade'
   if (/^(newInvite|counterAccepted)/.test(k)) return '/professor/convites'
   if (k === 'joinedByLink') return '/professor/alunos'
@@ -52,7 +54,7 @@ Deno.serve(async (req: Request) => {
   const clave = n.data?.key as string | undefined
   const payload = JSON.stringify({
     title: n.title, body: n.body ?? '', key: clave, params: n.data?.params ?? {},
-    lang: p?.language ?? 'pt', url: destino(clave, p?.role ?? 'student'), tag: n.id,
+    lang: p?.language ?? 'pt', url: destino(clave, p?.role ?? 'student', n.data?.conversation_id), tag: clave?.startsWith('newMessage') && n.data?.conversation_id ? 'chat-' + n.data.conversation_id : n.id,
   })
   const vencidas: string[] = []
   let sent = 0
