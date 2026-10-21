@@ -65,12 +65,10 @@ export function ConfiguracoesPage() {
       </div>
 
       {/* Language selector */}
-      <div className="card-dark p-4 mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Globe size={18} className="text-brand" />
-            <span className="text-white text-rt-14 font-semibold">{t('settings:language')}</span>
-          </div>
+      <div className="card-dark p-4 mb-4 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Globe size={18} className="text-brand" />
+          <span className="text-white text-rt-14 font-semibold">{t('settings:language')}</span>
         </div>
         <div className="flex gap-2">
           {(['pt', 'es', 'en'] as const).map((l) => (
@@ -81,7 +79,7 @@ export function ConfiguracoesPage() {
               title={l === 'pt' ? 'Português' : l === 'es' ? 'Español' : 'English'}
               aria-pressed={currentLang === l}
               className={
-                'w-14 h-10 rounded-btn-pill flex items-center justify-center ' +
+                'w-11 h-9 rounded-btn-pill flex items-center justify-center ' +
                 (currentLang === l ? 'bg-brand' : 'bg-surface-raised opacity-60')
               }
             >
