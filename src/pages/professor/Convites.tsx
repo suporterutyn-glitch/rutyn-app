@@ -121,7 +121,7 @@ export function ConvitesPage() {
               )}
 
               <div className="flex gap-2 flex-wrap">
-                <button onClick={() => reject(inv)} className="flex-1 h-10 rounded-btn-pill bg-danger-wine text-white text-rt-13 font-semibold min-w-[80px]">{t('financeiro:conv.reject')}</button>
+                <button onClick={() => reject(inv)} className="flex-1 h-10 rounded-[10px] bg-danger-wine text-white text-rt-13 font-semibold min-w-[80px]">{t('financeiro:conv.reject')}</button>
                 {!inv.amount || inv.last_offer_by === 'teacher' ? (
                   // Sin precio todavía: aceptar crearía una mensualidad de 0. El profesor propone el suyo.
                   <button onClick={() => setCounterOf(inv)} className="flex-[2] h-10 rounded-btn-pill bg-brand text-white text-rt-13 font-semibold min-w-[140px] flex items-center justify-center gap-1">
@@ -129,10 +129,10 @@ export function ConvitesPage() {
                   </button>
                 ) : (
                   <>
-                    <button onClick={() => setCounterOf(inv)} className="flex-1 h-10 rounded-btn-pill border-[1.5px] border-warning text-warning text-rt-13 font-semibold min-w-[110px] flex items-center justify-center gap-1">
+                    <button onClick={() => setCounterOf(inv)} className="flex-1 h-10 rounded-[10px] border-[1.5px] border-warning text-warning text-rt-13 font-semibold min-w-[110px] flex items-center justify-center gap-1">
                       <RefreshCw size={14} /> {t('financeiro:conv.counter')}
                     </button>
-                    <button onClick={() => accept(inv)} className="flex-1 h-10 rounded-btn-pill bg-brand text-white text-rt-13 font-semibold min-w-[90px] flex items-center justify-center gap-1">
+                    <button onClick={() => accept(inv)} className="flex-1 h-10 rounded-[10px] bg-brand text-white text-rt-13 font-semibold min-w-[90px] flex items-center justify-center gap-1">
                       <Check size={16} /> {t('financeiro:conv.accept')}
                     </button>
                   </>
@@ -210,7 +210,7 @@ function CounterSheet({ invite, currency, onClose, onSent }: {
           <div className="flex gap-2">
             {(['monthly', 'hourly'] as const).map((f) => (
               <button key={f} type="button" onClick={() => setFormat(f)} className={
-                'flex-1 h-10 rounded-btn-pill border text-rt-12 font-semibold ' +
+                'flex-1 h-10 rounded-[10px] border text-rt-12 font-semibold ' +
                 (format === f ? 'bg-brand border-brand text-white' : 'bg-transparent border-grey-700 text-grey-400')
               }>{f === 'monthly' ? t('financeiro:c.monthly') : t('financeiro:c.hourly')}</button>
             ))}

@@ -119,25 +119,25 @@
 
 @layer components {
   .btn-primary-pill {
-    @apply relative w-full h-[55px] rounded-[50px] bg-brand-v shadow-btn text-white font-bold text-rt-20 flex items-center justify-center transition active:scale-[0.98];
+    @apply relative w-full h-[55px] rounded-[12px] bg-brand-v shadow-btn text-white font-bold text-rt-20 flex items-center justify-center transition active:scale-[0.98];
   }
   .btn-create {
     @apply relative w-full h-12 rounded-[12px] bg-brand-v shadow-btn text-white font-semibold text-rt-14 flex items-center justify-center gap-2 transition active:scale-[0.98];
   }
   .btn-save {
-    @apply relative w-full h-[54px] rounded-[27px] bg-save shadow-glow text-white font-bold text-rt-16 flex items-center justify-center transition active:scale-[0.98];
+    @apply relative w-full h-[54px] rounded-[12px] bg-save shadow-glow text-white font-bold text-rt-16 flex items-center justify-center transition active:scale-[0.98];
   }
   .btn-save:disabled, .btn-create:disabled {
     @apply opacity-45 cursor-not-allowed shadow-none active:scale-100;
   }
   .btn-google {
-    @apply relative w-full h-[55px] rounded-[50px] bg-google shadow-btn text-white font-semibold text-rt-16 flex items-center justify-center gap-3 border border-white/50;
+    @apply relative w-full h-[55px] rounded-[12px] bg-google shadow-btn text-white font-semibold text-rt-16 flex items-center justify-center gap-3 border border-white/50;
   }
   .btn-apple {
-    @apply relative w-full h-[55px] rounded-[50px] bg-apple shadow-btn text-white font-semibold text-rt-16 flex items-center justify-center gap-3 border border-white/50;
+    @apply relative w-full h-[55px] rounded-[12px] bg-apple shadow-btn text-white font-semibold text-rt-16 flex items-center justify-center gap-3 border border-white/50;
   }
   .btn-outline-white {
-    @apply relative w-full h-[55px] rounded-[65px] border-[1.5px] border-white bg-transparent text-white font-semibold text-rt-16 flex items-center justify-center gap-3;
+    @apply relative w-full h-[55px] rounded-[12px] border-[1.5px] border-white bg-transparent text-white font-semibold text-rt-16 flex items-center justify-center gap-3;
   }
   .input-dark {
     @apply w-full h-[52px] px-4 rounded-[12px] bg-surface-input border border-surface-line text-white text-rt-14 placeholder:text-grey-600 focus:border-brand outline-none transition;

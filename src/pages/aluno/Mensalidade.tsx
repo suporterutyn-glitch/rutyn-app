@@ -88,8 +88,8 @@ export function MensalidadePage() {
           </div>
           {proposal.reason && <div className="text-white/70 text-rt-12 mt-1">{proposal.reason}</div>}
           <div className="flex gap-2 mt-3">
-            <button onClick={() => respondProposal(false)} className="flex-1 h-10 rounded-btn-pill bg-danger-wine text-white text-rt-13 font-semibold">{t('cuenta:mens.reject')}</button>
-            <button onClick={() => respondProposal(true)} className="flex-1 h-10 rounded-btn-pill bg-brand text-white text-rt-13 font-bold">{t('cuenta:mens.accept')}</button>
+            <button onClick={() => respondProposal(false)} className="flex-1 h-10 rounded-[10px] bg-danger-wine text-white text-rt-13 font-semibold">{t('cuenta:mens.reject')}</button>
+            <button onClick={() => respondProposal(true)} className="flex-1 h-10 rounded-[10px] bg-brand text-white text-rt-13 font-bold">{t('cuenta:mens.accept')}</button>
           </div>
         </div>
       )}

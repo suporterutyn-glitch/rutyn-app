@@ -132,7 +132,7 @@ function Formulario({ profile }: { profile: Profile }) {
       <div className="flex gap-3 mt-8">
         <button
           onClick={() => nav(-1)}
-          className="flex-1 h-[54px] rounded-[27px] bg-danger-wine text-white text-rt-16 font-bold"
+          className="flex-1 h-[54px] rounded-[12px] bg-danger-wine text-white text-rt-16 font-bold"
         >
           {t('settings:cancel')}
         </button>

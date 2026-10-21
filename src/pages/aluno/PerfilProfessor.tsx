@@ -183,7 +183,7 @@ function PropostaSheet({ teacher, onClose, onSent }: { teacher: Teacher; onClose
           <div className="flex gap-2">
             {(['monthly', 'hourly'] as const).map((f) => (
               <button key={f} type="button" onClick={() => setFormat(f)} className={
-                'flex-1 h-10 rounded-btn-pill border text-rt-12 font-semibold ' +
+                'flex-1 h-10 rounded-[10px] border text-rt-12 font-semibold ' +
                 (format === f ? 'bg-brand border-brand text-white' : 'bg-transparent border-grey-700 text-grey-400')
               }>{f === 'monthly' ? t('cuenta:pp.fmtMonthly') : t('cuenta:pp.fmtHourly')}</button>
             ))}
@@ -216,7 +216,7 @@ function PropostaSheet({ teacher, onClose, onSent }: { teacher: Teacher; onClose
           <div className="flex gap-2">
             {formatosTrabalho.map(({ id: m }) => (
               <button key={m} type="button" onClick={() => setModel(m)} className={
-                'flex-1 h-10 rounded-btn-pill border text-rt-12 font-semibold capitalize ' +
+                'flex-1 h-10 rounded-[10px] border text-rt-12 font-semibold capitalize ' +
                 (model === m ? 'bg-brand border-brand text-white' : 'bg-transparent border-grey-700 text-grey-400')
               }>{etiquetaDe(formatosTrabalho, m, i18n.language)}</button>
             ))}

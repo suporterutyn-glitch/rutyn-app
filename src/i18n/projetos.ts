@@ -58,7 +58,7 @@ export default textos({
     ser: {
       dragSeries: 'Arrastar série', addParams: 'Adicionar Parâmetros', addField: 'Adicionar Campo', duplicate: 'Duplicar Série', deleteSeries: 'Excluir série',
       edit: 'EDITAR', note: 'Observação', notePh: 'Ex: Última série fazer drop set', paramsTitle: 'Parâmetros do exercício', nOfMax: '{{n}} de {{max}}',
-      saveParams: 'Salvar Parâmetros', useRange: 'Usar intervalo (ex: 10-12)', save: 'Salvar', removeField: 'Remover Campo', done: 'Pronto', close: 'Fechar',
+      saveParams: 'Salvar Parâmetros', useRange: 'Usar intervalo (ex: 10-12)', save: 'Salvar', removeField: 'Remover Campo', delField: 'Excluir', delYes: 'Sim, excluir', delNo: 'Cancelar', done: 'Pronto', close: 'Fechar',
     },
     al: {
       macro: { highProtein: 'Rico em proteína', lowCarb: 'Baixo carboidrato', lowFat: 'Baixa gordura', lowCalorie: 'Baixas calorias' }, sortBy: 'Ordenar', per100Note: 'Valores comparados por 100 g ou 100 ml.',
@@ -216,7 +216,7 @@ export default textos({
     ser: {
       dragSeries: 'Arrastrar serie', addParams: 'Agregar Parámetros', addField: 'Agregar Campo', duplicate: 'Duplicar Serie', deleteSeries: 'Eliminar serie',
       edit: 'EDITAR', note: 'Observación', notePh: 'Ej: En la última serie hacer drop set', paramsTitle: 'Parámetros del ejercicio', nOfMax: '{{n}} de {{max}}',
-      saveParams: 'Guardar Parámetros', useRange: 'Usar intervalo (ej: 10-12)', save: 'Guardar', removeField: 'Quitar Campo', done: 'Listo', close: 'Cerrar',
+      saveParams: 'Guardar Parámetros', useRange: 'Usar intervalo (ej: 10-12)', save: 'Guardar', removeField: 'Quitar Campo', delField: 'Eliminar', delYes: 'Sí, eliminar', delNo: 'Cancelar', done: 'Listo', close: 'Cerrar',
     },
     al: {
       macro: { highProtein: 'Rico en proteína', lowCarb: 'Bajo en carbohidratos', lowFat: 'Bajo en grasa', lowCalorie: 'Bajo en calorías' }, sortBy: 'Ordenar', per100Note: 'Valores comparados por 100 g o 100 ml.',
@@ -374,7 +374,7 @@ export default textos({
     ser: {
       dragSeries: 'Drag set', addParams: 'Add Parameters', addField: 'Add Field', duplicate: 'Duplicate Set', deleteSeries: 'Delete set',
       edit: 'EDIT', note: 'Note', notePh: 'E.g.: Drop set on the last set', paramsTitle: 'Exercise parameters', nOfMax: '{{n}} of {{max}}',
-      saveParams: 'Save Parameters', useRange: 'Use range (e.g.: 10-12)', save: 'Save', removeField: 'Remove Field', done: 'Done', close: 'Close',
+      saveParams: 'Save Parameters', useRange: 'Use range (e.g.: 10-12)', save: 'Save', removeField: 'Remove Field', delField: 'Delete', delYes: 'Yes, delete', delNo: 'Cancel', done: 'Done', close: 'Close',
     },
     al: {
       macro: { highProtein: 'High protein', lowCarb: 'Low carb', lowFat: 'Low fat', lowCalorie: 'Low calorie' }, sortBy: 'Sort', per100Note: 'Values compared per 100 g or 100 ml.',

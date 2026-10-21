@@ -30,7 +30,7 @@ export function FeedbackDialog({
           type="button"
           onClick={onClose}
           className={
-            'w-full h-11 rounded-[22px] text-white text-rt-14 font-semibold mt-6 ' +
+            'w-full h-11 rounded-[12px] text-white text-rt-14 font-semibold mt-6 ' +
             (esError ? 'bg-[#E53935]' : 'bg-brand')
           }
         >

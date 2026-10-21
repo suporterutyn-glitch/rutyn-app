@@ -266,7 +266,7 @@ function RutinaExistente({ ejercicios, onCerrar, onListo, onError }: {
           <button
             disabled={!elegida || enviando}
             onClick={() => void agregar()}
-            className={'w-full h-[54px] rounded-[27px] text-white text-rt-15 font-bold ' + (elegida ? 'bg-gradient-to-b from-[#7CB342] to-[#94E143]' : 'bg-[#616161]')}
+            className={'w-full h-[54px] rounded-[12px] text-white text-rt-15 font-bold ' + (elegida ? 'bg-gradient-to-b from-[#7CB342] to-[#94E143]' : 'bg-[#616161]')}
           >
             {enviando ? '…' : elegida ? t('projetos:comb.addToRoutine') : t('projetos:comb.pickRoutine')}
           </button>

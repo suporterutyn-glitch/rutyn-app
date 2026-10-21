@@ -149,7 +149,7 @@ export function AdicionarAlimentos({ bloqueados, onCerrar, onAgregar, extraArrib
             <button
               disabled={agregando}
               onClick={() => (n === 1 ? setEditandoCantidad({ id: elegidos[0].food.id, final: true }) : setDefiniendo(true))}
-              className="w-full h-[54px] rounded-[27px] bg-gradient-to-b from-[#91C145] to-[#5A8F2F] text-white text-rt-16 font-bold"
+              className="w-full h-[54px] rounded-[12px] bg-gradient-to-b from-[#91C145] to-[#5A8F2F] text-white text-rt-16 font-bold"
             >
               {n === 1 ? t('projetos:aa.defineOne') : t('projetos:aa.defineMany', { n })}
             </button>
@@ -281,7 +281,7 @@ function DefinirCantidades({ elegidos, lang, onCerrar, onListo }: {
         <div className="p-5 pb-[calc(env(safe-area-inset-bottom)+16px)]">
           <button
             onClick={() => onListo(elegidos.map((e) => ({ ...e, cantidad: valida(valores[e.food.id], e.cantidad) })))}
-            className="w-full h-[54px] rounded-[27px] bg-gradient-to-b from-[#91C145] to-[#5A8F2F] text-white text-rt-16 font-bold"
+            className="w-full h-[54px] rounded-[12px] bg-gradient-to-b from-[#91C145] to-[#5A8F2F] text-white text-rt-16 font-bold"
           >
             {t('projetos:aa.addN', { n: elegidos.length })}
           </button>

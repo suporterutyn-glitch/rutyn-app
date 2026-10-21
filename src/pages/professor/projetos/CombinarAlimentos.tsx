@@ -315,7 +315,7 @@ function DietaExistente({ alimentos, onCerrar, onListo, onError }: {
             <button
               disabled={marcadas.length === 0 || enviando}
               onClick={() => void agregar()}
-              className={'w-full h-[54px] rounded-[27px] text-white text-rt-15 font-bold ' + (marcadas.length ? 'bg-gradient-to-b from-[#7CB342] to-[#94E143]' : 'bg-[#616161]')}
+              className={'w-full h-[54px] rounded-[12px] text-white text-rt-15 font-bold ' + (marcadas.length ? 'bg-gradient-to-b from-[#7CB342] to-[#94E143]' : 'bg-[#616161]')}
             >
               {enviando ? '…' : marcadas.length === 0 ? t('projetos:cal.pickMeals') : t('projetos:cal.addIn', { count: marcadas.length })}
             </button>
@@ -329,7 +329,7 @@ function DietaExistente({ alimentos, onCerrar, onListo, onError }: {
             <AlertTriangle size={48} className="text-[#FFA726] mx-auto" />
             <h3 className="text-white text-rt-16 font-bold mt-3">{t('projetos:cal.noMealsTitle')}</h3>
             <p className="text-white/70 text-rt-13 mt-2">{t('projetos:cal.noMealsBody')}</p>
-            <button onClick={() => setSinComidas(false)} className="w-full h-11 mt-5 rounded-[22px] bg-brand text-white text-rt-14 font-semibold">OK</button>
+            <button onClick={() => setSinComidas(false)} className="w-full h-11 mt-5 rounded-[12px] bg-brand text-white text-rt-14 font-semibold">OK</button>
           </div>
         </div>
       )}

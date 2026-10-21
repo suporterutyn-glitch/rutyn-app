@@ -561,10 +561,10 @@ function DialogoPropagar({ usadoEn, onSoloTemplate, onTodas, onCerrar }: {
           {t('projetos:ex.updateDetail', { count: usadoEn })}
         </p>
         <div className="flex flex-col gap-2 mt-5">
-          <button onClick={onTodas} className="w-full h-11 rounded-btn-pill bg-brand text-white text-rt-14 font-semibold">
+          <button onClick={onTodas} className="w-full h-11 rounded-[12px] bg-brand text-white text-rt-14 font-semibold">
             {t('projetos:ex.updateAll')}
           </button>
-          <button onClick={onSoloTemplate} className="w-full h-11 rounded-btn-pill border border-grey-700 text-white/80 text-rt-14 font-semibold">
+          <button onClick={onSoloTemplate} className="w-full h-11 rounded-[12px] border border-grey-700 text-white/80 text-rt-14 font-semibold">
             {t('projetos:ex.onlyTemplate')}
           </button>
         </div>

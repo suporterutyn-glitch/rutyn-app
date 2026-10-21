@@ -171,7 +171,7 @@ export function FinanceiroPage() {
               </div>
               {c.status === 'awaiting' && (
                 <div className="flex gap-2 mt-3">
-                  <button onClick={() => markPaid(c)} className="flex-1 h-10 rounded-btn-pill bg-charge text-white text-rt-13 font-semibold flex items-center justify-center gap-1">
+                  <button onClick={() => markPaid(c)} className="flex-1 h-10 rounded-[10px] bg-charge text-white text-rt-13 font-semibold flex items-center justify-center gap-1">
                     <CheckCircle2 size={16} /> {t('financeiro:fin.confirm')}
                   </button>
                   <button onClick={() => reject(c)} className="w-11 h-10 rounded-btn-pill border border-danger-wine text-danger-wine flex items-center justify-center">
@@ -181,7 +181,7 @@ export function FinanceiroPage() {
               )}
               {c.status === 'pending' && (
                 <div className="flex gap-2 mt-3">
-                  <button onClick={() => markPaid(c)} className="flex-1 h-10 rounded-btn-pill bg-charge text-white text-rt-13 font-semibold flex items-center justify-center gap-1">
+                  <button onClick={() => markPaid(c)} className="flex-1 h-10 rounded-[10px] bg-charge text-white text-rt-13 font-semibold flex items-center justify-center gap-1">
                     <CheckCircle2 size={16} /> {t('financeiro:fin.markPaid')}
                   </button>
                   <button onClick={() => setProposalOf(c)} className="h-10 px-3 rounded-btn-pill border border-warning text-warning text-rt-13 font-semibold flex items-center justify-center gap-1">
@@ -238,7 +238,7 @@ function ProposalSheet({ charge, currency, onClose, onSent }: { charge: Charge; 
           <div className="flex gap-2">
             {(['monthly', 'hourly'] as const).map((f) => (
               <button key={f} type="button" onClick={() => setNewFormat(f)} className={
-                'flex-1 h-10 rounded-btn-pill border text-rt-12 font-semibold ' +
+                'flex-1 h-10 rounded-[10px] border text-rt-12 font-semibold ' +
                 (newFormat === f ? 'bg-brand border-brand text-white' : 'bg-transparent border-grey-700 text-grey-400')
               }>{f === 'monthly' ? t('financeiro:c.monthly') : t('financeiro:c.hourly')}</button>
             ))}
@@ -318,7 +318,7 @@ function CobrarSheet({ currency, onClose, onCreated }: { currency: string; onClo
           <div className="flex gap-2">
             {(['monthly', 'hourly'] as const).map((f) => (
               <button key={f} type="button" onClick={() => setFormat(f)} className={
-                'flex-1 h-10 rounded-btn-pill border text-rt-12 font-semibold ' +
+                'flex-1 h-10 rounded-[10px] border text-rt-12 font-semibold ' +
                 (format === f ? 'bg-brand border-brand text-white' : 'bg-transparent border-grey-700 text-grey-400')
               }>
                 {f === 'monthly' ? t('financeiro:c.monthly') : t('financeiro:c.hourly')}

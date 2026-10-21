@@ -220,7 +220,7 @@ export function AlunoHome() {
         {estadoPago === 'pendiente' && (
           <button
             onClick={() => nav('/aluno/mensalidade')}
-            className="w-full mt-3 h-9 rounded-btn-pill bg-white/95 flex items-center justify-center text-danger-wine text-rt-13 font-bold"
+            className="w-full mt-3 h-9 rounded-[10px] bg-white/95 flex items-center justify-center text-danger-wine text-rt-13 font-bold"
           >
             {t('aluno:iPaid')}
           </button>
@@ -228,7 +228,7 @@ export function AlunoHome() {
         {estadoPago === 'suspendido' && (
           <button
             onClick={() => nav('/aluno/mensalidade')}
-            className="w-full mt-3 h-9 rounded-btn-pill bg-white/20 flex items-center justify-center text-white text-rt-13 font-bold"
+            className="w-full mt-3 h-9 rounded-[10px] bg-white/20 flex items-center justify-center text-white text-rt-13 font-bold"
           >
             {t('aluno:paymentSeeData')}
           </button>
@@ -250,13 +250,13 @@ export function AlunoHome() {
             <button
               onClick={() => drink(-250)}
               disabled={hydration.ml === 0}
-              className="flex-1 h-9 rounded-btn-pill bg-surface-raised text-white/80 text-rt-12 font-bold disabled:opacity-40"
+              className="flex-1 h-9 rounded-[10px] bg-surface-raised text-white/80 text-rt-12 font-bold disabled:opacity-40"
             >
               - 250ml
             </button>
             <button
               onClick={() => drink(250)}
-              className="flex-1 h-9 rounded-btn-pill border-[1.5px] border-brand text-white text-rt-12 font-bold"
+              className="flex-1 h-9 rounded-[10px] border-[1.5px] border-brand text-white text-rt-12 font-bold"
             >
               + 250ml
             </button>
@@ -398,10 +398,10 @@ function CounterModal({ counter, currency, onAccept, onClose }: {
           </div>
         </div>
         <div className="flex gap-2">
-          <button onClick={onClose} className="flex-1 h-11 rounded-btn-pill border border-grey-700 text-grey-400 text-rt-13 font-semibold">
+          <button onClick={onClose} className="flex-1 h-11 rounded-[12px] border border-grey-700 text-grey-400 text-rt-13 font-semibold">
             {t('inicio:later')}
           </button>
-          <button onClick={onAccept} className="flex-1 h-11 rounded-btn-pill bg-brand text-white text-rt-13 font-bold">
+          <button onClick={onAccept} className="flex-1 h-11 rounded-[12px] bg-brand text-white text-rt-13 font-bold">
             {t('inicio:accept')}
           </button>
         </div>

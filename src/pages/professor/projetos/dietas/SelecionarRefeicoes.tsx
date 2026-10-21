@@ -184,8 +184,8 @@ function EditarPersonalizada({ p, onCancelar, onGuardar }: { p: Personalizada; o
         <label className="block text-white text-rt-12 font-semibold mb-1.5 mt-3">{t('projetos:sr.defaultTime')}</label>
         <input type="time" value={hora} onChange={(e) => setHora(e.target.value)} className="w-full h-11 px-3 rounded-[10px] bg-[#252525] border border-[#333333] text-white text-rt-14 outline-none [color-scheme:dark]" />
         <div className="flex gap-2 mt-5">
-          <button onClick={onCancelar} className="flex-1 h-11 rounded-[22px] border border-grey-700 text-white/80 text-rt-14">{t('projetos:sr.cancel')}</button>
-          <button onClick={() => onGuardar({ ...p, name: nombre.trim() || p.name, default_time: hora })} className="flex-1 h-11 rounded-[22px] bg-brand text-white text-rt-14 font-semibold">{t('projetos:sr.save')}</button>
+          <button onClick={onCancelar} className="flex-1 h-11 rounded-[12px] border border-grey-700 text-white/80 text-rt-14">{t('projetos:sr.cancel')}</button>
+          <button onClick={() => onGuardar({ ...p, name: nombre.trim() || p.name, default_time: hora })} className="flex-1 h-11 rounded-[12px] bg-brand text-white text-rt-14 font-semibold">{t('projetos:sr.save')}</button>
         </div>
       </div>
     </div>

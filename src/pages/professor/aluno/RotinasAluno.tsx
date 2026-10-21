@@ -402,7 +402,7 @@ function FormRotinaAluno({ alumno, asignada, contrato, posicion, onCerrar, onLis
         )}
       </div>
       <div className="mt-8">
-        <button onClick={() => void guardar()} disabled={guardando} className="w-full h-[54px] rounded-[27px] bg-gradient-to-b from-[#91C145] to-[#5A8F2F] text-white text-rt-16 font-bold disabled:opacity-60">
+        <button onClick={() => void guardar()} disabled={guardando} className="w-full h-[54px] rounded-[12px] bg-gradient-to-b from-[#91C145] to-[#5A8F2F] text-white text-rt-16 font-bold disabled:opacity-60">
           {guardando ? t('projetos:c.saving') : asignada ? t('projetos:ra.save') : validos.length > 1 ? t('projetos:ra.createN', { n: validos.length }) : t('projetos:ra.create')}
         </button>
       </div>

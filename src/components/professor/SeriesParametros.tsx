@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Trash2, GripVertical, X } from 'lucide-react'
 import {
   PARAMETROS, PARAMETRO_POR_ID, MAX_PARAMETROS_POR_SERIE,
-  etiquetaParametro, type Parametro,
+  etiquetaParametro, valorFormateado, type Parametro,
 } from '@/lib/parametros'
 
 /** Lo que se guarda en series.params: { repetition: '12', load: '40', ... } */
@@ -113,24 +113,18 @@ export function FilaSerie({
 
             <div className="grid grid-cols-2 gap-3 mt-3 md:grid-cols-3 lg:grid-cols-4">
               {puestos.map((p) => (
-                <div key={p.id} className="bg-surface-card border border-surface-line rounded-[12px] p-3 flex flex-col">
-                  <label className="text-grey-500 text-rt-10 font-semibold mb-2 block">
-                    {etiquetaParametro(p, lang)}
-                  </label>
-                  <input
-                    type={p.tipo === 'time' ? 'text' : p.tipo === 'select' ? 'text' : 'text'}
-                    value={params[p.id] ?? ''}
-                    onChange={(e) => onParams({ ...params, [p.id]: e.target.value })}
-                    className="bg-white text-black text-rt-16 font-bold py-2 px-2 rounded-[8px] text-center mb-2 outline-none border border-transparent focus:border-brand transition"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setEditando(p)}
-                    className="text-grey-400 text-rt-11 font-semibold hover:text-brand transition"
-                  >
-                    {t('projetos:ser.edit')} / {t('projetos:ser.removeField')}
-                  </button>
-                </div>
+                <TarjetaParametro
+                  key={p.id}
+                  parametro={p}
+                  valor={params[p.id] ?? ''}
+                  lang={lang}
+                  onEditar={() => setEditando(p)}
+                  onEliminar={() => {
+                    const siguiente = { ...params }
+                    delete siguiente[p.id]
+                    onParams(siguiente)
+                  }}
+                />
               ))}
             </div>
           </>
@@ -168,13 +162,49 @@ export function FilaSerie({
           lang={lang}
           onCerrar={() => setEditando(null)}
           onGuardar={(v) => { onParams({ ...params, [editando.id]: v }); setEditando(null) }}
-          onQuitar={() => {
-            const siguiente = { ...params }
-            delete siguiente[editando.id]
-            onParams(siguiente)
-            setEditando(null)
-          }}
         />
+      )}
+    </div>
+  )
+}
+
+/**
+ * Tarjeta de un parámetro: se toca para editar el valor; abajo solo "Eliminar",
+ * que pide confirmación en la misma tarjeta.
+ */
+function TarjetaParametro({ parametro, valor, lang, onEditar, onEliminar }: {
+  parametro: Parametro
+  valor: string
+  lang: string
+  onEditar: () => void
+  onEliminar: () => void
+}) {
+  const { t } = useTranslation()
+  const [confirmando, setConfirmando] = useState(false)
+  const texto = parametro.tipo === 'select' ? valorFormateado(parametro, valor, lang) : (valor || '—')
+  const largo = parametro.tipo === 'select' || texto.length > 6
+  return (
+    <div className="bg-surface-card border border-surface-line rounded-[14px] p-2.5 flex flex-col gap-2">
+      <button
+        type="button"
+        onClick={onEditar}
+        className="group rounded-[10px] bg-surface-input border border-surface-line hover:border-brand active:scale-[0.98] transition px-2 pt-2 pb-2.5 text-center"
+      >
+        <span className="block text-grey-400 text-rt-10 font-semibold uppercase tracking-wide truncate">{etiquetaParametro(parametro, lang)}</span>
+        <span className="flex items-baseline justify-center gap-1 mt-1 min-h-[28px]">
+          <span className={'text-white font-bold leading-tight break-words ' + (largo ? 'text-rt-14' : 'text-rt-22')}>{texto}</span>
+          {parametro.tipo !== 'select' && parametro.unidad && valor && <span className="text-brand text-rt-11 font-semibold">{parametro.unidad}</span>}
+        </span>
+      </button>
+      {confirmando ? (
+        <div className="flex items-center gap-1.5 h-7">
+          <button type="button" onClick={onEliminar} className="flex-1 min-w-0 h-7 rounded-full bg-danger text-white text-rt-11 font-semibold truncate px-2">{t('projetos:ser.delYes')}</button>
+          <button type="button" onClick={() => setConfirmando(false)} aria-label={t('projetos:ser.delNo')} className="w-7 h-7 shrink-0 rounded-full border border-surface-line text-white/70 flex items-center justify-center"><X size={14} /></button>
+        </div>
+      ) : (
+        <button type="button" onClick={() => setConfirmando(true)} className="flex items-center justify-center gap-1 h-7 text-grey-500 hover:text-danger text-rt-11 font-semibold transition">
+          <Trash2 size={13} /> {t('projetos:ser.delField')}
+        </button>
       )}
     </div>
   )
@@ -248,13 +278,12 @@ function SheetParametros({ lang, elegidos, onCerrar, onGuardar }: {
   )
 }
 
-function SheetValor({ parametro, valor, lang, onCerrar, onGuardar, onQuitar }: {
+function SheetValor({ parametro, valor, lang, onCerrar, onGuardar }: {
   parametro: Parametro
   valor: string
   lang: string
   onCerrar: () => void
   onGuardar: (v: string) => void
-  onQuitar: () => void
 }) {
   const { t } = useTranslation()
   const esRango = parametro.id === 'repetition' && valor.includes('-')
@@ -266,9 +295,9 @@ function SheetValor({ parametro, valor, lang, onCerrar, onGuardar, onQuitar }: {
   const resultado = parametro.id === 'repetition' && rango ? `${desde}-${hasta}` : v
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/70" onClick={onCerrar}>
+    <div className="fixed inset-0 z-[70] popup-fondo bg-black/70" onClick={onCerrar}>
       <div
-        className="w-full max-w-app rounded-t-[28px] bg-surface-card px-5 pt-5 pb-[calc(env(safe-area-inset-bottom)+20px)] max-h-[80dvh] overflow-y-auto"
+        className="popup-caja bg-surface-card px-5 pt-5 pb-5 max-h-[80dvh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
@@ -335,10 +364,6 @@ function SheetValor({ parametro, valor, lang, onCerrar, onGuardar, onQuitar }: {
             <button onClick={() => onGuardar(resultado)} className="btn-save mt-6">{t('projetos:ser.save')}</button>
           </>
         )}
-
-        <button onClick={onQuitar} className="w-full h-11 mt-3 text-danger text-rt-13 font-semibold">
-          {t('projetos:ser.removeField')}
-        </button>
       </div>
     </div>
   )

@@ -332,7 +332,7 @@ function FiltersSheet({ filters, teachers, textos, onClose, onApply }: {
         </div>
 
         <div className="flex gap-2 mt-8">
-          <button onClick={() => onApply(emptyFilters)} className="flex-1 h-[52px] rounded-btn-pill border border-grey-700 text-grey-300 text-rt-14 font-semibold">
+          <button onClick={() => onApply(emptyFilters)} className="flex-1 h-[52px] rounded-[12px] border border-grey-700 text-grey-300 text-rt-14 font-semibold">
             {textos.clear}
           </button>
           <button onClick={() => onApply(f)} className="flex-[2] btn-save h-[52px]">

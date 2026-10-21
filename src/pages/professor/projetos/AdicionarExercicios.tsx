@@ -210,7 +210,7 @@ export function AdicionarExercicios({ yaEnRutina, onCerrar, onAgregar }: {
             <button
               disabled={agregando}
               onClick={() => void agregar()}
-              className="w-full h-[54px] rounded-[27px] bg-gradient-to-b from-[#91C145] to-[#5A8F2F] text-white text-rt-16 font-bold"
+              className="w-full h-[54px] rounded-[12px] bg-gradient-to-b from-[#91C145] to-[#5A8F2F] text-white text-rt-16 font-bold"
             >
               {agregando ? t('projetos:pick.adding') : t('projetos:pick.addN', { count: n })}
             </button>

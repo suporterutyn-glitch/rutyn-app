@@ -223,7 +223,7 @@ export function DarkMultiSheet({
               <button
                 type="button"
                 onClick={() => { onChange(draft); setOpen(false) }}
-                className="w-full h-12 rounded-[24px] bg-gradient-to-r from-[#91C145] to-[#5A8F2F] text-white text-rt-14 font-bold"
+                className="w-full h-12 rounded-[12px] bg-gradient-to-r from-[#91C145] to-[#5A8F2F] text-white text-rt-14 font-bold"
               >
                 {confirmLabel}
               </button>

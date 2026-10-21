@@ -178,15 +178,15 @@ export function AssinaturaPage() {
             </div>
           )}
           <div className="flex gap-2 mt-3">
-            <button disabled={enviando} onClick={() => void ejecutar({ action: 'portal' })} className="flex-1 h-10 rounded-btn-pill bg-white/15 text-white text-rt-13 font-semibold">
+            <button disabled={enviando} onClick={() => void ejecutar({ action: 'portal' })} className="flex-1 h-10 rounded-[10px] bg-white/15 text-white text-rt-13 font-semibold">
               {t('planes:managePayment')}
             </button>
             {cancelado ? (
-              <button disabled={enviando} onClick={() => void ejecutar({ action: 'resume' })} className="flex-1 h-10 rounded-btn-pill bg-white text-grey-900 text-rt-13 font-bold">
+              <button disabled={enviando} onClick={() => void ejecutar({ action: 'resume' })} className="flex-1 h-10 rounded-[10px] bg-white text-grey-900 text-rt-13 font-bold">
                 {t('planes:resume')}
               </button>
             ) : (
-              <button disabled={enviando} onClick={() => setConfirmar({ accion: { action: 'cancel' }, titulo: t('planes:cancelQ'), detalle: t('planes:cancelDetail', { date: fin }) })} className="flex-1 h-10 rounded-btn-pill bg-black/25 text-white/90 text-rt-13 font-semibold">
+              <button disabled={enviando} onClick={() => setConfirmar({ accion: { action: 'cancel' }, titulo: t('planes:cancelQ'), detalle: t('planes:cancelDetail', { date: fin }) })} className="flex-1 h-10 rounded-[10px] bg-black/25 text-white/90 text-rt-13 font-semibold">
                 {t('planes:cancel')}
               </button>
             )}

@@ -614,7 +614,7 @@ function AvisoTiempoAgotado({ onVolver, onMasTiempo }: {
 
         <button
           onClick={onVolver}
-          className="w-full h-[54px] rounded-btn-pill bg-brand text-white text-rt-16 font-bold tracking-[1px] uppercase mt-6 shadow-glow"
+          className="w-full h-[54px] rounded-[12px] bg-brand text-white text-rt-16 font-bold tracking-[1px] uppercase mt-6 shadow-glow"
         >
           {t('treino:backButton')}
         </button>

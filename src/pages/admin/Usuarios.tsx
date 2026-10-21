@@ -179,7 +179,7 @@ function AccionEnLote({ op, perfiles, alumnosPor, onCerrar, onHecho }: {
       pie={resultado
         ? <button className="btn-save" onClick={onHecho}>Cerrar</button>
         : (
-          <button className={borrar ? 'w-full h-12 rounded-btn-pill bg-danger text-white font-semibold disabled:opacity-40' : 'btn-save'} disabled={ocupado || (borrar && texto !== 'BORRAR')} onClick={ejecutar}>
+          <button className={borrar ? 'w-full h-12 rounded-[12px] bg-danger text-white font-semibold disabled:opacity-40' : 'btn-save'} disabled={ocupado || (borrar && texto !== 'BORRAR')} onClick={ejecutar}>
             {ocupado ? 'Procesando…' : `${titulo.split(' ')[0]} ${perfiles.length} ${perfiles.length === 1 ? 'cuenta' : 'cuentas'}`}
           </button>
         )}

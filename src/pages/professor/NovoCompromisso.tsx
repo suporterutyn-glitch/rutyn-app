@@ -293,7 +293,7 @@ export function NovoCompromissoPage() {
           onCancel={() => setBorrando(false)}
         >
           {original.series_id && (
-            <button type="button" onClick={() => eliminar(true)} className="w-full h-11 rounded-[22px] border border-danger text-danger text-rt-14 font-semibold">
+            <button type="button" onClick={() => eliminar(true)} className="w-full h-11 rounded-[12px] border border-danger text-danger text-rt-14 font-semibold">
               {t('prof:appt.deleteFollowing')}
             </button>
           )}

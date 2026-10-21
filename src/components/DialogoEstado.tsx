@@ -70,7 +70,7 @@ export function DialogoEstado({
 
 export function BotonVerde({ children, onClick }: { children: ReactNode; onClick: () => void }) {
   return (
-    <button onClick={onClick} className="w-full h-[52px] rounded-btn-pill bg-brand text-white text-rt-15 font-bold flex items-center justify-center gap-2">
+    <button onClick={onClick} className="w-full h-[52px] rounded-[12px] bg-brand text-white text-rt-15 font-bold flex items-center justify-center gap-2">
       {children}
     </button>
   )
@@ -78,7 +78,7 @@ export function BotonVerde({ children, onClick }: { children: ReactNode; onClick
 
 export function BotonWhatsapp({ children, onClick }: { children: ReactNode; onClick: () => void }) {
   return (
-    <button onClick={onClick} className="w-full h-[52px] rounded-btn-pill bg-whatsapp text-white text-rt-15 font-bold flex items-center justify-center gap-2">
+    <button onClick={onClick} className="w-full h-[52px] rounded-[12px] bg-whatsapp text-white text-rt-15 font-bold flex items-center justify-center gap-2">
       {children}
     </button>
   )
@@ -86,7 +86,7 @@ export function BotonWhatsapp({ children, onClick }: { children: ReactNode; onCl
 
 export function BotonSuave({ children, onClick }: { children: ReactNode; onClick: () => void }) {
   return (
-    <button onClick={onClick} className="w-full h-[52px] rounded-btn-pill border border-grey-300 text-grey-600 text-rt-15">
+    <button onClick={onClick} className="w-full h-[52px] rounded-[12px] border border-grey-300 text-grey-600 text-rt-15">
       {children}
     </button>
   )

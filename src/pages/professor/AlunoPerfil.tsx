@@ -375,11 +375,11 @@ function ConfirmarEliminar({ nombre, onConfirm, onCancel }: { nombre: string; on
         <label className="block text-white/70 text-rt-12 mt-4 mb-1">{t('alunos:perfil.del.type')}</label>
         <input className="input-dark" value={texto} onChange={(e) => setTexto(e.target.value)} autoFocus />
         <div className="flex gap-2 mt-5">
-          <button disabled={borrando} onClick={onCancel} className="flex-1 h-11 rounded-btn-pill border border-grey-600 text-white text-rt-13 font-semibold">{t('general:ui.cancel')}</button>
+          <button disabled={borrando} onClick={onCancel} className="flex-1 h-11 rounded-[12px] border border-grey-600 text-white text-rt-13 font-semibold">{t('general:ui.cancel')}</button>
           <button
             disabled={!listo || borrando}
             onClick={async () => { setBorrando(true); await onConfirm(); setBorrando(false) }}
-            className="flex-1 h-11 rounded-btn-pill bg-danger text-white text-rt-13 font-bold disabled:opacity-40"
+            className="flex-1 h-11 rounded-[12px] bg-danger text-white text-rt-13 font-bold disabled:opacity-40"
           >
             {borrando ? t('alunos:perfil.del.deleting') : t('alunos:perfil.del.confirm')}
           </button>

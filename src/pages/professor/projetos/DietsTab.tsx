@@ -378,7 +378,7 @@ function DietSheet({ dieta, alumno, posicion, onClose, onCreada, onEditada }: {
         )}
       </div>
       <div className="mt-8">
-        <button onClick={() => void guardar()} disabled={guardando} className="w-full h-[54px] rounded-[27px] bg-gradient-to-b from-[#91C145] to-[#5A8F2F] text-white text-rt-16 font-bold shadow-[0_6px_16px_rgba(124,179,66,0.3)] disabled:opacity-60">
+        <button onClick={() => void guardar()} disabled={guardando} className="w-full h-[54px] rounded-[12px] bg-gradient-to-b from-[#91C145] to-[#5A8F2F] text-white text-rt-16 font-bold shadow-[0_6px_16px_rgba(124,179,66,0.3)] disabled:opacity-60">
           {guardando ? t('projetos:c.saving') : dieta ? t('projetos:die.save') : t('projetos:die.create')}
         </button>
       </div>

@@ -597,11 +597,11 @@ function Cuestionario({ a, editar, base, esProfe, onCerrar }: { a: Anamnesis; ed
 
       <div className="border-t border-[#2D2D2D] px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+16px)]">
         <div className="max-w-form mx-auto flex gap-3">
-          <button disabled={i === 0} onClick={() => setI(i - 1)} className="flex-1 h-12 rounded-[24px] border border-[#333333] text-white text-rt-14 font-semibold disabled:opacity-40">{t('evaluacion:previous')}</button>
+          <button disabled={i === 0} onClick={() => setI(i - 1)} className="flex-1 h-12 rounded-[12px] border border-[#333333] text-white text-rt-14 font-semibold disabled:opacity-40">{t('evaluacion:previous')}</button>
           {lectura ? (
-            <button disabled={i === preguntas.length - 1} onClick={() => setI(i + 1)} className="flex-1 h-12 rounded-[24px] bg-[#42A5F5]/20 text-[#90CAF9] text-rt-14 font-semibold disabled:opacity-40">{t('evaluacion:next')}</button>
+            <button disabled={i === preguntas.length - 1} onClick={() => setI(i + 1)} className="flex-1 h-12 rounded-[12px] bg-[#42A5F5]/20 text-[#90CAF9] text-rt-14 font-semibold disabled:opacity-40">{t('evaluacion:next')}</button>
           ) : (
-            <button disabled={guardando || subiendo} onClick={() => void avanzar()} className="flex-1 h-12 rounded-[24px] bg-gradient-to-b from-[#91C145] to-[#5A8F2F] text-white text-rt-14 font-bold flex items-center justify-center">
+            <button disabled={guardando || subiendo} onClick={() => void avanzar()} className="flex-1 h-12 rounded-[12px] bg-gradient-to-b from-[#91C145] to-[#5A8F2F] text-white text-rt-14 font-bold flex items-center justify-center">
               {guardando ? <span className="w-5 h-5 rounded-full border-2 border-white/40 border-t-white animate-spin" /> : i === preguntas.length - 1 ? t('evaluacion:finish') : t('evaluacion:advance')}
             </button>
           )}

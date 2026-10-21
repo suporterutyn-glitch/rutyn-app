@@ -30,7 +30,7 @@ export function ModalEdicion({ titulo, subtitulo, guardando, error, onGuardar, o
       <div className="border-t border-[#2D2D2D] px-6 pt-3 pb-[calc(env(safe-area-inset-bottom)+16px)]">
         <div className="max-w-form mx-auto">
           <button onClick={onGuardar} disabled={guardando}
-            className="w-full h-[54px] rounded-[27px] bg-gradient-to-b from-[#91C145] to-[#5A8F2F] shadow-[0_4px_12px_rgba(124,179,66,0.3)] text-white text-rt-16 font-bold flex items-center justify-center">
+            className="w-full h-[54px] rounded-[12px] bg-gradient-to-b from-[#91C145] to-[#5A8F2F] shadow-[0_4px_12px_rgba(124,179,66,0.3)] text-white text-rt-16 font-bold flex items-center justify-center">
             {guardando ? <span className="w-5 h-5 rounded-full border-2 border-white/40 border-t-white animate-spin" /> : t('evaluacion:save')}
           </button>
         </div>

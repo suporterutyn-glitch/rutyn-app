@@ -67,7 +67,7 @@ export function CompartirTreino({ datos, leyenda, onCerrar }: { datos: DatosTrei
   }
 
   const chip = (activo: boolean) =>
-    'flex-1 h-10 rounded-btn-pill text-rt-13 font-semibold border ' + (activo ? 'bg-brand border-brand text-white' : 'border-grey-700 text-grey-400')
+    'flex-1 h-10 rounded-[10px] text-rt-13 font-semibold border ' + (activo ? 'bg-brand border-brand text-white' : 'border-grey-700 text-grey-400')
 
   return (
     <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/75" onClick={onCerrar}>

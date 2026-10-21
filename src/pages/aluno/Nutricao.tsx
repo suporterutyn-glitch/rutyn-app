@@ -381,7 +381,7 @@ function ComprasList({ diets }: { diets: SD[] }) {
         </ul>
       )}
 
-      <button onClick={sendWhats} className="w-full h-12 rounded-btn-pill bg-whatsapp text-white font-semibold flex items-center justify-center gap-2">
+      <button onClick={sendWhats} className="w-full h-12 rounded-[12px] bg-whatsapp text-white font-semibold flex items-center justify-center gap-2">
         <MessageCircle size={18} /> {t('nutricao:sendWhatsapp')}
       </button>
     </>

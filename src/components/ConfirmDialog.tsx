@@ -50,7 +50,7 @@ export function ConfirmDialog({
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 h-11 rounded-[22px] border border-grey-700 text-white/80 text-rt-14 font-semibold"
+            className="flex-1 h-11 rounded-[12px] border border-grey-700 text-white/80 text-rt-14 font-semibold"
           >
             {cancelLabel ?? t('general:ui.cancel')}
           </button>
@@ -58,7 +58,7 @@ export function ConfirmDialog({
             type="button"
             onClick={onConfirm}
             className={
-              'flex-1 h-11 rounded-[22px] text-white text-rt-14 font-semibold ' +
+              'flex-1 h-11 rounded-[12px] text-white text-rt-14 font-semibold ' +
               (peligro ? 'bg-[#E53935]' : 'bg-brand')
             }
           >

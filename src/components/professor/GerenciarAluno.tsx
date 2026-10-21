@@ -16,7 +16,7 @@ export function GerenciarAlunoDialog({ nome, suspenso, onSuspender, onReativar, 
   const { t } = useTranslation()
   const [confirmando, setConfirmando] = useState<'suspender' | 'excluir' | null>(null)
 
-  const pill = 'w-full rounded-[25px] py-3.5 text-rt-14 font-semibold'
+  const pill = 'w-full rounded-[12px] py-3.5 text-rt-14 font-semibold'
 
   if (confirmando) {
     const esExcluir = confirmando === 'excluir'

@@ -129,7 +129,7 @@ export function ConfiguracoesPage() {
             href={URL_SOPORTE}
             target="_blank"
             rel="noreferrer"
-            className="w-full h-12 rounded-btn-pill bg-whatsapp text-white text-rt-14 font-semibold flex items-center justify-center gap-2"
+            className="w-full h-12 rounded-[12px] bg-whatsapp text-white text-rt-14 font-semibold flex items-center justify-center gap-2"
           >
             <MessageCircle size={18} /> {t('settings:support')}
           </a>
