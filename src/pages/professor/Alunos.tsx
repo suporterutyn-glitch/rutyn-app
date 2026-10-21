@@ -144,10 +144,6 @@ export function AlunosPage() {
 
   return (
     <div className="pt-[calc(env(safe-area-inset-top)+16px)] px-4 pb-24">
-      <div className="flex items-center justify-between mb-3">
-        <h1 className="text-white text-rt-20 font-bold">{t('students:title')}</h1>
-      </div>
-
       {/* Barra de limite do plano */}
       <div className="mb-4">
         <div className="flex justify-between mb-1.5">

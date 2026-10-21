@@ -14,7 +14,6 @@ export function AvaliacaoAlunoPage() {
 
   return (
     <div className="pt-[calc(env(safe-area-inset-top)+16px)] px-4 pb-28">
-      <h1 className="text-white text-rt-20 font-bold mb-5 px-1">{t('evaluacion:mine')}</h1>
       {!profile ? null : !profesor ? (
         <div className="py-12 flex flex-col items-center gap-2 text-center">
           <UserPlus size={64} className="text-grey-700" />

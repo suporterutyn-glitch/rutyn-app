@@ -66,11 +66,6 @@ export function MeusProjetosPage() {
       style={{ '--proy-top': 'calc(env(safe-area-inset-top) + 52px)' } as React.CSSProperties}
       data-fijo={fijo ? '1' : undefined}
     >
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-white text-rt-20 font-bold">{t('projects:title')}</h1>
-      </div>
-
       {/* Filtros: Todos / Favoritos / Mis Creaciones */}
       <div className="flex flex-wrap gap-2 mb-5 md:justify-center">
         {FILTROS.map((f) => (

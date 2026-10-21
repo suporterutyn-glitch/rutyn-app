@@ -147,17 +147,15 @@ function ListaConversas({ activoId }: { activoId?: string }) {
     <div className="pt-[calc(env(safe-area-inset-top)+16px)] px-4 pb-24 lg:p-0">
       <div className="flex items-center gap-3 mb-4">
         {!isTeacher && (
-          <button onClick={() => nav('/aluno')} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white" aria-label={t('back')}>
+          <button onClick={() => nav('/aluno')} className="w-10 h-10 shrink-0 rounded-full bg-surface-line flex items-center justify-center text-white" aria-label={t('back')}>
             <ArrowLeft size={20} />
           </button>
         )}
-        <h1 className="text-white text-rt-22 font-bold">{t('general:chat.title')}</h1>
+        <label className="flex-1 flex items-center gap-2 h-10 px-3 rounded-xl bg-surface-raised text-white/60 focus-within:ring-1 focus-within:ring-brand">
+          <Search size={17} />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('general:chat.search')} className="flex-1 bg-transparent text-white text-rt-14 outline-none placeholder:text-white/40" />
+        </label>
       </div>
-
-      <label className="flex items-center gap-2 h-10 px-3 mb-4 rounded-xl bg-surface-raised text-white/60 focus-within:ring-1 focus-within:ring-brand">
-        <Search size={17} />
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('general:chat.search')} className="flex-1 bg-transparent text-white text-rt-14 outline-none placeholder:text-white/40" />
-      </label>
 
       {loading ? (
         <div className="text-white/60 text-rt-13 py-8 text-center">{t('common:loading')}</div>

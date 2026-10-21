@@ -97,8 +97,7 @@ export function FinanceiroPage() {
 
   return (
     <div className="pt-[calc(env(safe-area-inset-top)+16px)] px-4 pb-24">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-white text-rt-20 font-bold">{t('financeiro:fin.title')}</h1>
+      <div className="flex items-center justify-end mb-2">
         <button onClick={() => nav('/professor/dados-bancarios')} className="text-brand text-rt-11 font-semibold">
           {t('financeiro:fin.bank')}
         </button>
