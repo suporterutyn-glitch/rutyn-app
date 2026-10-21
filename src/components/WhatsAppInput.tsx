@@ -56,14 +56,13 @@ export function WhatsAppInput({ countryCode, onCountry, value, onChange, label =
       </div>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-end bg-black/60" onClick={() => setOpen(false)}>
+        <div className="fixed inset-0 z-50 popup-fondo bg-black/60" onClick={() => setOpen(false)}>
           <div
-            className="w-full max-w-app mx-auto bg-white rounded-t-card h-[70dvh] overflow-y-auto"
+            className="popup-caja bg-white h-[70dvh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="sticky top-0 bg-white pt-3 pb-2 flex flex-col items-center border-b border-grey-200">
-              <div className="w-10 h-1 rounded-full bg-grey-300" />
-              <div className="flex w-full items-center justify-between px-4 mt-2">
+              <div className="flex w-full items-center justify-between px-4 mt-1">
                 <span className="text-rt-16 font-bold text-black/90">
                   {t('settings:chooseCountry')}
                 </span>

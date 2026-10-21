@@ -197,9 +197,9 @@ function SheetPais({ titulo, lang, value, onChange, onClose }: {
   const { t } = useTranslation()
   const [q, setQ] = useState('')
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/70" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] popup-fondo bg-black/70" onClick={onClose}>
       <div
-        className="w-full max-w-app rounded-t-[28px] bg-surface-card px-5 pt-6 pb-[calc(env(safe-area-inset-bottom)+24px)] h-[70dvh] overflow-y-auto"
+        className="popup-caja bg-surface-card px-5 pt-6 pb-5 h-[70dvh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-white text-rt-18 font-bold mb-3">{titulo}</h2>

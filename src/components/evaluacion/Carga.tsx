@@ -114,9 +114,8 @@ function HojaGrupos({ disponibles, elegidos, onAplicar, onCerrar }: { disponible
   const { t, i18n } = useTranslation()
   const [sel, setSel] = useState(elegidos)
   return (
-    <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/60" onClick={onCerrar}>
-      <div className="w-full max-w-app rounded-t-[20px] bg-[#1E1E1E] flex flex-col h-[65dvh]" onClick={(e) => e.stopPropagation()}>
-        <div className="flex justify-center pt-3"><span className="w-10 h-1 rounded-full bg-grey-500" /></div>
+    <div className="fixed inset-0 z-[70] popup-fondo bg-black/60" onClick={onCerrar}>
+      <div className="popup-caja bg-[#1E1E1E] flex flex-col h-[65dvh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 pt-3">
           <span className="text-white text-rt-16 font-bold">{t('evaluacion:muscleGroups')}</span>
           <button onClick={onCerrar} aria-label={t('close')} className="w-9 h-9 rounded-[12px] bg-[#333333] flex items-center justify-center text-grey-400"><X size={18} /></button>

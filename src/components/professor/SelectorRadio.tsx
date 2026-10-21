@@ -39,12 +39,11 @@ export function HojaRadio({ lista, valor, lang, onElegir, onCerrar }: {
   onCerrar: () => void
 }) {
   return (
-    <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/60" onClick={onCerrar}>
+    <div className="fixed inset-0 z-[70] popup-fondo bg-black/60" onClick={onCerrar}>
       <div
-        className="w-full max-w-app rounded-t-[20px] bg-surface-raised pt-3 pb-[calc(env(safe-area-inset-bottom)+16px)] max-h-[70dvh] overflow-y-auto"
+        className="popup-caja bg-surface-raised py-2 max-h-[75dvh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="w-16 h-1 rounded-full bg-grey-600 mx-auto mb-4" />
         <ul className="flex flex-col">
           {lista.map((o) => {
             const on = o.id === valor

@@ -38,14 +38,11 @@ export function SelectSheet<T extends string>({
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-end bg-black/60" onClick={() => setOpen(false)}>
+        <div className="fixed inset-0 z-50 popup-fondo bg-black/60" onClick={() => setOpen(false)}>
           <div
-            className="w-full max-w-app mx-auto bg-white rounded-t-[16px] pb-[calc(env(safe-area-inset-bottom)+12px)]"
+            className="popup-caja bg-white pb-3 max-h-[75dvh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-center pt-3">
-              <span className="w-10 h-1 rounded-full bg-grey-300" />
-            </div>
             <div className="text-center text-rt-15 font-semibold text-ink-dark py-4">{title}</div>
             <ul>
               {options.map((o) => {

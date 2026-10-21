@@ -47,9 +47,9 @@ export function HojaMulti({ titulo, lista, valores, lang, onCambiar, onCerrar }:
 }) {
   const { t } = useTranslation()
   return (
-    <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/60" onClick={onCerrar}>
+    <div className="fixed inset-0 z-[70] popup-fondo bg-black/60" onClick={onCerrar}>
       <div
-        className="w-full max-w-app rounded-t-[20px] bg-surface-raised px-5 pt-4 pb-[calc(env(safe-area-inset-bottom)+16px)] max-h-[70dvh] overflow-y-auto"
+        className="popup-caja bg-surface-raised px-5 pt-4 pb-5 max-h-[80dvh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-3">

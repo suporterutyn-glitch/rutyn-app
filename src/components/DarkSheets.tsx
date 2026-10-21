@@ -9,14 +9,6 @@ function normalizar(s: string) {
   return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 }
 
-function Manija() {
-  return (
-    <div className="flex justify-center pt-3">
-      <span className="w-10 h-1 rounded-full bg-grey-500" />
-    </div>
-  )
-}
-
 /** Seletor escuro de opção única, con búsqueda opcional para listas largas. */
 export function DarkSelectSheet({
   label,
@@ -81,13 +73,12 @@ export function DarkSelectSheet({
       )}
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-end bg-black/60" onClick={() => setOpen(false)}>
+        <div className="fixed inset-0 z-50 popup-fondo bg-black/60" onClick={() => setOpen(false)}>
           <div
-            className="w-full max-w-app mx-auto bg-[#1E1E1E] rounded-t-[16px] flex flex-col"
+            className="popup-caja bg-[#1E1E1E] flex flex-col overflow-hidden"
             style={{ height: searchable ? '65dvh' : undefined, maxHeight: '70dvh' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <Manija />
             <div className="text-center text-white font-bold text-rt-16 p-4">{title}</div>
 
             {searchable && (
@@ -105,7 +96,7 @@ export function DarkSelectSheet({
               </div>
             )}
 
-            <ul className="flex-1 overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+12px)]">
+            <ul className="flex-1 overflow-y-auto pb-3">
               {visibles.length === 0 && (
                 <li className="text-center text-rt-13 text-grey-500 py-6">{t('general:ui.nothingFound')}</li>
               )}
@@ -196,12 +187,11 @@ export function DarkMultiSheet({
       )}
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-end bg-black/60" onClick={() => setOpen(false)}>
+        <div className="fixed inset-0 z-50 popup-fondo bg-black/60" onClick={() => setOpen(false)}>
           <div
-            className="w-full max-w-app mx-auto bg-[#1E1E1E] rounded-t-[16px] flex flex-col max-h-[70dvh]"
+            className="popup-caja bg-[#1E1E1E] flex flex-col max-h-[70dvh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <Manija />
             <div className="text-center text-white font-bold text-rt-16 p-4">{title}</div>
 
             <ul className="flex-1 overflow-y-auto">
@@ -229,7 +219,7 @@ export function DarkMultiSheet({
               })}
             </ul>
 
-            <div className="p-6 pb-[calc(env(safe-area-inset-bottom)+16px)]">
+            <div className="p-5">
               <button
                 type="button"
                 onClick={() => { onChange(draft); setOpen(false) }}
