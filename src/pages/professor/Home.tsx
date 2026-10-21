@@ -142,27 +142,23 @@ export function ProfessorHome() {
       <div
         onClick={() => nav('/professor/assinatura')}
         className={
-          'rounded-card p-4 lg:p-6 mb-3 md:mb-0 cursor-pointer ' +
+          'rounded-card px-3 py-2.5 lg:px-4 lg:py-3 mb-3 md:mb-0 cursor-pointer flex items-center gap-3 ' +
           (plan === 'free' ? 'bg-plan-free' : 'bg-plan-premium')
         }
       >
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="text-white/80 text-rt-11 font-semibold uppercase tracking-wider">{t('professor:plan')}</div>
-            <div className="text-white text-rt-20 font-bold mt-1">
-              {t(`planes:name.${plan}`)}
-              {plan === 'free' ? '' : ' ✓'}
-            </div>
-            <div className="text-white/80 text-rt-11 mt-1">
-              {planLimit === null ? t('planes:activeCount', { n: activeStudents }) : `${activeStudents} / ${planLimit}`}
-            </div>
-          </div>
-          <div className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center">
-            <Users size={22} className="text-white" />
+        <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+          <Users size={18} className="text-white" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-white/80 text-rt-10 font-semibold uppercase tracking-wider leading-none">{t('professor:plan')}</div>
+          <div className="text-white text-rt-15 font-bold mt-1 leading-tight truncate">
+            {t(`planes:name.${plan}`)}
+            {plan === 'free' ? '' : ' ✓'}
+            <span className="text-white/80 text-rt-11 font-normal"> · {planLimit === null ? t('planes:activeCount', { n: activeStudents }) : `${activeStudents} / ${planLimit}`}</span>
           </div>
         </div>
         {plan === 'free' && (
-          <div className="mt-3 h-9 rounded-btn-pill bg-white/95 flex items-center justify-center text-danger-strong text-rt-13 font-bold">
+          <div className="shrink-0 h-8 px-3 rounded-btn-pill bg-white/95 flex items-center justify-center text-danger-strong text-rt-12 font-bold">
             {t('professor:planUpgrade')}
           </div>
         )}

@@ -74,12 +74,18 @@ export function ConfiguracoesPage() {
         </div>
         <div className="flex gap-2">
           {(['pt', 'es', 'en'] as const).map((l) => (
-            <button key={l} onClick={() => setLang(l)} className={
-              'flex-1 h-10 rounded-btn-pill font-semibold text-rt-13 flex items-center justify-center gap-2 ' +
-              (currentLang === l ? 'bg-brand text-white' : 'bg-surface-raised text-grey-400')
-            }>
-              <span className="text-lg leading-none">{l === 'pt' ? '🇧🇷' : l === 'es' ? '🇪🇸' : '🇺🇸'}</span>
-              {l === 'pt' ? 'Português' : l === 'es' ? 'Español' : 'English'}
+            <button
+              key={l}
+              onClick={() => setLang(l)}
+              aria-label={l === 'pt' ? 'Português' : l === 'es' ? 'Español' : 'English'}
+              title={l === 'pt' ? 'Português' : l === 'es' ? 'Español' : 'English'}
+              aria-pressed={currentLang === l}
+              className={
+                'w-14 h-10 rounded-btn-pill flex items-center justify-center ' +
+                (currentLang === l ? 'bg-brand' : 'bg-surface-raised opacity-60')
+              }
+            >
+              <span className="text-xl leading-none">{l === 'pt' ? '🇧🇷' : l === 'es' ? '🇪🇸' : '🇺🇸'}</span>
             </button>
           ))}
         </div>

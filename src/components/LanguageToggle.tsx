@@ -40,11 +40,11 @@ export function LanguageToggle() {
     <button
       type="button"
       onClick={handleClick}
-      className="flex items-center gap-2 px-3 h-9 rounded-menu bg-surface-raised text-white text-rt-12 font-semibold transition active:scale-95"
+      className="w-10 h-10 rounded-full bg-surface-raised flex items-center justify-center transition active:scale-95"
       aria-label={t('general:ui.switchLang')}
+      title={current.toUpperCase()}
     >
-      <span className="text-lg leading-none">{FLAGS[current]}</span>
-      <span className="uppercase">{current}</span>
+      <span className="text-xl leading-none">{FLAGS[current]}</span>
     </button>
   )
 }
