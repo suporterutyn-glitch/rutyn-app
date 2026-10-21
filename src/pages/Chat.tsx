@@ -154,7 +154,7 @@ function ListaConversas({ activoId }: { activoId?: string }) {
       ) : visibles.length === 0 ? (
         <div className="text-white/50 text-rt-13 py-8 text-center">{t('general:chat.noResults')}</div>
       ) : (
-        <ul className="flex flex-col -mx-2">
+        <ul className="flex flex-col -mx-2 divide-y divide-white/[0.07]">
           {visibles.map((c) => {
             const goto = isTeacher ? `/professor/mensagens/${c.id}` : `/aluno/chat/${c.id}`
             const miLectura = isTeacher ? c.teacher_last_read_at : c.student_last_read_at
@@ -168,7 +168,7 @@ function ListaConversas({ activoId }: { activoId?: string }) {
                 <button
                   type="button"
                   onClick={() => nav(goto, { replace: !!activoId })}
-                  className={'w-full text-left px-2 py-2.5 rounded-xl flex items-center gap-3 hover:bg-white/5 active:bg-white/10 ' + (c.id === activoId ? 'bg-white/10' : '')}
+                  className={'w-full text-left px-2 py-3 flex items-center gap-3 hover:bg-white/5 active:bg-white/10 ' + (c.id === activoId ? 'bg-white/10' : '')}
                 >
                   <Avatar url={c.other?.avatar_url} nombre={c.other?.full_name} />
                   <div className="flex-1 min-w-0">
@@ -465,9 +465,9 @@ export function ConversaPage() {
   return (
     <div className="lg:flex lg:gap-4 lg:h-[calc(100dvh-72px)] lg:pt-2">
     <div className="hidden lg:block lg:w-[360px] lg:shrink-0 lg:overflow-y-auto no-scrollbar"><ListaConversas activoId={id} /></div>
-    <div className="app-shell bg-[#0b0b0b] lg:flex-1 lg:h-full lg:rounded-card lg:overflow-hidden lg:border lg:border-surface-line-strong">
-      <div className="relative z-10 min-h-dvh lg:min-h-0 lg:h-full flex flex-col">
-        <div className="sticky top-0 z-20 bg-[#0b0b0b]/90 backdrop-blur-md px-3 pt-[calc(env(safe-area-inset-top)+10px)] lg:pt-3 pb-2.5 flex items-center gap-3 border-b border-white/10">
+    <div className="fixed inset-0 z-30 h-dvh bg-[#0b0b0b] lg:static lg:z-auto lg:h-full lg:flex-1 lg:rounded-card lg:overflow-hidden lg:border lg:border-surface-line-strong">
+      <div className="h-full flex flex-col">
+        <div className="shrink-0 z-20 bg-[#0b0b0b]/95 backdrop-blur-md px-3 pt-[calc(env(safe-area-inset-top)+10px)] lg:pt-3 pb-2.5 flex items-center gap-3 border-b border-white/10">
           <button onClick={() => nav(-1)} className="lg:hidden w-9 h-9 flex items-center justify-center text-white" aria-label={t('back')}>
             <ArrowLeft size={24} />
           </button>
@@ -478,14 +478,7 @@ export function ConversaPage() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-3 py-4 flex flex-col">
-          {other && (
-            <div className="flex flex-col items-center text-center pt-4 pb-8">
-              <Avatar url={other.avatar_url} nombre={other.full_name} size={88} />
-              <div className="text-white text-rt-18 font-bold mt-3">{other.full_name}</div>
-              {rol && <div className="text-white/50 text-rt-13">{rol} · Rutyn</div>}
-            </div>
-          )}
+        <div className="chat-fondo flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-4 flex flex-col">
           {msgs.map((m, i) => {
             const mia = m.sender_id === profile?.id
             const prev = msgs[i - 1]
@@ -522,7 +515,7 @@ export function ConversaPage() {
           </div>
         )}
 
-        <div className="sticky bottom-0 bg-[#0b0b0b] px-3 pt-1.5" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 10px)' }}>
+        <div className="shrink-0 bg-[#0b0b0b] border-t border-white/5 px-3 pt-2" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 10px)' }}>
           {grabando ? (
             <div className="flex items-center gap-3 h-12 pl-3 pr-1.5 rounded-full bg-[#262626]">
               <button onClick={() => terminarGrabacion(true)} className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white" aria-label={t('general:chat.cancel')}>
