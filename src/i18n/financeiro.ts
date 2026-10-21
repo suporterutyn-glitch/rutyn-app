@@ -2,7 +2,7 @@ import { textos } from './textos'
 
 export default textos({
   pt: {
-    c: { student: 'Aluno', monthly: 'Mensal', hourly: 'Por hora', monthlyLower: 'mensal', hourlyLower: 'por hora', format: 'Formato', sending: 'Enviando…', loading: 'Carregando…', newValue: 'Novo valor ({{cur}})', value: 'Valor ({{cur}})', reasonOpt: 'Motivo (opcional)' },
+    c: { student: 'Aluno', monthly: 'Mensal', hourly: 'Por hora', monthlyLower: 'mensal', hourlyLower: 'por hora', format: 'Formato', sending: 'Enviando…', loading: 'Carregando…', newValue: 'Novo valor ({{cur}})', value: 'Valor ({{cur}})', hourRate: 'Valor da hora ({{cur}})', hoursQty: 'Quantidade de horas', totalCharge: 'Total a cobrar', errHours: 'Digite a quantidade de horas.', reasonOpt: 'Motivo (opcional)' },
     fin: {
       weekTitle: 'Para cobrar', overdueList: 'Atrasados', dueList: 'Vencem nos próximos 7 dias', awaitingList: 'Avisaram que pagaram', since: 'venceu em {{date}}', on: 'vence em {{date}}', confirmIt: 'confirme o pagamento', allGood: 'Tudo em dia: ninguém atrasado nem vencendo esta semana.',
       title: 'Financeiro', bank: 'Dados bancários', received: 'Recebido no mês', all: 'Todos', pending: 'Pendente', awaiting: 'Aguardando', paid: 'Pago', suspended: 'Atrasado',
@@ -17,7 +17,7 @@ export default textos({
     },
   },
   es: {
-    c: { student: 'Alumno', monthly: 'Mensual', hourly: 'Por hora', monthlyLower: 'mensual', hourlyLower: 'por hora', format: 'Formato', sending: 'Enviando…', loading: 'Cargando…', newValue: 'Nuevo valor ({{cur}})', value: 'Valor ({{cur}})', reasonOpt: 'Motivo (opcional)' },
+    c: { student: 'Alumno', monthly: 'Mensual', hourly: 'Por hora', monthlyLower: 'mensual', hourlyLower: 'por hora', format: 'Formato', sending: 'Enviando…', loading: 'Cargando…', newValue: 'Nuevo valor ({{cur}})', value: 'Valor ({{cur}})', hourRate: 'Valor de la hora ({{cur}})', hoursQty: 'Cantidad de horas', totalCharge: 'Total a cobrar', errHours: 'Ingresá la cantidad de horas.', reasonOpt: 'Motivo (opcional)' },
     fin: {
       weekTitle: 'Para cobrar', overdueList: 'Atrasados', dueList: 'Vencen en los próximos 7 días', awaitingList: 'Avisaron que pagaron', since: 'venció el {{date}}', on: 'vence el {{date}}', confirmIt: 'confirmá el pago', allGood: 'Todo al día: nadie atrasado ni por vencer esta semana.',
       title: 'Finanzas', bank: 'Datos bancarios', received: 'Recibido en el mes', all: 'Todos', pending: 'Pendiente', awaiting: 'En espera', paid: 'Pagado', suspended: 'Atrasado',
@@ -32,7 +32,7 @@ export default textos({
     },
   },
   en: {
-    c: { student: 'Student', monthly: 'Monthly', hourly: 'Hourly', monthlyLower: 'monthly', hourlyLower: 'hourly', format: 'Format', sending: 'Sending…', loading: 'Loading…', newValue: 'New amount ({{cur}})', value: 'Amount ({{cur}})', reasonOpt: 'Reason (optional)' },
+    c: { student: 'Student', monthly: 'Monthly', hourly: 'Hourly', monthlyLower: 'monthly', hourlyLower: 'hourly', format: 'Format', sending: 'Sending…', loading: 'Loading…', newValue: 'New amount ({{cur}})', value: 'Amount ({{cur}})', hourRate: 'Hourly rate ({{cur}})', hoursQty: 'Number of hours', totalCharge: 'Total to charge', errHours: 'Enter the number of hours.', reasonOpt: 'Reason (optional)' },
     fin: {
       weekTitle: 'To collect', overdueList: 'Overdue', dueList: 'Due in the next 7 days', awaitingList: 'Said they paid', since: 'was due {{date}}', on: 'due {{date}}', confirmIt: 'confirm the payment', allGood: 'All up to date: nobody overdue or due this week.',
       title: 'Finances', bank: 'Bank details', received: 'Received this month', all: 'All', pending: 'Pending', awaiting: 'Awaiting', paid: 'Paid', suspended: 'Overdue',

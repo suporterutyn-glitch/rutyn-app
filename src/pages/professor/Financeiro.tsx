@@ -268,8 +268,12 @@ function CobrarSheet({ currency, onClose, onCreated }: { currency: string; onClo
   const [amount, setAmount] = useState('')
   const [dueDate, setDueDate] = useState(nextMonthISO())
   const [format, setFormat] = useState<'monthly' | 'hourly'>('monthly')
+  const [hours, setHours] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Por hora: valor de la hora × cantidad de horas = lo que se cobra.
+  const horas = leerMonto(hours) || 0
+  const total = format === 'hourly' ? Math.round((leerMonto(amount) || 0) * horas * 100) / 100 : leerMonto(amount)
 
   useEffect(() => {
     if (!profile?.id) return
@@ -281,9 +285,10 @@ function CobrarSheet({ currency, onClose, onCreated }: { currency: string; onClo
 
   async function save() {
     if (!profile?.id) return
-    const valor = leerMonto(amount)
+    const valor = total
     if (!studentId) { setError(t('financeiro:fin.errStudent')); return }
-    if (!(valor > 0)) { setError(t('financeiro:fin.errAmount')); return }
+    if (!(leerMonto(amount) > 0)) { setError(t('financeiro:fin.errAmount')); return }
+    if (format === 'hourly' && !(horas > 0)) { setError(t('financeiro:c.errHours')); return }
     setError(null)
     setSaving(true)
     const { error: e } = await supabase.from('charges').insert({
@@ -291,6 +296,7 @@ function CobrarSheet({ currency, onClose, onCreated }: { currency: string; onClo
       student_id: studentId,
       format,
       amount: valor,
+      hours: format === 'hourly' ? horas : null,
       due_date: dueDate,
       status: 'pending',
     })
@@ -320,9 +326,33 @@ function CobrarSheet({ currency, onClose, onCreated }: { currency: string; onClo
             ))}
           </div>
         </Field>
-        <Field label={t('financeiro:c.value', { cur: currency })}>
-          <input inputMode="decimal" className="input-dark" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0,00" />
-        </Field>
+        {format === 'hourly' ? (
+          <>
+            <div className="flex gap-3">
+              <div className="flex-1 min-w-0">
+                <Field label={t('financeiro:c.hoursQty')}>
+                  <input inputMode="decimal" className="input-dark" value={hours} onChange={(e) => setHours(e.target.value)} placeholder="0" />
+                </Field>
+              </div>
+              <div className="flex-1 min-w-0">
+                <Field label={t('financeiro:c.hourRate', { cur: currency })}>
+                  <input inputMode="decimal" className="input-dark" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0,00" />
+                </Field>
+              </div>
+            </div>
+            <div className="flex items-center justify-between rounded-[14px] bg-brand/10 border border-brand/30 px-4 py-3">
+              <span className="text-white/70 text-rt-13">
+                {t('financeiro:c.totalCharge')}
+                {horas > 0 && leerMonto(amount) > 0 && <span className="block text-rt-11 text-white/45">{hours} × {formatMoney(leerMonto(amount), currency)}</span>}
+              </span>
+              <span className="text-brand text-rt-20 font-bold">{formatMoney(total || 0, currency)}</span>
+            </div>
+          </>
+        ) : (
+          <Field label={t('financeiro:c.value', { cur: currency })}>
+            <input inputMode="decimal" className="input-dark" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0,00" />
+          </Field>
+        )}
         <Field label={t('financeiro:fin.dueDate')}>
           <input type="date" className="input-dark" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
         </Field>
