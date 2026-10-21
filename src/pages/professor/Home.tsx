@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, Plus, Calendar, ChevronRight, Zap, RefreshCw, ClipboardCheck, MessageSquare, Users, Settings, Send } from 'lucide-react'
+import { Bell, Plus, ChevronRight, Zap, RefreshCw, ClipboardCheck, MessageSquare, Users, Settings, Send } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
@@ -198,31 +198,30 @@ export function ProfessorHome() {
 
       {/* Calendar and Agenda */}
       <div className="lg:grid lg:grid-cols-2 lg:gap-4 lg:items-start">
-      <WeekCalendar selectedDate={selectedDate} onSelectDate={setSelectedDate} datesWithEvents={datesWithEvents} />
+      {/* Un solo bloque: mes, avisar a alumnos y nuevo compromiso arriba; la semana se desliza con el dedo. */}
+      <WeekCalendar
+        selectedDate={selectedDate}
+        onSelectDate={setSelectedDate}
+        datesWithEvents={datesWithEvents}
+        acciones={<>
+          <button
+            className="w-9 h-9 rounded-lg bg-surface-raised flex items-center justify-center"
+            aria-label={t('prof:home.notifyStudents')}
+            onClick={() => nav('/professor/notificar')}
+          >
+            <Send size={17} className="text-brand" strokeWidth={2.2} />
+          </button>
+          <button
+            className="w-9 h-9 rounded-lg bg-brand flex items-center justify-center"
+            aria-label={t('prof:home.addAppointment')}
+            onClick={() => nav('/professor/compromisso/novo')}
+          >
+            <Plus size={19} className="text-white" strokeWidth={2.4} />
+          </button>
+        </>}
+      />
 
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-2 px-1">
-          <div className="text-white text-rt-15 font-bold flex items-center gap-2">
-            <Calendar size={18} className="text-brand" />
-            {t('professor:schedule')}
-          </div>
-          <div className="flex gap-2">
-            <button
-              className="w-[30px] h-[30px] rounded-md bg-surface-raised flex items-center justify-center"
-              aria-label={t('prof:home.notifyStudents')}
-              onClick={() => nav('/professor/notificar')}
-            >
-              <Send size={16} className="text-brand" strokeWidth={2.2} />
-            </button>
-            <button
-              className="w-[30px] h-[30px] rounded-md bg-brand flex items-center justify-center"
-              aria-label={t('prof:home.addAppointment')}
-              onClick={() => nav('/professor/compromisso/novo')}
-            >
-              <Plus size={18} className="text-white" strokeWidth={2.4} />
-            </button>
-          </div>
-        </div>
 
         {loading ? (
           <div className="card-dark p-4 text-white/60 text-rt-13">{t('loading')}</div>

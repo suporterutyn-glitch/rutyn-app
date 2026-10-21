@@ -27,7 +27,7 @@ export default textos({
       deleteQ: 'Excluir sua conta?', deleteDetail: 'Sua conta fica marcada para exclusão e você sai do aplicativo.', delete: 'Excluir',
     },
     pushErr: { unsupported: 'Este navegador não suporta notificações push', notConfigured: 'Notificações push ainda não configuradas', denied: 'Permissão negada', invalid: 'Não foi possível ativar as notificações' },
-    chat: { title: 'Mensagens', none: 'Sem conversas', noneTeacher: 'Assim que você tiver alunos ativos aparecerão aqui.', noneStudent: 'Aguarde ser vinculado a um professor.', placeholder: 'Digite sua mensagem…' },
+    chat: { title: 'Mensagens', none: 'Sem conversas', noneTeacher: 'Assim que você tiver alunos ativos aparecerão aqui.', noneStudent: 'Aguarde ser vinculado a um professor.', placeholder: 'Mensagem…', search: 'Pesquisar', you: 'Você', seen: 'Visto', today: 'Hoje', yesterday: 'Ontem', send: 'Enviar', student: 'Aluno', teacher: 'Professor', kind: { image: '📷 Foto', video: '🎬 Vídeo', audio: '🎤 Áudio', file: '📄 Documento' }, attach: 'Enviar arquivo', gallery: 'Foto ou vídeo', record: 'Gravar áudio', recording: 'Gravando…', cancel: 'Cancelar', tooBig: 'O arquivo é muito grande (máximo 25 MB).', uploadError: 'Não foi possível enviar o arquivo. Tente de novo.', micDenied: 'Permita o uso do microfone para gravar áudios.', sending: 'Enviando…', open: 'Abrir', now: 'agora', min: '{{n}} min', h: '{{n}} h', d: '{{n}} d', noResults: 'Nenhuma conversa encontrada' },
     ui: {
       confirm: 'Confirmar', cancel: 'Cancelar', search: 'Buscar...', nothingFound: 'Nenhum dado encontrado',
       maxSize: 'Máximo 2MB', photoFormat: 'Não foi possível ler essa imagem. Use uma foto JPG ou PNG.', changePhoto: 'Alterar foto', learnMore: 'Saber mais', later: 'Depois', switchLang: 'Alternar idioma',
@@ -60,7 +60,7 @@ export default textos({
       deleteQ: '¿Eliminar tu cuenta?', deleteDetail: 'Tu cuenta queda marcada para eliminación y salís de la aplicación.', delete: 'Eliminar',
     },
     pushErr: { unsupported: 'Este navegador no admite notificaciones push', notConfigured: 'Las notificaciones push todavía no están configuradas', denied: 'Permiso denegado', invalid: 'No se pudieron activar las notificaciones' },
-    chat: { title: 'Mensajes', none: 'Sin conversaciones', noneTeacher: 'Cuando tengas alumnos activos aparecerán acá.', noneStudent: 'Esperá a que un profesor te vincule.', placeholder: 'Escribí tu mensaje…' },
+    chat: { title: 'Mensajes', none: 'Sin conversaciones', noneTeacher: 'Cuando tengas alumnos activos aparecerán acá.', noneStudent: 'Esperá a que un profesor te vincule.', placeholder: 'Mensaje…', search: 'Buscar', you: 'Vos', seen: 'Visto', today: 'Hoy', yesterday: 'Ayer', send: 'Enviar', student: 'Alumno', teacher: 'Profesor', kind: { image: '📷 Foto', video: '🎬 Video', audio: '🎤 Audio', file: '📄 Documento' }, attach: 'Enviar archivo', gallery: 'Foto o video', record: 'Grabar audio', recording: 'Grabando…', cancel: 'Cancelar', tooBig: 'El archivo es muy grande (máximo 25 MB).', uploadError: 'No se pudo enviar el archivo. Probá de nuevo.', micDenied: 'Permití el uso del micrófono para grabar audios.', sending: 'Enviando…', open: 'Abrir', now: 'ahora', min: '{{n}} min', h: '{{n}} h', d: '{{n}} d', noResults: 'No se encontraron conversaciones' },
     ui: {
       confirm: 'Confirmar', cancel: 'Cancelar', search: 'Buscar...', nothingFound: 'No se encontraron datos',
       maxSize: 'Máximo 2MB', photoFormat: 'No se pudo leer esa imagen. Usá una foto JPG o PNG.', changePhoto: 'Cambiar foto', learnMore: 'Saber más', later: 'Después', switchLang: 'Cambiar idioma',
@@ -93,7 +93,7 @@ export default textos({
       deleteQ: 'Delete your account?', deleteDetail: 'Your account will be marked for deletion and you will be logged out.', delete: 'Delete',
     },
     pushErr: { unsupported: "This browser doesn't support push notifications", notConfigured: "Push notifications aren't set up yet", denied: 'Permission denied', invalid: 'Could not turn on notifications' },
-    chat: { title: 'Messages', none: 'No conversations', noneTeacher: 'Your active students will show up here.', noneStudent: 'Wait until a trainer links you.', placeholder: 'Type your message…' },
+    chat: { title: 'Messages', none: 'No conversations', noneTeacher: 'Your active students will show up here.', noneStudent: 'Wait until a trainer links you.', placeholder: 'Message…', search: 'Search', you: 'You', seen: 'Seen', today: 'Today', yesterday: 'Yesterday', send: 'Send', student: 'Client', teacher: 'Trainer', kind: { image: '📷 Photo', video: '🎬 Video', audio: '🎤 Audio', file: '📄 Document' }, attach: 'Send file', gallery: 'Photo or video', record: 'Record audio', recording: 'Recording…', cancel: 'Cancel', tooBig: 'The file is too large (25 MB max).', uploadError: "Couldn't send the file. Try again.", micDenied: 'Allow microphone access to record audio.', sending: 'Sending…', open: 'Open', now: 'now', min: '{{n}} min', h: '{{n}} h', d: '{{n}} d', noResults: 'No conversations found' },
     ui: {
       confirm: 'Confirm', cancel: 'Cancel', search: 'Search...', nothingFound: 'Nothing found',
       maxSize: 'Max 2MB', photoFormat: "Couldn't read that image. Use a JPG or PNG photo.", changePhoto: 'Change photo', learnMore: 'Learn more', later: 'Later', switchLang: 'Switch language',
