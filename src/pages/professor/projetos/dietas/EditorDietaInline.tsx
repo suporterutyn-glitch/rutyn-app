@@ -268,7 +268,7 @@ function TarjetaComida({ c, lang, abierta, onAlternar, onHora, onBorrar, onAgreg
                     (arrastre.arrastrando === a!.id ? 'border-brand shadow-[0_4px_12px_rgba(124,179,66,0.3)] opacity-80 ' : 'border-[#333333] ') +
                     (arrastre.encima === a!.id && arrastre.arrastrando !== a!.id ? 'border-dashed border-brand' : '')}
                 >
-                  <button onPointerDown={arrastre.alBajar(a!.id)} aria-label={t('projetos:ed.drag')} className="touch-none cursor-grab shrink-0"><GripVertical size={18} className="text-grey-600" /></button>
+                  <button onPointerDown={arrastre.alBajar(a!.id)} aria-label={t('projetos:ed.drag')} className="touch-none cursor-grab shrink-0 p-2 -m-2"><GripVertical size={18} className="text-grey-600" /></button>
                   <div className="flex-1 min-w-0">
                     <div className="text-white text-rt-13 font-semibold truncate">{nombreAlimento(a!, lang)}</div>
                     <div className="text-grey-400 text-rt-10">{Math.round(mm.kcal)} kcal | P: {mm.p.toFixed(1)}g | C: {mm.c.toFixed(1)}g | G: {mm.g.toFixed(1)}g</div>

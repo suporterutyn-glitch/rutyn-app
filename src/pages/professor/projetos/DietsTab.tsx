@@ -256,7 +256,7 @@ function CabeceraDieta({ d, deAlumno, lang, expandida, seleccionada, onGrip, onE
           className={'w-[22px] h-[22px] rounded-[4px] border-[1.5px] flex items-center justify-center shrink-0 text-rt-12 ' + (seleccionada ? 'bg-brand border-brand text-white' : 'border-grey-500')}>
           {seleccionada && '✓'}
         </button>
-        <button onPointerDown={onGrip} aria-label={t('projetos:die.drag')} className="touch-none cursor-grab shrink-0"><GripVertical size={18} className="text-grey-600" /></button>
+        <button onPointerDown={onGrip} aria-label={t('projetos:die.drag')} className="touch-none cursor-grab shrink-0 p-2 -m-2"><GripVertical size={18} className="text-grey-600" /></button>
         <button onClick={() => { if (fueArrastre()) return; if (abierto) { cerrar(); return } onExpandir() }} className="flex-1 min-w-0 text-left">
           <span className="block text-white text-rt-14 font-bold truncate">{d.name}</span>
           {d.goal && <span className="inline-block mt-1 text-rt-10 px-2 py-0.5 rounded-[10px] bg-[#2D2D2D] text-grey-400">{etiquetaDe(objetivosDieta, d.goal, lang)}</span>}

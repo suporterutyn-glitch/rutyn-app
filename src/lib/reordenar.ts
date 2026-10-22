@@ -28,6 +28,7 @@ export function useArrastreLista<T extends string>(
       // El arrastre nace en la manija, no en toda la tarjeta: así el scroll
       // vertical de la lista sigue funcionando.
       e.preventDefault()
+      window.getSelection?.()?.removeAllRanges()
       try { (e.target as HTMLElement).setPointerCapture?.(e.pointerId) } catch { /* sin captura igual funciona */ }
       arrastrandoRef.current = id
       setArrastrando(id)

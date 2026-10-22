@@ -84,6 +84,16 @@
     @apply bg-background text-foreground antialiased;
     font-family: 'Montserrat', system-ui, sans-serif;
     -webkit-tap-highlight-color: transparent;
+    /* Sin seleccionar ni copiar texto en la app (al arrastrar ejercicios o alimentos se marcaba el texto). */
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  /* Donde se escribe, sí se puede seleccionar. */
+  input, textarea, select, [contenteditable="true"] {
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
   }
 
   #root { display: flex; justify-content: center; }

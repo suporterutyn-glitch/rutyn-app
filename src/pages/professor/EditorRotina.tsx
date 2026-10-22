@@ -630,7 +630,7 @@ function TarjetaExercicio({
           type="button"
           onPointerDown={arrastre.alBajar(re.id!)}
           aria-label={t('projetos:rot.drag')}
-          className="shrink-0 touch-none cursor-grab active:cursor-grabbing"
+          className="shrink-0 touch-none cursor-grab active:cursor-grabbing p-2 -m-2"
         >
           <GripVertical size={16} className="text-grey-600" />
         </button>
