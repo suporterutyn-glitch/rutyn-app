@@ -112,14 +112,15 @@ export const MAX_PARAMETROS_POR_SERIE = 10
  * valor ("90s"). El catálogo usa 'repetition' y la unidad va aparte, así que
  * al leer se traduce la clave y se limpia el valor: sin esto se ve "90ss".
  */
-export function normalizarParams(params: Record<string, string> | null | undefined): Record<string, string> {
+export function normalizarParams(params: Record<string, string> | null | undefined, conVacios = false): Record<string, string> {
   const salida: Record<string, string> = {}
   for (const [clave, valor] of Object.entries(params ?? {})) {
     const id = clave === 'reps' ? 'repetition' : clave
     const p = PARAMETRO_POR_ID.get(id)
     if (!p) continue
     let v = String(valor ?? '').trim()
-    if (v === '') continue
+    // En el editor un campo recién agregado (Carga, Distancia…) nace vacío y tiene que seguir a la vista.
+    if (v === '' && !conVacios) continue
     if (p.tipo !== 'select' && p.unidad && v.toLowerCase().endsWith(p.unidad.toLowerCase())) {
       v = v.slice(0, -p.unidad.length).trim()
     }

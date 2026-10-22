@@ -234,20 +234,23 @@ function SheetParametros({ lang, elegidos, onCerrar, onGuardar }: {
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/70" onClick={onCerrar}>
+    <div className="fixed inset-0 z-[60] popup-fondo bg-black/70" onClick={onCerrar}>
       <div
-        className="w-full max-w-app rounded-t-[28px] bg-surface-card px-5 pt-5 pb-[calc(env(safe-area-inset-bottom)+20px)] max-h-[80dvh] overflow-y-auto"
+        className="popup-caja bg-surface-card flex flex-col max-h-[82dvh] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
+        <div className="px-5 pt-5 pb-3 border-b border-surface-line shrink-0">
         <div className="flex items-center justify-between mb-1">
           <h2 className="text-white text-rt-18 font-bold">{t('projetos:ser.paramsTitle')}</h2>
           <button onClick={onCerrar} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white" aria-label={t('projetos:ser.close')}>
             <X size={18} />
           </button>
         </div>
-        <p className="text-white/50 text-rt-11 mb-4">{t('projetos:ser.nOfMax', { n: sel.length, max: MAX_PARAMETROS_POR_SERIE })}</p>
+        <p className="text-white/50 text-rt-11">{t('projetos:ser.nOfMax', { n: sel.length, max: MAX_PARAMETROS_POR_SERIE })}</p>
+        </div>
 
-        <ul className="flex flex-col">
+        {/* Lista con scroll; el botón Guardar queda fijo abajo. */}
+        <ul className="flex flex-col flex-1 min-h-0 overflow-y-auto overscroll-contain px-5">
           {PARAMETROS.map((p) => {
             const on = sel.includes(p.id)
             return (
@@ -272,7 +275,9 @@ function SheetParametros({ lang, elegidos, onCerrar, onGuardar }: {
           })}
         </ul>
 
-        <button onClick={() => onGuardar(sel)} className="btn-save mt-6">{t('projetos:ser.saveParams')}</button>
+        <div className="px-5 py-4 border-t border-surface-line shrink-0">
+          <button onClick={() => onGuardar(sel)} className="btn-save">{t('projetos:ser.saveParams')}</button>
+        </div>
       </div>
     </div>
   )

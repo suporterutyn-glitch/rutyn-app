@@ -139,9 +139,11 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
     await load()
   }
 
+  // Solo la primera carga muestra "Cargando…"; las siguientes actualizan sin mover la pantalla.
+  const yaCargo = useRef(false)
   async function load() {
     if (!id) return
-    setLoading(true)
+    if (!yaCargo.current) setLoading(true)
     const [{ data: r }, { data: re }] = await Promise.all([
       supabase.from('routines').select('id,name,objective,student_id').eq('id', id).single(),
       supabase.from('routine_exercises').select('*,series(*)').eq('routine_id', id).order('position'),
@@ -154,6 +156,7 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
     }))
     setExs(list as Ex[])
     setLoading(false)
+    yaCargo.current = true
     // Rutina de un alumno: cada cambio le llega a su app.
     if ((r as Routine | null)?.student_id) void sincronizarRutinaAlumno(id)
   }
@@ -196,12 +199,14 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
 
   async function addSerie(re: Ex) {
     const pos = (re.series?.length ?? 0)
-    await supabase.from('series').insert({
+    const { data, error } = await supabase.from('series').insert({
       routine_exercise_id: re.id,
       position: pos,
       params: { reps: '10', load: '', rest: '90s' },
-    })
-    await load()
+    }).select('*').single()
+    if (error || !data) { setErrorGuardado(error ? mensajeError(error) : t('projetos:rot.addError')); return }
+    setExs((prev) => prev.map((ex) => (ex.id === re.id ? { ...ex, series: [...(ex.series ?? []), data as Serie] } : ex)))
+    sincronizarPronto()
   }
 
   async function updateSerieParams(sId: string, params: any) {
@@ -229,19 +234,23 @@ export function EditorRotina({ routineId, embebido = false }: { routineId?: stri
   /** Copia parámetros y observación al final, como pide el diseño. */
   async function duplicarSerie(re: Ex, s: Serie) {
     const pos = re.series?.length ?? 0
-    const { error } = await supabase.from('series').insert({
+    const { data, error } = await supabase.from('series').insert({
       routine_exercise_id: re.id,
       position: pos,
       params: s.params ?? {},
       notes: s.notes ?? null,
-    })
-    if (error) { setErrorGuardado(mensajeError(error)); return }
-    await load()
+    }).select('*').single()
+    if (error || !data) { setErrorGuardado(error ? mensajeError(error) : t('projetos:rot.addError')); return }
+    // Se agrega en memoria: recargar todo hacía saltar la pantalla.
+    setExs((prev) => prev.map((ex) => (ex.id === re.id ? { ...ex, series: [...(ex.series ?? []), data as Serie] } : ex)))
+    sincronizarPronto()
   }
 
   async function removeSerie(sId: string) {
-    await supabase.from('series').delete().eq('id', sId)
-    await load()
+    setExs((prev) => prev.map((ex) => ({ ...ex, series: (ex.series ?? []).filter((sr) => sr.id !== sId) })))
+    const { error } = await supabase.from('series').delete().eq('id', sId)
+    if (error) { setErrorGuardado(mensajeError(error)); await load(); return }
+    sincronizarPronto()
   }
 
   return (
@@ -676,7 +685,7 @@ function TarjetaExercicio({
                 id={sr.id}
                 arrastre={arrastreSeries}
                 numero={si + 1}
-                params={normalizarParams(sr.params)}
+                params={normalizarParams(sr.params, true)}
                 observacion={sr.notes ?? ''}
                 lang={lang}
                 onParams={(np) => onSerieParams(sr.id!, np)}
