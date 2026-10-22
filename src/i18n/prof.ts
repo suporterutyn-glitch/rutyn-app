@@ -14,7 +14,7 @@ export default textos({
       keyType: 'Tipo de Chave', email: 'E-mail', phone: 'Telefone', random: 'Aleatória', pixKey: 'Chave PIX', save: 'Salvar', saving: 'Salvando…', saved: 'Salvo ✓',
     },
     home: {
-      teacher: 'Professor', cardRoutineDone: '{{done}} de {{total}} treinos feitos', cardRoutineEnded: 'Terminou em {{date}}', cardAnamDone: 'Anamnese concluída: {{name}}', cardUnread: 'Mensagem sem ler', cardNothing: 'Nada pendente por aqui.', cardOpen: 'Abrir',
+      teacher: 'Professor', cardRoutineDone: '{{done}} de {{total}} treinos feitos', cardRoutineEnded: 'Terminou em {{date}}', cardAnamDone: 'Anamnese concluída: {{name}}', cardUnread: 'Mensagem sem ler', cardNothing: 'Nada pendente por aqui.', cardOpen: 'Abrir', evalNew: 'Novas', evalAll: 'Todas as anamneses', evalSeeAnswers: 'Ver respostas', evalStatus: { pending: 'Pendente', in_progress: 'Em andamento', completed: 'Concluída' }, evalEmpty: 'Nenhuma anamnese nova. As já vistas ficam em Avaliações de cada aluno.',
       settings: 'Configurações', notifications: 'Notificações', notifyStudents: 'Notificar alunos', addAppointment: 'Adicionar compromisso',
       deleteAppointment: 'Excluir compromisso', seeMore: 'Ver mais...', seeLess: 'Ver menos...', prevWeek: 'Semana anterior', nextWeek: 'Próxima semana',
     },
@@ -47,7 +47,7 @@ export default textos({
       keyType: 'Tipo de Clave', email: 'E-mail', phone: 'Teléfono', random: 'Aleatoria', pixKey: 'Clave PIX', save: 'Guardar', saving: 'Guardando…', saved: 'Guardado ✓',
     },
     home: {
-      teacher: 'Profesor', cardRoutineDone: '{{done}} de {{total}} entrenamientos hechos', cardRoutineEnded: 'Terminó el {{date}}', cardAnamDone: 'Anamnesis completada: {{name}}', cardUnread: 'Mensaje sin leer', cardNothing: 'No hay nada pendiente.', cardOpen: 'Abrir',
+      teacher: 'Profesor', cardRoutineDone: '{{done}} de {{total}} entrenamientos hechos', cardRoutineEnded: 'Terminó el {{date}}', cardAnamDone: 'Anamnesis completada: {{name}}', cardUnread: 'Mensaje sin leer', cardNothing: 'No hay nada pendiente.', cardOpen: 'Abrir', evalNew: 'Nuevas', evalAll: 'Todas las anamnesis', evalSeeAnswers: 'Ver respuestas', evalStatus: { pending: 'Pendiente', in_progress: 'En curso', completed: 'Completada' }, evalEmpty: 'No hay anamnesis nuevas. Las ya vistas quedan en Evaluaciones de cada alumno.',
       settings: 'Configuración', notifications: 'Notificaciones', notifyStudents: 'Notificar alumnos', addAppointment: 'Agregar compromiso',
       deleteAppointment: 'Eliminar compromiso', seeMore: 'Ver más...', seeLess: 'Ver menos...', prevWeek: 'Semana anterior', nextWeek: 'Semana siguiente',
     },
@@ -80,7 +80,7 @@ export default textos({
       keyType: 'Key Type', email: 'Email', phone: 'Phone', random: 'Random', pixKey: 'PIX Key', save: 'Save', saving: 'Saving…', saved: 'Saved ✓',
     },
     home: {
-      teacher: 'Trainer', cardRoutineDone: '{{done}} of {{total}} workouts done', cardRoutineEnded: 'Ended on {{date}}', cardAnamDone: 'Questionnaire completed: {{name}}', cardUnread: 'Unread message', cardNothing: 'Nothing pending.', cardOpen: 'Open',
+      teacher: 'Trainer', cardRoutineDone: '{{done}} of {{total}} workouts done', cardRoutineEnded: 'Ended on {{date}}', cardAnamDone: 'Questionnaire completed: {{name}}', cardUnread: 'Unread message', cardNothing: 'Nothing pending.', cardOpen: 'Open', evalNew: 'New', evalAll: 'All questionnaires', evalSeeAnswers: 'View answers', evalStatus: { pending: 'Pending', in_progress: 'In progress', completed: 'Completed' }, evalEmpty: 'No new questionnaires. Ones you have seen stay in each student\'s Assessments.',
       settings: 'Settings', notifications: 'Notifications', notifyStudents: 'Notify students', addAppointment: 'Add appointment',
       deleteAppointment: 'Delete appointment', seeMore: 'See more...', seeLess: 'See less...', prevWeek: 'Previous week', nextWeek: 'Next week',
     },

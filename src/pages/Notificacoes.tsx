@@ -243,7 +243,7 @@ function DetalleNotificacion({ n, tag, profe, onVerImagen, onClose }: {
         )}
 
         {accion && (
-          <button onClick={() => { onClose(); nav(accion.to) }} className="btn-save mt-5">
+          <button onClick={async () => { const to = accion.to || (await buscarAnamnesis(n)); onClose(); nav(to) }} className="btn-save mt-5">
             {t(`notifications:act.${accion.label}`)}
           </button>
         )}
@@ -257,9 +257,8 @@ function accionDe(n: N, profe: boolean): { label: string; to: string } | null {
   const k = n.data?.key ?? ''
   const d = n.data ?? {}
   if (k.startsWith('newMessage') && d.conversation_id) return { label: 'chat', to: profe ? `/professor/mensagens/${d.conversation_id}` : `/aluno/chat/${d.conversation_id}` }
-  if (k === 'anamnesisDone') return d.student_id
-    ? { label: 'anamnesis', to: `/professor/avaliacoes/${d.student_id}?anamnesis=${d.anamnesis_id ?? ''}` }
-    : { label: 'students', to: '/professor/alunos' }
+  // Sin student_id (avisos viejos) se busca al tocar el botón: ver buscarAnamnesis.
+  if (k === 'anamnesisDone') return { label: 'answers', to: d.student_id ? `/professor/avaliacoes/${d.student_id}?anamnesis=${d.anamnesis_id ?? ''}` : '' }
   if (k === 'anamnesisSent') return { label: 'anamnesis', to: `/aluno/avaliacao?anamnesis=${d.anamnesis_id ?? ''}` }
   if (/^(charge|payment|change|weekSummary)/.test(k) && k !== 'paymentFailed') return profe ? { label: 'finance', to: '/professor/financeiro' } : { label: 'monthly', to: '/aluno/mensalidade' }
   if (/^(newInvite|counterAccepted)/.test(k)) return { label: 'invites', to: '/professor/convites' }
@@ -268,6 +267,17 @@ function accionDe(n: N, profe: boolean): { label: string; to: string } | null {
   if (/^newRoutine/.test(k)) return { label: 'workouts', to: '/aluno/treinos' }
   if (/^newDiet/.test(k)) return { label: 'nutrition', to: '/aluno/nutricao' }
   return null
+}
+
+/** Avisos de anamnesis anteriores al 22/10 no guardaban el alumno: se busca por su nombre y el de la anamnesis. */
+async function buscarAnamnesis(n: N): Promise<string> {
+  const p = n.data?.params ?? {}
+  const { data } = await supabase.from('anamnesis_answers')
+    .select('id,student_id,template_name,submitted_at,profiles!anamnesis_answers_student_id_fkey(full_name)')
+    .eq('status', 'completed').order('submitted_at', { ascending: false }).limit(50)
+  const filas = (data as unknown as { id: string; student_id: string; template_name: string | null; profiles: { full_name: string | null } | null }[]) ?? []
+  const a = filas.find((x) => x.template_name === p.name && x.profiles?.full_name === p.who) ?? filas.find((x) => x.profiles?.full_name === p.who)
+  return a ? `/professor/avaliacoes/${a.student_id}?anamnesis=${a.id}` : '/professor/alunos'
 }
 
 /** "agora", "3h", "2d" — como en el diseño, no la fecha completa. */

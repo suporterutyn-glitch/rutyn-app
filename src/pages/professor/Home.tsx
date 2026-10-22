@@ -68,18 +68,22 @@ export function ProfessorHome() {
   type Pendiente = { id: string; titulo: string; detalle: string; to: string }
   const [pend, setPend] = useState<{ rutinas: Pendiente[]; evals: Pendiente[]; msgs: Pendiente[] }>({ rutinas: [], evals: [], msgs: [] })
   const [lista, setLista] = useState<{ titulo: string; items: Pendiente[] } | null>(null)
+  type FilaAnam = { id: string; alumno: string; nombre: string; estado: 'pending' | 'in_progress' | 'completed'; nueva: boolean; fecha: string; to: string }
+  const [anamTodas, setAnamTodas] = useState<FilaAnam[]>([])
+  const [verAnam, setVerAnam] = useState(false)
 
   async function cargarPendientes(tid: string) {
     const hoy = new Date().toISOString().slice(0, 10)
     const [{ data: alumnos }, { data: rutinas }, { data: anams }, { data: convs }] = await Promise.all([
       supabase.from('profiles').select('id,full_name,email').eq('teacher_id', tid).eq('link_status', 'active'),
       supabase.from('student_routines').select('id,student_id,name,completed_workouts,estimated_workouts,ends_on,is_hidden').eq('teacher_id', tid),
-      supabase.from('anamnesis_answers').select('id,student_id,template_name,template_name_es,template_name_en,completed_by,teacher_seen_at').eq('teacher_id', tid).eq('status', 'completed'),
+      supabase.from('anamnesis_answers').select('id,student_id,status,created_at,submitted_at,template_name,template_name_es,template_name_en,completed_by,teacher_seen_at').eq('teacher_id', tid).order('created_at', { ascending: false }),
       supabase.from('conversations').select('id,student_id,last_message,last_message_at,last_sender_id,teacher_last_read_at').eq('teacher_id', tid),
     ])
     const nombres = new Map(((alumnos as { id: string; full_name: string | null; email: string | null }[]) ?? []).map((a) => [a.id, a.full_name || a.email || '—']))
     const activo = (id: string) => nombres.has(id)
     const fecha = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString(localeDe(i18n.language))
+    const lang = i18n.language.slice(0, 2)
     const vistos = new Set<string>()
     const rutinasPend: Pendiente[] = []
     for (const r of (rutinas as { id: string; student_id: string; name: string; completed_workouts: number | null; estimated_workouts: number | null; ends_on: string | null; is_hidden: boolean | null }[]) ?? []) {
@@ -91,9 +95,16 @@ export function ProfessorHome() {
       vistos.add(r.student_id)
       rutinasPend.push({ id: r.id, titulo: nombres.get(r.student_id)!, detalle: `${r.name} · ${porCantidad ? t('prof:home.cardRoutineDone', { done: hechos, total }) : t('prof:home.cardRoutineEnded', { date: fecha(r.ends_on!) })}`, to: `/professor/alunos/${r.student_id}?tab=rotinas` })
     }
-    const lang = i18n.language.slice(0, 2)
-    const evals: Pendiente[] = ((anams as { id: string; student_id: string; template_name: string | null; template_name_es: string | null; template_name_en: string | null; completed_by: string | null; teacher_seen_at: string | null }[]) ?? [])
-      .filter((a) => a.completed_by !== 'teacher' && !a.teacher_seen_at && activo(a.student_id))
+    type A = { id: string; student_id: string; status: FilaAnam['estado']; created_at: string; submitted_at: string | null; template_name: string | null; template_name_es: string | null; template_name_en: string | null; completed_by: string | null; teacher_seen_at: string | null }
+    const nombreA = (a: A) => (lang === 'es' && a.template_name_es) || (lang === 'en' && a.template_name_en) || a.template_name || ''
+    const esNueva = (a: A) => a.status === 'completed' && a.completed_by !== 'teacher' && !a.teacher_seen_at
+    setAnamTodas(((anams as A[]) ?? []).filter((a) => activo(a.student_id)).map((a) => ({
+      id: a.id, alumno: nombres.get(a.student_id)!, nombre: nombreA(a), estado: a.status, nueva: esNueva(a),
+      fecha: new Date(a.submitted_at ?? a.created_at).toLocaleDateString(localeDe(i18n.language)),
+      to: `/professor/avaliacoes/${a.student_id}?anamnesis=${a.id}`,
+    })))
+    const evals: Pendiente[] = ((anams as A[]) ?? [])
+      .filter((a) => esNueva(a) && activo(a.student_id))
       .map((a) => ({ id: a.id, titulo: nombres.get(a.student_id)!, detalle: t('prof:home.cardAnamDone', { name: (lang === 'es' && a.template_name_es) || (lang === 'en' && a.template_name_en) || a.template_name || '' }), to: `/professor/avaliacoes/${a.student_id}?anamnesis=${a.id}` }))
     const msgs: Pendiente[] = ((convs as { id: string; student_id: string; last_message: string | null; last_message_at: string | null; last_sender_id: string | null; teacher_last_read_at: string | null }[]) ?? [])
       .filter((c) => c.last_message_at && c.last_sender_id && c.last_sender_id !== tid && (!c.teacher_last_read_at || c.teacher_last_read_at < c.last_message_at) && activo(c.student_id))
@@ -238,7 +249,7 @@ export function ProfessorHome() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 lg:gap-4 mb-4 lg:mb-6">
         <DashCard title={t('professor:activeStudents')} value={activeStudents.toString()} icon={Users} onClick={() => nav('/professor/alunos')} />
         <DashCard title={t('professor:changeWorkouts')} value={String(pend.rutinas.length)} icon={RefreshCw} onClick={() => abrirPendientes(t('professor:changeWorkouts'), pend.rutinas, '/professor/alunos')} />
-        <DashCard title={t('professor:assessments')} value={String(pend.evals.length)} icon={ClipboardCheck} onClick={() => abrirPendientes(t('professor:assessments'), pend.evals, '/professor/alunos')} />
+        <DashCard title={t('professor:assessments')} value={String(pend.evals.length)} icon={ClipboardCheck} onClick={() => setVerAnam(true)} />
         <DashCard title={t('professor:messages')} value={String(pend.msgs.length)} icon={MessageSquare} onClick={() => abrirPendientes(t('professor:messages'), pend.msgs, '/professor/mensagens')} />
       </div>
 
@@ -312,6 +323,42 @@ export function ProfessorHome() {
       </div>
 
       <AnnouncementModal />
+
+      {verAnam && (
+        <div className="fixed inset-0 z-[60] popup-fondo bg-black/70" onClick={() => setVerAnam(false)}>
+          <div className="popup-caja bg-surface-card p-5 max-h-[85dvh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-white text-rt-18 font-bold">{t('professor:assessments')}</h2>
+              <button onClick={() => setVerAnam(false)} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white" aria-label={t('common:close')}><X size={18} /></button>
+            </div>
+            {/* El inicio es solo para lo nuevo: las anamnesis ya vistas quedan en Evaluaciones de cada alumno. */}
+            {!anamTodas.some((a) => a.nueva) && <p className="text-white/60 text-rt-13 py-4 text-center">{t('prof:home.evalEmpty')}</p>}
+            {[{ titulo: t('prof:home.evalNew'), filas: anamTodas.filter((a) => a.nueva) }].filter((g) => g.filas.length > 0).map((g) => (
+              <div key={g.titulo} className="mb-4 last:mb-0">
+                <div className="text-white/50 text-rt-11 font-semibold uppercase tracking-wide mb-2">{g.titulo}</div>
+                <ul className="flex flex-col gap-2">
+                  {g.filas.map((a) => (
+                    <li key={g.titulo + a.id} className={'rounded-[12px] border p-3 ' + (a.nueva ? 'bg-brand/10 border-brand/40' : 'bg-surface-raised border-surface-line')}>
+                      <div className="flex items-start gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-white text-rt-14 font-semibold truncate">{a.nombre}</div>
+                          <div className="text-white/70 text-rt-12 truncate">{a.alumno} · {a.fecha}</div>
+                        </div>
+                        <span className={'shrink-0 text-rt-10 font-semibold px-2 py-0.5 rounded-tag ' + (a.estado === 'completed' ? 'bg-brand/20 text-brand' : a.estado === 'in_progress' ? 'bg-[#42A5F5]/20 text-[#90CAF9]' : 'bg-warning/20 text-warning')}>
+                          {t(`prof:home.evalStatus.${a.estado}`)}
+                        </span>
+                      </div>
+                      <button onClick={() => { setVerAnam(false); nav(a.to) }} className="mt-2.5 w-full h-9 rounded-[10px] bg-brand text-white text-rt-12 font-semibold">
+                        {t('prof:home.evalSeeAnswers')}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {lista && (
         <div className="fixed inset-0 z-[60] popup-fondo bg-black/70" onClick={() => setLista(null)}>
