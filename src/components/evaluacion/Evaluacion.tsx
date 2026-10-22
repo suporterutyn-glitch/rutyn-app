@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useSearchParams } from 'react-router-dom'
 import {
   User, Dumbbell, Activity, PersonStanding, Ruler, Camera, PieChart, TrendingUp, ClipboardList,
   ChevronLeft, ChevronsUpDown, ChevronsDownUp, Pencil, Lock, LockOpen, Eye, EyeOff, UserPlus, GraduationCap,
@@ -61,6 +62,10 @@ export function Evaluacion({ studentId, teacherId, modo }: { studentId: string; 
   const [estado, setEstado] = useState<'cargando' | 'listo' | 'sin' | 'error'>('cargando')
   const [error, setError] = useState('')
   const [abiertas, setAbiertas] = useState<Seccion[]>([])
+  // ?anamnesis=<id> (desde una notificación): abre la sección y esa anamnesis directo.
+  const [params] = useSearchParams()
+  const abrirAnamnesis = params.get('anamnesis')
+  useEffect(() => { if (abrirAnamnesis !== null) setAbiertas((p) => (p.includes('anamnese') ? p : [...p, 'anamnese'])) }, [abrirAnamnesis])
   const [editando, setEditando] = useState<Seccion | null>(null)
   const [rms, setRms] = useState<PruebaRM[]>([])
   const [rmEditando, setRmEditando] = useState<PruebaRM | null>(null)
@@ -190,7 +195,7 @@ export function Evaluacion({ studentId, teacherId, modo }: { studentId: string; 
             {s === 'gordura' && <SeccionGrasa registro={grasa} ficha={ficha} puedeEditar={puedeEditar('gordura')} onEditar={() => setEditando('gordura')} />}
             {s === 'fotos' && <SeccionFotos fotos={fotos} base={base} puedeEditar={puedeEditar('fotos')} onCambio={() => void cargar()} />}
             {s === 'carga' && <SeccionCarga studentId={studentId} />}
-            {s === 'anamnese' && <SeccionAnamnesis lista={anamnesis} esProfe={esProfe} puedeResponder={ficha.student_editable_sections.includes('anamnese')} base={base} onCambio={() => void cargar()} />}
+            {s === 'anamnese' && <SeccionAnamnesis lista={anamnesis} esProfe={esProfe} puedeResponder={ficha.student_editable_sections.includes('anamnese')} base={base} onCambio={() => void cargar()} abrirId={abrirAnamnesis} onAbierta={() => { const u = new URL(window.location.href); u.searchParams.delete('anamnesis'); window.history.replaceState(window.history.state, '', u.pathname + u.search) }} />}
           </TarjetaSeccion>
         ))}
       </div>

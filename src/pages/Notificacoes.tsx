@@ -13,7 +13,7 @@ type N = {
   type: string
   title: string
   body: string | null
-  data: { image_url?: string; key?: string; params?: DatosAviso; conversation_id?: string } | null
+  data: { image_url?: string; key?: string; params?: DatosAviso; conversation_id?: string; student_id?: string; anamnesis_id?: string } | null
   read_at: string | null
   created_at: string
 }
@@ -181,6 +181,7 @@ export function NotificacoesPage() {
         <DetalleNotificacion
           n={abierta}
           tag={TAG[abierta.type] ?? ''}
+          profe={profile?.role === 'teacher'}
           onVerImagen={(url) => setImagenGrande(url)}
           onClose={() => setAbierta(null)}
         />
@@ -202,17 +203,19 @@ export function NotificacoesPage() {
   )
 }
 
-function DetalleNotificacion({ n, tag, onVerImagen, onClose }: {
-  n: N; tag: string; onVerImagen: (url: string) => void; onClose: () => void
+function DetalleNotificacion({ n, tag, profe, onVerImagen, onClose }: {
+  n: N; tag: string; profe: boolean; onVerImagen: (url: string) => void; onClose: () => void
 }) {
   const { t, i18n } = useTranslation()
+  const nav = useNavigate()
+  const accion = accionDe(n, profe)
   const Icon = ICON[n.type] ?? Bell
   const tono = TONO[n.type] ?? TONO.system
   const imagen = n.data?.image_url
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/70" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] popup-fondo bg-black/70" onClick={onClose}>
       <div
-        className="w-full max-w-app rounded-t-[28px] bg-surface-card px-5 pt-6 pb-[calc(env(safe-area-inset-bottom)+24px)] max-h-[70dvh] overflow-y-auto"
+        className="popup-caja bg-surface-card px-5 pt-5 pb-5 max-h-[80dvh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start gap-3">
@@ -238,9 +241,33 @@ function DetalleNotificacion({ n, tag, onVerImagen, onClose }: {
             <img src={imagen} alt="" className="w-full rounded-[12px]" />
           </button>
         )}
+
+        {accion && (
+          <button onClick={() => { onClose(); nav(accion.to) }} className="btn-save mt-5">
+            {t(`notifications:act.${accion.label}`)}
+          </button>
+        )}
       </div>
     </div>
   )
+}
+
+/** Botón de la ventana del aviso: lleva directo a donde corresponde (misma lógica que el push). */
+function accionDe(n: N, profe: boolean): { label: string; to: string } | null {
+  const k = n.data?.key ?? ''
+  const d = n.data ?? {}
+  if (k.startsWith('newMessage') && d.conversation_id) return { label: 'chat', to: profe ? `/professor/mensagens/${d.conversation_id}` : `/aluno/chat/${d.conversation_id}` }
+  if (k === 'anamnesisDone') return d.student_id
+    ? { label: 'anamnesis', to: `/professor/avaliacoes/${d.student_id}?anamnesis=${d.anamnesis_id ?? ''}` }
+    : { label: 'students', to: '/professor/alunos' }
+  if (k === 'anamnesisSent') return { label: 'anamnesis', to: `/aluno/avaliacao?anamnesis=${d.anamnesis_id ?? ''}` }
+  if (/^(charge|payment|change|weekSummary)/.test(k) && k !== 'paymentFailed') return profe ? { label: 'finance', to: '/professor/financeiro' } : { label: 'monthly', to: '/aluno/mensalidade' }
+  if (/^(newInvite|counterAccepted)/.test(k)) return { label: 'invites', to: '/professor/convites' }
+  if (k === 'joinedByLink') return { label: 'students', to: '/professor/alunos' }
+  if (/^(plan|paymentFailed)/.test(k)) return { label: 'plan', to: '/professor/assinatura' }
+  if (/^newRoutine/.test(k)) return { label: 'workouts', to: '/aluno/treinos' }
+  if (/^newDiet/.test(k)) return { label: 'nutrition', to: '/aluno/nutricao' }
+  return null
 }
 
 /** "agora", "3h", "2d" — como en el diseño, no la fecha completa. */

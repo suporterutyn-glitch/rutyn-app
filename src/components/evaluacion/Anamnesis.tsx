@@ -47,23 +47,34 @@ async function enviar(modelo: Modelo, alumnos: string[], teacherId: string, nomb
     const { data: ficha } = await supabase.from('assessments').select('id,student_editable_sections').eq('student_id', sid).eq('teacher_id', teacherId).maybeSingle()
     const ed = (ficha?.student_editable_sections as string[] | undefined) ?? []
     if (ficha && !ed.includes('anamnese')) await supabase.from('assessments').update({ student_editable_sections: [...ed, 'anamnese'] }).eq('id', ficha.id)
-    const { error } = await supabase.from('anamnesis_answers').insert({
+    const { data: nueva, error } = await supabase.from('anamnesis_answers').insert({
       student_id: sid, teacher_id: teacherId, template_id: modelo.id, questions: modelo.questions, answers: {},
       template_name: modelo.name, template_name_es: modelo.name_es, template_name_en: modelo.name_en,
-    })
+    }).select('id').single()
     if (error) throw error
-    await supabase.from('notifications').insert({ user_id: sid, type: 'evaluation', ...aviso('anamnesisSent', { who: nombreProfe, name: modelo.name }) })
+    const av = aviso('anamnesisSent', { who: nombreProfe, name: modelo.name })
+    await supabase.from('notifications').insert({ user_id: sid, type: 'evaluation', ...av, data: { ...av.data, anamnesis_id: nueva?.id } })
   }
 }
 
 // ---------------- Sección ----------------
 
-export function SeccionAnamnesis({ lista, esProfe, base, onCambio }: { lista: Anamnesis[]; esProfe: boolean; puedeResponder?: boolean; base: Base; onCambio: () => void }) {
+export function SeccionAnamnesis({ lista, esProfe, base, onCambio, abrirId, onAbierta }: { lista: Anamnesis[]; esProfe: boolean; puedeResponder?: boolean; base: Base; onCambio: () => void; abrirId?: string | null; onAbierta?: () => void }) {
   const { t, i18n } = useTranslation()
   const [eligiendo, setEligiendo] = useState<{ reemplaza?: Anamnesis } | null>(null)
   const [acciones, setAcciones] = useState<Anamnesis | null>(null)
   const [abierta, setAbierta] = useState<{ a: Anamnesis; editar: boolean } | null>(null)
   const [borrando, setBorrando] = useState<Anamnesis | null>(null)
+
+  // Desde una notificación: abre directo esa anamnesis (o la más reciente si el aviso es viejo y no trae el id).
+  const yaAbrio = useRef(false)
+  useEffect(() => {
+    if (abrirId == null || lista.length === 0 || yaAbrio.current) return
+    yaAbrio.current = true
+    const a = lista.find((x) => x.id === abrirId) ?? (abrirId === '' ? lista[0] : undefined)
+    if (a) setAbierta({ a, editar: esProfe || a.status !== 'completed' })
+    onAbierta?.()
+  }, [abrirId, lista])
 
   return (
     <div className="flex flex-col gap-3">
@@ -469,7 +480,11 @@ function Cuestionario({ a, editar, base, esProfe, onCerrar }: { a: Anamnesis; ed
     try {
       await guardar(ultima ? 'completed' : 'in_progress', ultima ? i : i + 1)
       if (ultima) {
-        if (!esProfe && !yaCompleta) await supabase.from('notifications').insert({ user_id: base.teacherId, type: 'evaluation', ...aviso('anamnesisDone', { who: base.autor.nombre, name: nombreAnamnesis(a, 'pt') }) })
+        if (!esProfe && !yaCompleta) {
+          const av = aviso('anamnesisDone', { who: base.autor.nombre, name: nombreAnamnesis(a, 'pt') })
+          // student_id y anamnesis_id: el botón "Ver anamnesis" del aviso la abre directo.
+          await supabase.from('notifications').insert({ user_id: base.teacherId, type: 'evaluation', ...av, data: { ...av.data, student_id: base.studentId, anamnesis_id: a.id } })
+        }
         onCerrar()
       } else setI(i + 1)
     } catch (e) { setError(t('evaluacion:saveError', { msg: detalleError(e) })) }

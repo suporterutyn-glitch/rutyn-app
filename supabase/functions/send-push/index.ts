@@ -14,7 +14,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
 import webpush from 'npm:web-push@3.6.7'
 
 // A dónde lleva tocar la notificación, según el aviso y si la recibe el profesor o el alumno.
-function destino(clave: string | undefined, rol: string, conversacion?: string) {
+function destino(clave: string | undefined, rol: string, conversacion?: string, datos: Record<string, string> = {}) {
   const profe = rol === 'teacher'
   const k = clave ?? ''
   // Mensaje del chat: abre directo esa conversación.
@@ -25,7 +25,9 @@ function destino(clave: string | undefined, rol: string, conversacion?: string) 
   if (/^(plan|paymentFailed)/.test(k)) return '/professor/assinatura'
   if (/^newRoutine/.test(k)) return '/aluno/treinos'
   if (/^newDiet/.test(k)) return '/aluno/nutricao'
-  if (/^anamnesis/.test(k)) return profe ? '/professor' : '/aluno/anamneses'
+  // Anamnesis: abre directo esa anamnesis en la evaluación del alumno.
+  if (k === 'anamnesisDone') return datos.student_id ? `/professor/avaliacoes/${datos.student_id}?anamnesis=${datos.anamnesis_id ?? ''}` : '/professor/alunos'
+  if (/^anamnesis/.test(k)) return profe ? '/professor' : `/aluno/avaliacao?anamnesis=${datos.anamnesis_id ?? ''}`
   return profe ? '/professor/notificacoes' : '/aluno/notificacoes'
 }
 
@@ -54,7 +56,7 @@ Deno.serve(async (req: Request) => {
   const clave = n.data?.key as string | undefined
   const payload = JSON.stringify({
     title: n.title, body: n.body ?? '', key: clave, params: n.data?.params ?? {},
-    lang: p?.language ?? 'pt', url: destino(clave, p?.role ?? 'student', n.data?.conversation_id), tag: clave?.startsWith('newMessage') && n.data?.conversation_id ? 'chat-' + n.data.conversation_id : n.id,
+    lang: p?.language ?? 'pt', url: destino(clave, p?.role ?? 'student', n.data?.conversation_id, n.data ?? {}), tag: clave?.startsWith('newMessage') && n.data?.conversation_id ? 'chat-' + n.data.conversation_id : n.id,
   })
   const vencidas: string[] = []
   let sent = 0
