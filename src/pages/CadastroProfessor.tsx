@@ -43,6 +43,7 @@ export function CadastroProfessorPage() {
     try { window.parent.postMessage({ rutynEvento: evento }, '*') } catch { /* sin marco */ }
   }
   const [porConfirmar, setPorConfirmar] = useState<string | null>(null)
+  const [salida, setSalida] = useState<string | null>(null)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -101,7 +102,8 @@ export function CadastroProfessorPage() {
       const inicio = new URLSearchParams(window.location.search).get('oferta') ? '/professor/assinatura' : '/professor'
       const destino = `${inicio}?lang=${lang}#access_token=${s.access_token}&refresh_token=${s.refresh_token}&expires_in=${s.expires_in}&expires_at=${s.expires_at}&token_type=bearer&type=signup`
       // Un instante para que la landing alcance a registrar el evento antes de salir de la página.
-      setTimeout(() => abrirFuera(destino), 250)
+      // Si el navegador no deja salir del iframe, queda un botón que abre la app en otra pestaña (con la sesión).
+      setTimeout(() => abrirFuera(destino, () => setSalida(window.location.origin + destino)), 250)
       return
     }
     nav('/professor', { replace: true })
@@ -136,7 +138,14 @@ export function CadastroProfessorPage() {
           ) : (
             !porConfirmar && <h1 className="text-center text-brand font-bold text-rt-18 mb-4">{t('signupTeacher:fillData')}</h1>
           )}
-          {porConfirmar && <VerificarCorreo email={porConfirmar} onVerificado={entrar} onCambiar={() => setPorConfirmar(null)} />}
+          {salida && (
+            <div className="flex flex-col items-center gap-3 py-6 text-center">
+              <div className="text-ink-dark font-bold text-rt-18">{t('general:accountReady')}</div>
+              <p className="text-ink-muted text-rt-13">{t('general:accountReadySub')}</p>
+              <a href={salida} target="_blank" rel="noopener" className="btn-primary-pill px-8 inline-flex items-center justify-center">{t('general:openApp')}</a>
+            </div>
+          )}
+          {porConfirmar && !salida && <VerificarCorreo email={porConfirmar} onVerificado={entrar} onCambiar={() => setPorConfirmar(null)} />}
           <form ref={formulario} onSubmit={submit} onFocusCapture={() => avisarLanding('form_start')} className={'flex-col ' + (porConfirmar ? 'hidden ' : 'flex ') + (embebido ? 'gap-3' : 'gap-6')}>
             <div>
               <label className="block text-rt-11 text-ink-placeholder font-semibold">{t('signupTeacher:fullName')}</label>

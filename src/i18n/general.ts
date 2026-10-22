@@ -13,6 +13,8 @@ export default textos({
     },
     emailCheck: { title: 'Seu e-mail está certo?', detail: 'Você escreveu {{typed}}. Parece ter um erro. Quis dizer {{fixed}}?', use: 'Usar @{{fixed}}', keep: 'Meu e-mail está certo assim', edit: 'Corrigir' },
     openApp: 'Abrir o Rutyn',
+    accountReady: 'Sua conta está pronta!',
+    accountReadySub: 'Toque no botão para entrar no Rutyn.',
     showPassword: 'Mostrar senha', acceptTerms: 'Aceite os termos', chooseGender: 'Selecione o gênero',
     rs: {
       title: 'Redefinir senha', tooShort: 'Senha muito curta (mínimo 6 caracteres)', mismatch: 'Senhas não coincidem',
@@ -46,6 +48,8 @@ export default textos({
     },
     emailCheck: { title: '¿Tu correo está bien escrito?', detail: 'Escribiste {{typed}}. Parece tener un error. ¿Quisiste decir {{fixed}}?', use: 'Usar @{{fixed}}', keep: 'Mi correo está bien así', edit: 'Corregir' },
     openApp: 'Abrir Rutyn',
+    accountReady: '¡Tu cuenta está lista!',
+    accountReadySub: 'Tocá el botón para entrar a Rutyn.',
     showPassword: 'Mostrar contraseña', acceptTerms: 'Aceptá los términos', chooseGender: 'Seleccioná el género',
     rs: {
       title: 'Restablecer contraseña', tooShort: 'Contraseña muy corta (mínimo 6 caracteres)', mismatch: 'Las contraseñas no coinciden',
@@ -79,6 +83,8 @@ export default textos({
     },
     emailCheck: { title: 'Is your email right?', detail: 'You typed {{typed}}. It looks like a typo. Did you mean {{fixed}}?', use: 'Use @{{fixed}}', keep: 'My email is correct', edit: 'Edit' },
     openApp: 'Open Rutyn',
+    accountReady: 'Your account is ready!',
+    accountReadySub: 'Tap the button to enter Rutyn.',
     showPassword: 'Show password', acceptTerms: 'Please accept the terms', chooseGender: 'Please select a gender',
     rs: {
       title: 'Reset password', tooShort: 'Password too short (minimum 6 characters)', mismatch: "Passwords don't match",

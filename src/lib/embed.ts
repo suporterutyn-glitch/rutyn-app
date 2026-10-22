@@ -27,10 +27,14 @@ export function enIframe() {
   return marcoDeLaLanding()
 }
 
-/** Abre una URL de la app en la ventana principal, fuera del iframe. */
-export function abrirFuera(url: string) {
+/** Abre una URL de la app en la ventana principal, fuera del iframe.
+ *  Algunos navegadores (Safari de iPhone, navegadores dentro de Instagram) no dejan que el iframe
+ *  cambie la página de arriba: si a los 1,5 s seguimos acá, avisa con `alFallar`.
+ *  Nunca navega el propio iframe (antes `window.open(url, '_top')` podía cargar la app adentro). */
+export function abrirFuera(url: string, alFallar?: () => void) {
   const destino = url.startsWith('http') ? url : window.location.origin + url
-  try { window.top!.location.href = destino } catch { window.open(destino, '_top') }
+  try { window.top!.location.href = destino } catch { /* bloqueado: decide alFallar */ }
+  if (alFallar) setTimeout(() => { if (document.visibilityState === 'visible') alFallar() }, 1500)
 }
 
 /** Rutas que pueden mostrarse dentro del iframe de la landing. */
