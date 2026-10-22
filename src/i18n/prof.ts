@@ -14,7 +14,8 @@ export default textos({
       keyType: 'Tipo de Chave', email: 'E-mail', phone: 'Telefone', random: 'Aleatória', pixKey: 'Chave PIX', save: 'Salvar', saving: 'Salvando…', saved: 'Salvo ✓',
     },
     home: {
-      teacher: 'Professor', settings: 'Configurações', notifications: 'Notificações', notifyStudents: 'Notificar alunos', addAppointment: 'Adicionar compromisso',
+      teacher: 'Professor', cardRoutineDone: '{{done}} de {{total}} treinos feitos', cardRoutineEnded: 'Terminou em {{date}}', cardAnamDone: 'Anamnese concluída: {{name}}', cardUnread: 'Mensagem sem ler', cardNothing: 'Nada pendente por aqui.', cardOpen: 'Abrir',
+      settings: 'Configurações', notifications: 'Notificações', notifyStudents: 'Notificar alunos', addAppointment: 'Adicionar compromisso',
       deleteAppointment: 'Excluir compromisso', seeMore: 'Ver mais...', seeLess: 'Ver menos...', prevWeek: 'Semana anterior', nextWeek: 'Próxima semana',
     },
     appt: {
@@ -46,7 +47,8 @@ export default textos({
       keyType: 'Tipo de Clave', email: 'E-mail', phone: 'Teléfono', random: 'Aleatoria', pixKey: 'Clave PIX', save: 'Guardar', saving: 'Guardando…', saved: 'Guardado ✓',
     },
     home: {
-      teacher: 'Profesor', settings: 'Configuración', notifications: 'Notificaciones', notifyStudents: 'Notificar alumnos', addAppointment: 'Agregar compromiso',
+      teacher: 'Profesor', cardRoutineDone: '{{done}} de {{total}} entrenamientos hechos', cardRoutineEnded: 'Terminó el {{date}}', cardAnamDone: 'Anamnesis completada: {{name}}', cardUnread: 'Mensaje sin leer', cardNothing: 'No hay nada pendiente.', cardOpen: 'Abrir',
+      settings: 'Configuración', notifications: 'Notificaciones', notifyStudents: 'Notificar alumnos', addAppointment: 'Agregar compromiso',
       deleteAppointment: 'Eliminar compromiso', seeMore: 'Ver más...', seeLess: 'Ver menos...', prevWeek: 'Semana anterior', nextWeek: 'Semana siguiente',
     },
     appt: {
@@ -78,7 +80,8 @@ export default textos({
       keyType: 'Key Type', email: 'Email', phone: 'Phone', random: 'Random', pixKey: 'PIX Key', save: 'Save', saving: 'Saving…', saved: 'Saved ✓',
     },
     home: {
-      teacher: 'Trainer', settings: 'Settings', notifications: 'Notifications', notifyStudents: 'Notify students', addAppointment: 'Add appointment',
+      teacher: 'Trainer', cardRoutineDone: '{{done}} of {{total}} workouts done', cardRoutineEnded: 'Ended on {{date}}', cardAnamDone: 'Questionnaire completed: {{name}}', cardUnread: 'Unread message', cardNothing: 'Nothing pending.', cardOpen: 'Open',
+      settings: 'Settings', notifications: 'Notifications', notifyStudents: 'Notify students', addAppointment: 'Add appointment',
       deleteAppointment: 'Delete appointment', seeMore: 'See more...', seeLess: 'See less...', prevWeek: 'Previous week', nextWeek: 'Next week',
     },
     appt: {

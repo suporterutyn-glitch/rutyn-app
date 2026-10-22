@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { localeDe } from '@/lib/fechas'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, User as UserIcon, MessageCircle, MoreVertical, Pause, Play, UserMinus, FileText, TrendingUp } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
@@ -43,7 +43,9 @@ export function AlunoPerfilPage() {
   const nav = useNavigate()
   const { profile: me } = useAuth()
   const [student, setStudent] = useState<StudentProfile | null>(null)
-  const [tab, setTab] = useState<TabKey>('perfil')
+  const [qs] = useSearchParams()
+  // ?tab=rotinas (desde la tarjeta "Cambiar entrenamientos" del inicio) abre esa pestaña.
+  const [tab, setTab] = useState<TabKey>(() => (TABS.some((x) => x.key === qs.get('tab')) ? (qs.get('tab') as TabKey) : 'perfil'))
   const [charge, setCharge] = useState<Charge | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmando, setConfirmando] = useState<'suspender' | 'eliminar' | null>(null)

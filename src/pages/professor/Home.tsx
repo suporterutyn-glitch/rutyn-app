@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Bell, Plus, ChevronRight, Zap, RefreshCw, ClipboardCheck, MessageSquare, Users, Settings, Send } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -30,7 +31,7 @@ function formatMoney(v: number, currency: string) {
 
 export function ProfessorHome() {
   const { profile } = useAuth()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const nav = useNavigate()
   const [stats, setStats] = useState<Stats | null>(null)
   const [allAppointments, setAllAppointments] = useState<Appt[]>([])
@@ -57,10 +58,55 @@ export function ProfessorHome() {
           .order('starts_at', { ascending: true }),
       ])
       setStats(statsRow ?? { active_students: 0, pending_invites: 0, month_received: 0, unread_notifications: 0 })
+      void cargarPendientes(profile.id)
       setAllAppointments((appts as Appt[]) ?? [])
       setLoading(false)
     })()
   }, [profile?.id])
+
+  // Tarjetas del inicio con datos reales: rutinas por cambiar, anamnesis por revisar y mensajes sin leer.
+  type Pendiente = { id: string; titulo: string; detalle: string; to: string }
+  const [pend, setPend] = useState<{ rutinas: Pendiente[]; evals: Pendiente[]; msgs: Pendiente[] }>({ rutinas: [], evals: [], msgs: [] })
+  const [lista, setLista] = useState<{ titulo: string; items: Pendiente[] } | null>(null)
+
+  async function cargarPendientes(tid: string) {
+    const hoy = new Date().toISOString().slice(0, 10)
+    const [{ data: alumnos }, { data: rutinas }, { data: anams }, { data: convs }] = await Promise.all([
+      supabase.from('profiles').select('id,full_name,email').eq('teacher_id', tid).eq('link_status', 'active'),
+      supabase.from('student_routines').select('id,student_id,name,completed_workouts,estimated_workouts,ends_on,is_hidden').eq('teacher_id', tid),
+      supabase.from('anamnesis_answers').select('id,student_id,template_name,template_name_es,template_name_en,completed_by,teacher_seen_at').eq('teacher_id', tid).eq('status', 'completed'),
+      supabase.from('conversations').select('id,student_id,last_message,last_message_at,last_sender_id,teacher_last_read_at').eq('teacher_id', tid),
+    ])
+    const nombres = new Map(((alumnos as { id: string; full_name: string | null; email: string | null }[]) ?? []).map((a) => [a.id, a.full_name || a.email || '—']))
+    const activo = (id: string) => nombres.has(id)
+    const fecha = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString(localeDe(i18n.language))
+    const vistos = new Set<string>()
+    const rutinasPend: Pendiente[] = []
+    for (const r of (rutinas as { id: string; student_id: string; name: string; completed_workouts: number | null; estimated_workouts: number | null; ends_on: string | null; is_hidden: boolean | null }[]) ?? []) {
+      if (r.is_hidden || !activo(r.student_id) || vistos.has(r.student_id)) continue
+      const hechos = r.completed_workouts ?? 0, total = r.estimated_workouts ?? 0
+      const porCantidad = total > 0 && hechos >= total
+      const porFecha = !!r.ends_on && r.ends_on < hoy
+      if (!porCantidad && !porFecha) continue
+      vistos.add(r.student_id)
+      rutinasPend.push({ id: r.id, titulo: nombres.get(r.student_id)!, detalle: `${r.name} · ${porCantidad ? t('prof:home.cardRoutineDone', { done: hechos, total }) : t('prof:home.cardRoutineEnded', { date: fecha(r.ends_on!) })}`, to: `/professor/alunos/${r.student_id}?tab=rotinas` })
+    }
+    const lang = i18n.language.slice(0, 2)
+    const evals: Pendiente[] = ((anams as { id: string; student_id: string; template_name: string | null; template_name_es: string | null; template_name_en: string | null; completed_by: string | null; teacher_seen_at: string | null }[]) ?? [])
+      .filter((a) => a.completed_by !== 'teacher' && !a.teacher_seen_at && activo(a.student_id))
+      .map((a) => ({ id: a.id, titulo: nombres.get(a.student_id)!, detalle: t('prof:home.cardAnamDone', { name: (lang === 'es' && a.template_name_es) || (lang === 'en' && a.template_name_en) || a.template_name || '' }), to: `/professor/avaliacoes/${a.student_id}?anamnesis=${a.id}` }))
+    const msgs: Pendiente[] = ((convs as { id: string; student_id: string; last_message: string | null; last_message_at: string | null; last_sender_id: string | null; teacher_last_read_at: string | null }[]) ?? [])
+      .filter((c) => c.last_message_at && c.last_sender_id && c.last_sender_id !== tid && (!c.teacher_last_read_at || c.teacher_last_read_at < c.last_message_at) && activo(c.student_id))
+      .map((c) => ({ id: c.id, titulo: nombres.get(c.student_id)!, detalle: c.last_message?.startsWith('::') ? t('prof:home.cardUnread') : (c.last_message ?? t('prof:home.cardUnread')), to: `/professor/mensagens/${c.id}` }))
+    setPend({ rutinas: rutinasPend, evals, msgs })
+  }
+
+  // Una sola: va directo. Varias: lista para elegir. Ninguna: a la sección.
+  function abrirPendientes(titulo: string, items: Pendiente[], porDefecto: string) {
+    if (items.length === 1) nav(items[0].to)
+    else if (items.length > 1) setLista({ titulo, items })
+    else nav(porDefecto)
+  }
 
   const activeStudents = stats?.active_students ?? 0
   const pendingInvites = stats?.pending_invites ?? 0
@@ -191,9 +237,9 @@ export function ProfessorHome() {
       {/* Grid 2x2 de cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 lg:gap-4 mb-4 lg:mb-6">
         <DashCard title={t('professor:activeStudents')} value={activeStudents.toString()} icon={Users} onClick={() => nav('/professor/alunos')} />
-        <DashCard title={t('professor:changeWorkouts')} value="0" icon={RefreshCw} onClick={() => nav('/professor/alunos')} />
-        <DashCard title={t('professor:assessments')} value="0" icon={ClipboardCheck} onClick={() => nav('/professor/alunos')} />
-        <DashCard title={t('professor:messages')} value="0" icon={MessageSquare} onClick={() => nav('/professor/mensagens')} />
+        <DashCard title={t('professor:changeWorkouts')} value={String(pend.rutinas.length)} icon={RefreshCw} onClick={() => abrirPendientes(t('professor:changeWorkouts'), pend.rutinas, '/professor/alunos')} />
+        <DashCard title={t('professor:assessments')} value={String(pend.evals.length)} icon={ClipboardCheck} onClick={() => abrirPendientes(t('professor:assessments'), pend.evals, '/professor/alunos')} />
+        <DashCard title={t('professor:messages')} value={String(pend.msgs.length)} icon={MessageSquare} onClick={() => abrirPendientes(t('professor:messages'), pend.msgs, '/professor/mensagens')} />
       </div>
 
       {/* Calendar and Agenda */}
@@ -266,6 +312,30 @@ export function ProfessorHome() {
       </div>
 
       <AnnouncementModal />
+
+      {lista && (
+        <div className="fixed inset-0 z-[60] popup-fondo bg-black/70" onClick={() => setLista(null)}>
+          <div className="popup-caja bg-surface-card p-5 max-h-[80dvh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-white text-rt-18 font-bold">{lista.titulo}</h2>
+              <button onClick={() => setLista(null)} className="w-9 h-9 rounded-full bg-surface-line flex items-center justify-center text-white" aria-label={t('common:close')}><X size={18} /></button>
+            </div>
+            <ul className="flex flex-col gap-2">
+              {lista.items.map((it) => (
+                <li key={it.id}>
+                  <button onClick={() => { setLista(null); nav(it.to) }} className="w-full rounded-[12px] bg-surface-raised border border-surface-line px-4 py-3 flex items-center gap-3 text-left active:scale-[0.99]">
+                    <span className="flex-1 min-w-0">
+                      <span className="block text-white text-rt-14 font-semibold truncate">{it.titulo}</span>
+                      <span className="block text-white/60 text-rt-12 truncate">{it.detalle}</span>
+                    </span>
+                    <ChevronRight size={18} className="text-white/40 shrink-0" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

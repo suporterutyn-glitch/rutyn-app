@@ -440,6 +440,13 @@ function Cuestionario({ a, editar, base, esProfe, onCerrar }: { a: Anamnesis; ed
   const cambio = useRef(false)
   const q = preguntas[i]
 
+  // El profesor abrió una anamnesis que completó el alumno: deja de contar en "Evaluaciones" del inicio.
+  useEffect(() => {
+    if (esProfe && a.status === 'completed' && !(a as Anamnesis & { teacher_seen_at?: string | null }).teacher_seen_at) {
+      void supabase.from('anamnesis_answers').update({ teacher_seen_at: new Date().toISOString() }).eq('id', a.id).then(() => {})
+    }
+  }, [])
+
   // URLs firmadas de los adjuntos para verlos.
   useEffect(() => {
     const archivos = Object.entries(resp).filter(([, v]) => v && typeof v === 'object' && (v as Archivo).path) as [string, Archivo][]

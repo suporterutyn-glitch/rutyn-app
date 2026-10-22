@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Smartphone, X, Share, PlusSquare, MoreVertical, Download } from 'lucide-react'
+import { Smartphone, X, Share, PlusSquare, MoreVertical, MoreHorizontal, ChevronDown, CheckCircle2, Download } from 'lucide-react'
 import { alCambiarInstalacion, esSafariIos, instalarDirecto, plataforma, puedeInstalarDirecto, yaInstalada } from '@/lib/instalacion'
 
 const CLAVE = 'rutyn_instalar_oculto'
@@ -58,9 +58,12 @@ export function InstalarApp() {
             <ol className="flex flex-col gap-3">
               {(so === 'ios'
                 ? [
-                    { icon: Share, text: t('general:install.ios1') },
-                    { icon: PlusSquare, text: t('general:install.ios2') },
-                    { icon: Download, text: t('general:install.ios3') },
+                    // Pasos del iPhone actual (pedido del dueño): tres puntos → Compartir → Ver más → Agregar a inicio → Agregar.
+                    { icon: MoreHorizontal, text: t('general:install.ios1') },
+                    { icon: Share, text: t('general:install.ios2') },
+                    { icon: ChevronDown, text: t('general:install.ios3') },
+                    { icon: PlusSquare, text: t('general:install.ios4') },
+                    { icon: CheckCircle2, text: t('general:install.ios5') },
                   ]
                 : [
                     { icon: MoreVertical, text: t('general:install.and1') },
