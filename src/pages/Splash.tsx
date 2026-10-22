@@ -33,7 +33,8 @@ export function SplashPage() {
   }, [loading, tiempoMinimoCumplido, session, profile, nav])
 
   return (
-    <div className="app-shell app-bg-pro flex items-center justify-center">
+    // Fija y de borde a borde: en el iPhone con la app instalada, 100dvh no llega al final y asomaba una franja gris abajo.
+    <div className="fixed inset-0 z-50 app-bg-pro flex items-center justify-center" style={{ minHeight: '100lvh' }}>
       <div className="relative z-10 flex items-center justify-center">
         <span
           aria-hidden
