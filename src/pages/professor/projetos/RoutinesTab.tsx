@@ -125,7 +125,7 @@ export function RoutinesTab({ query, filtro }: { query: string; filtro: Filtro }
       ) : (
         <ul className="grid grid-cols-1 items-start gap-3">
           {filtered.map((r) => (
-            <li key={r.id} className="flex flex-col gap-0">
+            <li key={r.id} className={'flex flex-col gap-0 ' + (expandida === r.id ? 'rounded-card border border-surface-line-strong bg-surface-card overflow-hidden' : '')}>
             <RoutineCard
               rotina={r}
               seleccionada={seleccion.has(r.id)}
@@ -140,7 +140,7 @@ export function RoutinesTab({ query, filtro }: { query: string; filtro: Filtro }
               onExpandir={() => setExpandida((v) => (v === r.id ? null : r.id))}
             />
             {expandida === r.id && (
-              <div className="mt-2 pl-2 border-l-2 border-brand/40">
+              <div className="border-t border-surface-line px-3 pt-3 pb-4">
                 <EditorRotina routineId={r.id} embebido />
               </div>
             )}

@@ -100,7 +100,8 @@ export function RoutineCard({
   ].filter(Boolean)
 
   return (
-    <div className="relative overflow-hidden rounded-card">
+    // Abierta, la tarjeta es la cabecera de un bloque que contiene los ejercicios (lo arma quien la usa).
+    <div className={'relative overflow-hidden ' + (expandida ? 'rounded-t-card' : 'rounded-card')}>
       {/* Acciones detrás del card */}
       <div className="absolute inset-y-0 right-0 flex" style={{ width: ANCHO_ACCIONES }}>
         <AccionSwipe label={t('projetos:rot.clone')} className="bg-grey-700" onClick={() => { cerrar(); onClonar() }} />
@@ -110,7 +111,7 @@ export function RoutineCard({
       </div>
 
       <div
-        className="relative card-dark px-3 py-3 flex items-center gap-3 touch-pan-y"
+        className={'relative px-3 py-3 flex items-center gap-3 touch-pan-y ' + (expandida ? 'bg-surface-card' : 'card-dark')}
         style={{ transform: `translateX(${dx}px)`, transition: inicio.current ? 'none' : 'transform .2s ease' }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}

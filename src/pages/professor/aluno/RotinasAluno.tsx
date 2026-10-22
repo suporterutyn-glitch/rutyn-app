@@ -124,7 +124,7 @@ export function RotinasAluno({ alumno }: { alumno: AlumnoCtx }) {
       ) : (
         <ul className="flex flex-col gap-3">
           {items.map((r) => (
-            <li key={r.id}>
+            <li key={r.id} className={expandida === r.id ? 'rounded-card border border-surface-line-strong bg-surface-card overflow-hidden' : ''}>
               <RoutineCard
                 rotina={{ id: r.routine_id, name: r.routines?.name ?? r.name, objective: r.routines?.objective ?? r.objective, difficulty: r.routines?.difficulty ?? null, is_favorite: false }}
                 deAlumno
@@ -142,7 +142,7 @@ export function RotinasAluno({ alumno }: { alumno: AlumnoCtx }) {
                 onExpandir={() => setExpandida((v) => (v === r.id ? null : r.id))}
               />
               {expandida === r.id && (
-                <div className="mt-2 pl-2 border-l-2 border-brand/40">
+                <div className="border-t border-surface-line px-3 pt-3 pb-4">
                   <EditorRotina routineId={r.routine_id} embebido />
                 </div>
               )}
