@@ -106,7 +106,6 @@ export function SeccionAnamnesis({ lista, esProfe, puedeResponder, base, onCambi
         <HojaAcciones
           a={acciones}
           onCerrar={() => setAcciones(null)}
-          onVer={() => { setAbierta({ a: acciones, editar: false }); setAcciones(null) }}
           onLlenar={() => { setAbierta({ a: acciones, editar: true }); setAcciones(null) }}
           onTrocar={() => { setEligiendo({ reemplaza: acciones }); setAcciones(null) }}
           onBorrar={() => { setBorrando(acciones); setAcciones(null) }}
@@ -390,7 +389,7 @@ function EditorModelo({ modelo, teacherId, onCerrar, onGuardado }: { modelo: Mod
   )
 }
 
-function HojaAcciones({ a, onCerrar, onVer, onLlenar, onTrocar, onBorrar }: { a: Anamnesis; onCerrar: () => void; onVer: () => void; onLlenar: () => void; onTrocar: () => void; onBorrar: () => void }) {
+function HojaAcciones({ a, onCerrar, onLlenar, onTrocar, onBorrar }: { a: Anamnesis; onCerrar: () => void; onLlenar: () => void; onTrocar: () => void; onBorrar: () => void }) {
   const { t, i18n } = useTranslation()
   const Fila = ({ icono: Icono, texto, onClick, peligro }: { icono: typeof Eye; texto: string; onClick: () => void; peligro?: boolean }) => (
     <button onClick={onClick} className={'w-full rounded-[12px] border px-4 py-3.5 flex items-center gap-3 text-left ' + (peligro ? 'bg-[#EF5350]/10 border-[#EF5350]/30 text-[#EF5350]' : 'bg-[#252525] border-[#2D2D2D] text-white')}>
@@ -402,8 +401,8 @@ function HojaAcciones({ a, onCerrar, onVer, onLlenar, onTrocar, onBorrar }: { a:
   return (
     <Hoja titulo={nombreAnamnesis(a, i18n.language)} subtitulo={t('evaluacion:whatToDo')} onCerrar={onCerrar}>
       <div className="flex flex-col gap-2">
-        <Fila icono={Eye} texto={t('evaluacion:viewAnswers')} onClick={onVer} />
-        {a.status !== 'completed' && <Fila icono={FilePen} texto={t('evaluacion:fillMyself')} onClick={onLlenar} />}
+        {/* Una sola opción para abrirla: el profesor puede responder o corregir (antes "Ver" la abría bloqueada y Sí/No no respondían). */}
+        <Fila icono={FilePen} texto={t('evaluacion:openAnswer')} onClick={onLlenar} />
         <Fila icono={Repeat} texto={t('evaluacion:changeModel')} onClick={onTrocar} />
         <Fila icono={Trash2} texto={t('evaluacion:deleteAnamnesis')} onClick={onBorrar} peligro />
       </div>
@@ -416,7 +415,8 @@ function HojaAcciones({ a, onCerrar, onVer, onLlenar, onTrocar, onBorrar }: { a:
 function Cuestionario({ a, editar, base, esProfe, onCerrar }: { a: Anamnesis; editar: boolean; base: Base; esProfe: boolean; onCerrar: () => void }) {
   const { t, i18n } = useTranslation()
   const preguntas = a.questions ?? []
-  const [i, setI] = useState(editar ? Math.min(a.current_index ?? 0, Math.max(preguntas.length - 1, 0)) : 0)
+  // Una en curso sigue donde quedó; una completa (para revisar o corregir) arranca desde la primera.
+  const [i, setI] = useState(editar && a.status !== 'completed' ? Math.min(a.current_index ?? 0, Math.max(preguntas.length - 1, 0)) : 0)
   const [resp, setResp] = useState<Record<string, Valor>>(a.answers ?? {})
   const [coment, setComent] = useState<Record<string, string>>(a.comments ?? {})
   const [guardando, setGuardando] = useState(false)
@@ -447,9 +447,12 @@ function Cuestionario({ a, editar, base, esProfe, onCerrar }: { a: Anamnesis; ed
     )
   }
 
+  const yaCompleta = a.status === 'completed'
   async function guardar(estado: Anamnesis['status'], indice: number) {
-    const fila: Record<string, unknown> = { answers: resp, comments: coment, status: estado, current_index: indice }
-    if (estado === 'completed') { fila.submitted_at = new Date().toISOString(); fila.completed_by = esProfe ? 'teacher' : 'student' }
+    // Corregir una anamnesis ya completa no la vuelve "en curso" ni cambia quién la completó.
+    const final = yaCompleta ? 'completed' : estado
+    const fila: Record<string, unknown> = { answers: resp, comments: coment, status: final, current_index: indice }
+    if (final === 'completed' && !yaCompleta) { fila.submitted_at = new Date().toISOString(); fila.completed_by = esProfe ? 'teacher' : 'student' }
     const { error: err } = await supabase.from('anamnesis_answers').update(fila).eq('id', a.id)
     if (err) throw err
   }
@@ -465,7 +468,7 @@ function Cuestionario({ a, editar, base, esProfe, onCerrar }: { a: Anamnesis; ed
     try {
       await guardar(ultima ? 'completed' : 'in_progress', ultima ? i : i + 1)
       if (ultima) {
-        if (!esProfe) await supabase.from('notifications').insert({ user_id: base.teacherId, type: 'evaluation', ...aviso('anamnesisDone', { who: base.autor.nombre, name: nombreAnamnesis(a, 'pt') }) })
+        if (!esProfe && !yaCompleta) await supabase.from('notifications').insert({ user_id: base.teacherId, type: 'evaluation', ...aviso('anamnesisDone', { who: base.autor.nombre, name: nombreAnamnesis(a, 'pt') }) })
         onCerrar()
       } else setI(i + 1)
     } catch (e) { setError(t('evaluacion:saveError', { msg: detalleError(e) })) }
