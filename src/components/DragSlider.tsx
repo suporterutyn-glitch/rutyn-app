@@ -11,31 +11,48 @@ type Props = {
 export function DragSlider({ label, onConfirm, variant = 'brand' }: Props) {
   const trackRef = useRef<HTMLDivElement>(null)
   const [x, setX] = useState(0)
-  const [maxX, setMaxX] = useState(0)
   const [dragging, setDragging] = useState(false)
+  // Posición y estado en refs: al soltar se lee el valor real (con el estado de React
+  // a veces llegaba uno viejo y no confirmaba aunque la bolita estuviera al final).
+  const xRef = useRef(0)
+  const maxRef = useRef(0)
+  const activo = useRef(false)
+  const offset = useRef(24)
+
+  function mover(nx: number) {
+    xRef.current = nx
+    setX(nx)
+  }
 
   function start(e: PointerEvent<HTMLDivElement>) {
     if (!trackRef.current) return
-    e.currentTarget.setPointerCapture(e.pointerId)
+    e.preventDefault()
+    try { e.currentTarget.setPointerCapture(e.pointerId) } catch { /* sigue funcionando sin captura */ }
     const rect = trackRef.current.getBoundingClientRect()
-    setMaxX(rect.width - 48)
+    maxRef.current = rect.width - 56
+    // Si agarra la bolita, se respeta dónde la tomó; si toca la pista, la bolita va al dedo.
+    const dentro = e.clientX - rect.left - xRef.current
+    offset.current = dentro >= 0 && dentro <= 56 ? dentro : 28
+    activo.current = true
     setDragging(true)
+    window.getSelection?.()?.removeAllRanges()
   }
   function move(e: PointerEvent<HTMLDivElement>) {
-    if (!dragging || !trackRef.current) return
+    if (!activo.current || !trackRef.current) return
+    e.preventDefault()
     const rect = trackRef.current.getBoundingClientRect()
-    const nx = Math.max(0, Math.min(maxX, e.clientX - rect.left - 24))
-    setX(nx)
+    mover(Math.max(0, Math.min(maxRef.current, e.clientX - rect.left - offset.current)))
   }
   function end() {
-    if (!dragging) return
+    if (!activo.current) return
+    activo.current = false
     setDragging(false)
-    if (maxX > 0 && x / maxX > 0.85) {
-      setX(maxX)
+    if (maxRef.current > 0 && xRef.current / maxRef.current > 0.75) {
+      mover(maxRef.current)
       onConfirm()
-      setTimeout(() => setX(0), 300)
+      setTimeout(() => mover(0), 300)
     } else {
-      setX(0)
+      mover(0)
     }
   }
 
@@ -51,11 +68,13 @@ export function DragSlider({ label, onConfirm, variant = 'brand' }: Props) {
       </div>
       <div
         ref={trackRef}
-        className="absolute inset-0"
+        // touch-none: sin esto el iPhone toma el gesto como scroll y cancela el arrastre.
+        className="absolute inset-0 touch-none"
         onPointerDown={start}
         onPointerMove={move}
         onPointerUp={end}
         onPointerCancel={end}
+        onLostPointerCapture={end}
       >
         <div
           className={
