@@ -58,7 +58,7 @@ async function enviar(modelo: Modelo, alumnos: string[], teacherId: string, nomb
 
 // ---------------- Sección ----------------
 
-export function SeccionAnamnesis({ lista, esProfe, puedeResponder, base, onCambio }: { lista: Anamnesis[]; esProfe: boolean; puedeResponder: boolean; base: Base; onCambio: () => void }) {
+export function SeccionAnamnesis({ lista, esProfe, base, onCambio }: { lista: Anamnesis[]; esProfe: boolean; puedeResponder?: boolean; base: Base; onCambio: () => void }) {
   const { t, i18n } = useTranslation()
   const [eligiendo, setEligiendo] = useState<{ reemplaza?: Anamnesis } | null>(null)
   const [acciones, setAcciones] = useState<Anamnesis | null>(null)
@@ -81,7 +81,8 @@ export function SeccionAnamnesis({ lista, esProfe, puedeResponder, base, onCambi
       {lista.map((a) => {
         const { hechas, total } = cuenta(a)
         const color = COLOR_ESTADO[a.status]
-        const puedeLlenar = !esProfe && puedeResponder && a.status !== 'completed'
+        // Si se la mandaron, el alumno la puede responder siempre: las enviadas antes del 21/10 no habilitaban la sección y quedaban bloqueadas.
+        const puedeLlenar = !esProfe && a.status !== 'completed'
         return (
           <button key={a.id} onClick={() => (esProfe ? setAcciones(a) : setAbierta({ a, editar: puedeLlenar }))}
             className="w-full rounded-[12px] bg-[#252525] border border-[#2D2D2D] p-3.5 flex flex-col gap-2 text-left">
