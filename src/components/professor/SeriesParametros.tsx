@@ -58,11 +58,12 @@ export function FilaSerie({
       onPointerMove={arrastre?.alMover}
       onPointerUp={arrastre?.alSoltar}
       className={
-        'flex gap-3 transition ' +
+        'flex flex-col transition ' +
         (arrastre && id && arrastre.arrastrando === id ? 'opacity-50 ' : '') +
         (arrastre && id && arrastre.encima === id && arrastre.arrastrando !== id ? 'ring-1 ring-brand rounded-lg ' : '')
       }
     >
+      <div className="flex gap-3">
       <div className="flex flex-col items-center shrink-0 w-8 pt-1">
         <button
           type="button"
@@ -111,7 +112,7 @@ export function FilaSerie({
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 mt-3 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-3 gap-2 mt-3 lg:grid-cols-4">
               {puestos.map((p) => (
                 <TarjetaParametro
                   key={p.id}
@@ -130,15 +131,18 @@ export function FilaSerie({
           </>
         )}
 
-        <div className="mt-3">
-          <label className="block text-grey-500 text-[10px] mb-1">{t('projetos:ser.note')}</label>
-          <input
-            value={observacion}
-            onChange={(e) => onObservacion(e.target.value)}
-            placeholder={t('projetos:ser.notePh')}
-            className="w-full h-10 px-3 rounded-[10px] bg-surface-card border border-surface-line text-white text-rt-12 outline-none focus:border-brand"
-          />
-        </div>
+      </div>
+      </div>
+
+      {/* Observación de lado a lado, debajo de las tarjetas. */}
+      <div className="mt-3">
+        <label className="block text-grey-500 text-[10px] mb-1">{t('projetos:ser.note')}</label>
+        <input
+          value={observacion}
+          onChange={(e) => onObservacion(e.target.value)}
+          placeholder={t('projetos:ser.notePh')}
+          className="w-full h-10 px-3 rounded-[10px] bg-surface-card border border-surface-line text-white text-rt-12 outline-none focus:border-brand"
+        />
       </div>
 
       {eligiendo && (
@@ -184,26 +188,26 @@ function TarjetaParametro({ parametro, valor, lang, onEditar, onEliminar }: {
   const texto = parametro.tipo === 'select' ? valorFormateado(parametro, valor, lang) : (valor || '—')
   const largo = parametro.tipo === 'select' || texto.length > 6
   return (
-    <div className="bg-surface-card border border-surface-line rounded-[14px] p-2.5 flex flex-col gap-2">
+    <div className="bg-surface-card border border-surface-line rounded-[12px] p-1 flex flex-col gap-1 min-w-0">
       <button
         type="button"
         onClick={onEditar}
-        className="group rounded-[10px] bg-surface-input border border-surface-line hover:border-brand active:scale-[0.98] transition px-2 pt-2 pb-2.5 text-center"
+        className="group rounded-[9px] bg-surface-input border border-surface-line hover:border-brand active:scale-[0.98] transition px-1 pt-1.5 pb-2 text-center min-w-0"
       >
-        <span className="block text-grey-400 text-rt-10 font-semibold uppercase tracking-wide truncate">{etiquetaParametro(parametro, lang)}</span>
-        <span className="flex items-baseline justify-center gap-1 mt-1 min-h-[28px]">
-          <span className={'text-white font-bold leading-tight break-words ' + (largo ? 'text-rt-14' : 'text-rt-22')}>{texto}</span>
-          {parametro.tipo !== 'select' && parametro.unidad && valor && <span className="text-brand text-rt-11 font-semibold">{parametro.unidad}</span>}
+        <span className="flex items-center justify-center min-h-[22px] text-grey-400 text-[8.5px] leading-[10px] font-semibold uppercase line-clamp-2 break-words">{etiquetaParametro(parametro, lang)}</span>
+        <span className="flex items-baseline justify-center gap-0.5 mt-0.5 min-h-[24px]">
+          <span className={'text-white font-bold leading-tight break-words ' + (largo ? 'text-rt-12' : 'text-rt-18')}>{texto}</span>
+          {parametro.tipo !== 'select' && parametro.unidad && valor && <span className="text-brand text-rt-10 font-semibold">{parametro.unidad}</span>}
         </span>
       </button>
       {confirmando ? (
-        <div className="flex items-center gap-1.5 h-7">
-          <button type="button" onClick={onEliminar} className="flex-1 min-w-0 h-7 rounded-full bg-danger text-white text-rt-11 font-semibold truncate px-2">{t('projetos:ser.delYes')}</button>
-          <button type="button" onClick={() => setConfirmando(false)} aria-label={t('projetos:ser.delNo')} className="w-7 h-7 shrink-0 rounded-full border border-surface-line text-white/70 flex items-center justify-center"><X size={14} /></button>
+        <div className="flex items-center gap-1 h-6">
+          <button type="button" onClick={onEliminar} className="flex-1 min-w-0 h-6 rounded-full bg-danger text-white text-rt-10 font-semibold truncate px-1.5">{t('projetos:ser.delYes')}</button>
+          <button type="button" onClick={() => setConfirmando(false)} aria-label={t('projetos:ser.delNo')} className="w-6 h-6 shrink-0 rounded-full border border-surface-line text-white/70 flex items-center justify-center"><X size={12} /></button>
         </div>
       ) : (
-        <button type="button" onClick={() => setConfirmando(true)} className="flex items-center justify-center gap-1 h-7 text-grey-500 hover:text-danger text-rt-11 font-semibold transition">
-          <Trash2 size={13} /> {t('projetos:ser.delField')}
+        <button type="button" onClick={() => setConfirmando(true)} className="flex items-center justify-center gap-1 h-6 text-grey-500 hover:text-danger text-rt-10 font-semibold transition">
+          <Trash2 size={12} /> {t('projetos:ser.delField')}
         </button>
       )}
     </div>
