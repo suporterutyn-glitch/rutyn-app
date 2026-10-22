@@ -40,13 +40,14 @@ export function BarraFlotante({ items, inicio }: { items: ItemBarra[]; inicio: s
               <NavLink
                 to={it.to}
                 end={false}
+                aria-label={it.label}
                 className={
-                  'flex flex-col items-center justify-center gap-0.5 w-full max-w-[72px] h-[52px] rounded-full transition active:scale-95 ' +
+                  'flex items-center justify-center w-full max-w-[64px] h-[48px] rounded-full transition active:scale-95 ' +
                   (active ? 'bg-black/10' : '')
                 }
               >
-                <Icon size={21} className={active ? 'text-[#4E7F23]' : 'text-ink-muted'} strokeWidth={active ? 2.4 : 1.8} />
-                <span className={'text-[9.5px] font-semibold leading-none ' + (active ? 'text-[#4E7F23]' : 'text-ink-muted')}>{it.label}</span>
+                {/* Solo íconos (pedido del dueño); el nombre queda para lectores de pantalla. */}
+                <Icon size={25} className={active ? 'text-[#4E7F23]' : 'text-ink-muted'} strokeWidth={active ? 2.4 : 1.8} />
               </NavLink>
             </li>
           )
