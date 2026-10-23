@@ -3,6 +3,11 @@ import { textos } from './textos'
 // Ruty: asistente que arma borradores de rutina para un alumno a partir de lo que dicta el profesor.
 export default textos({
   pt: {
+    speak: 'Falar', stop: 'Parar', listening: 'Ouvindo… fale o que precisa e toque em parar ao terminar.', speakHint: 'Toque no microfone e fale, ou escreva.',
+    free: '1 rotina grátis',
+    upgradeTitle: 'Ruty é para planos pagos',
+    upgradeBody: 'Você já usou sua rotina grátis com a Ruty. Passe para um plano pago para criar rotinas sem limite.',
+    upgradeCta: 'Ver planos',
     button: 'Criar com Ruty',
     title: 'Criar com Ruty',
     intro: 'Conte para a Ruty o que {{name}} precisa. Ela usa só exercícios do catálogo e os dados do aluno (avaliação e anamnese), e você revisa tudo antes de salvar.',
@@ -24,6 +29,11 @@ export default textos({
     error: 'A Ruty não conseguiu montar a rotina. Tente novamente.',
   },
   es: {
+    speak: 'Hablar', stop: 'Detener', listening: 'Escuchando… decí lo que necesitás y tocá detener al terminar.', speakHint: 'Tocá el micrófono y hablá, o escribí.',
+    free: '1 rutina gratis',
+    upgradeTitle: 'Ruty es para planes pagos',
+    upgradeBody: 'Ya usaste tu rutina gratis con Ruty. Pasate a un plan pago para crear rutinas sin límite.',
+    upgradeCta: 'Ver planes',
     button: 'Crear con Ruty',
     title: 'Crear con Ruty',
     intro: 'Contale a Ruty lo que necesita {{name}}. Usa solo ejercicios del catálogo y los datos del alumno (evaluación y anamnesis), y vos revisás todo antes de guardar.',
@@ -45,6 +55,11 @@ export default textos({
     error: 'Ruty no pudo armar la rutina. Probá de nuevo.',
   },
   en: {
+    speak: 'Speak', stop: 'Stop', listening: 'Listening… say what you need and tap stop when done.', speakHint: 'Tap the microphone and speak, or type.',
+    free: '1 free routine',
+    upgradeTitle: 'Ruty is for paid plans',
+    upgradeBody: 'You’ve already used your free routine with Ruty. Upgrade to a paid plan to create routines without limits.',
+    upgradeCta: 'See plans',
     button: 'Create with Ruty',
     title: 'Create with Ruty',
     intro: 'Tell Ruty what {{name}} needs. She only uses exercises from the catalog and the student’s data (assessment and anamnesis), and you review everything before saving.',

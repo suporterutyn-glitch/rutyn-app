@@ -1,30 +1,36 @@
 import { supabase } from './supabase'
 import { crearRutinaAlumno, periodoPorDefecto, sincronizarRutinaAlumno } from './asignacion'
 
-/** Ruty: asistente que arma borradores de rutina (Edge Function `ruty`). Por ahora solo para algunas cuentas. */
+/** Ruty: asistente que arma borradores de rutina (Edge Function `ruty`). Planes pagos sin límite; plan Gratis, 1 rutina. */
 
-export type SerieRuty = { tipo: 'reps' | 'tiempo'; valor: string; carga_kg: string; intensidad: string; descanso_seg: number }
-export type DiaRuty = {
-  nombre: string
-  dias_semana: number[]
-  ejercicios: { exercise_id: string; nombre: string; grupo: string | null; series: SerieRuty[]; notas: string }[]
+export type EjercicioRuty = {
+  exercise_id: string; nombre: string; grupo: string | null
+  series: number; tipo: 'reps' | 'tiempo'; valor: string; carga_kg: string; intensidad: string; descanso_seg: number; notas: string
 }
+export type DiaRuty = { nombre: string; dias_semana: number[]; ejercicios: EjercicioRuty[] }
 export type BorradorRuty = { plan: { nombre: string; objetivo: string; dias: DiaRuty[] }; advertencias: string[]; segundos: number }
 
-const activoPorCuenta = new Map<string, Promise<boolean>>()
-/** Si esta cuenta puede usar Ruty (lo decide el servidor). Se consulta con la sesión ya cargada, una vez por cuenta. */
-export async function rutyActivo(userId: string) {
-  if (!activoPorCuenta.has(userId)) {
-    activoPorCuenta.set(userId, supabase.functions.invoke('ruty', { body: { accion: 'estado' } })
-      .then(({ data }) => Boolean(data?.activo)).catch(() => false))
+export type EstadoRuty = { permitido: boolean; pago: boolean; usados: number }
+
+const estadoPorCuenta = new Map<string, Promise<EstadoRuty>>()
+/** Si esta cuenta puede usar Ruty ahora (lo decide el servidor según el plan). Se consulta con la sesión ya cargada. */
+export function estadoRuty(userId: string, refrescar = false) {
+  if (refrescar || !estadoPorCuenta.has(userId)) {
+    estadoPorCuenta.set(userId, supabase.functions.invoke('ruty', { body: { accion: 'estado' } })
+      .then(({ data }) => ({ permitido: Boolean(data?.permitido), pago: Boolean(data?.pago), usados: Number(data?.usados ?? 0) }))
+      .catch(() => ({ permitido: false, pago: false, usados: 0 })))
   }
-  return activoPorCuenta.get(userId)!
+  return estadoPorCuenta.get(userId)!
 }
+
+/** Error de Ruty cuando el plan Gratis ya usó su rutina: hay que pasarse a un plan pago. */
+export class RutyUpgrade extends Error {}
 
 export async function pedirRutina(alumnoId: string, pedido: string, lang: string): Promise<BorradorRuty> {
   const { data, error } = await supabase.functions.invoke('ruty', { body: { accion: 'rutina', alumno_id: alumnoId, pedido, lang } })
   if (error) {
     const detalle = await (error as { context?: Response }).context?.json?.().catch(() => null)
+    if (detalle?.codigo === 'upgrade') throw new RutyUpgrade(detalle.error)
     throw new Error(detalle?.error ?? error.message)
   }
   return data as BorradorRuty
@@ -45,12 +51,10 @@ export async function guardarBorrador(b: BorradorRuty, o: { alumnoId: string; pr
         .insert({ routine_id: routineId, exercise_id: e.exercise_id, exercise_name_snapshot: e.nombre, position: pos, group_type: 'single', notes: e.notas || null })
         .select('id').single()
       if (error) throw error
-      const series = e.series.map((s, n) => {
-        const params: Record<string, string> = s.tipo === 'tiempo' ? { time: s.valor.replace(/[^\d]/g, '') } : { repetition: s.valor }
-        if (/^\d+([.,]\d+)?$/.test(s.carga_kg.trim())) params.load = s.carga_kg.trim().replace(',', '.')
-        params.rest = String(s.descanso_seg)
-        return { routine_exercise_id: re.id, position: n, params, notes: s.intensidad || null }
-      })
+      const params: Record<string, string> = e.tipo === 'tiempo' ? { time: e.valor.replace(/[^\d]/g, '') } : { repetition: e.valor }
+      if (/^\d+([.,]\d+)?$/.test(e.carga_kg.trim())) params.load = e.carga_kg.trim().replace(',', '.')
+      params.rest = String(e.descanso_seg)
+      const series = Array.from({ length: Math.max(1, e.series) }, (_, n) => ({ routine_exercise_id: re.id, position: n, params, notes: e.intensidad || null }))
       const { error: e2 } = await supabase.from('series').insert(series)
       if (e2) throw e2
     }

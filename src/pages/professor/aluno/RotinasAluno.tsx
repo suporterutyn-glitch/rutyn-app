@@ -14,7 +14,8 @@ import { dificultades, objetivosTreino } from '@/lib/catalogos'
 import { asignarRutina, crearRutinaAlumno, estimarTreinos, periodoPorDefecto, sincronizarRutinaAlumno } from '@/lib/asignacion'
 import type { AlumnoCtx } from '@/pages/professor/projetos/DietsTab'
 import { mensajeError, detalleError } from '@/lib/errores'
-import { rutyActivo } from '@/lib/ruty'
+import { estadoRuty, type EstadoRuty } from '@/lib/ruty'
+import { useNavigate } from 'react-router-dom'
 import { RutySheet } from '@/components/professor/RutySheet'
 
 type Asignada = {
@@ -48,9 +49,12 @@ export function RotinasAluno({ alumno }: { alumno: AlumnoCtx }) {
   const [borrando, setBorrando] = useState<Asignada[] | null>(null)
   const [aviso, setAviso] = useState<Aviso | null>(null)
   const [contrato, setContrato] = useState<{ weekdays: number[]; frequency: number } | null>(null)
-  const [conRuty, setConRuty] = useState(false)
+  const navigate = useNavigate()
   const [ruty, setRuty] = useState(false)
-  useEffect(() => { if (profile?.id) void rutyActivo(profile.id).then(setConRuty) }, [profile?.id])
+  const [rutyPlan, setRutyPlan] = useState<EstadoRuty | null>(null)
+  const [pedirUpgrade, setPedirUpgrade] = useState(false)
+  const refrescarRuty = (forzar = false) => { if (profile?.id) void estadoRuty(profile.id, forzar).then(setRutyPlan) }
+  useEffect(() => { refrescarRuty() }, [profile?.id])
 
   async function load() {
     const { data, error } = await supabase.from('student_routines')
@@ -114,9 +118,15 @@ export function RotinasAluno({ alumno }: { alumno: AlumnoCtx }) {
           </div>
         </div>
       </div>
-      {conRuty && (
-        <button onClick={() => setRuty(true)} className="w-full h-11 mb-3 rounded-[12px] border border-brand/60 bg-brand/10 text-brand-light text-rt-14 font-semibold flex items-center justify-center gap-2">
+      {rutyPlan && (
+        // Plan Gratis que ya usó su rutina: el botón queda apagado y al tocarlo invita a pasar a un plan pago.
+        <button
+          onClick={() => (rutyPlan.permitido ? setRuty(true) : setPedirUpgrade(true))}
+          className={'w-full h-11 mb-3 rounded-[12px] border text-rt-14 font-semibold flex items-center justify-center gap-2 '
+            + (rutyPlan.permitido ? 'border-brand/60 bg-brand/10 text-brand-light' : 'border-surface-line bg-surface-input text-grey-600')}
+        >
           <Sparkles size={17} /> {t('ruty:button')}
+          {rutyPlan.permitido && !rutyPlan.pago && <span className="ml-1 text-rt-11 font-medium text-grey-400">· {t('ruty:free')}</span>}
         </button>
       )}
 
@@ -186,8 +196,18 @@ export function RotinasAluno({ alumno }: { alumno: AlumnoCtx }) {
           alumno={alumno}
           posicion={items?.length ?? 0}
           diasContrato={contrato?.weekdays}
-          onCerrar={() => setRuty(false)}
-          onGuardado={(m) => { setRuty(false); setAviso({ kind: 'success', message: m }); void load() }}
+          onCerrar={() => { setRuty(false); refrescarRuty(true) }}
+          onGuardado={(m) => { setRuty(false); refrescarRuty(true); setAviso({ kind: 'success', message: m }); void load() }}
+          onUpgrade={() => { setRuty(false); refrescarRuty(true); setPedirUpgrade(true) }}
+        />
+      )}
+      {pedirUpgrade && (
+        <ConfirmDialog
+          message={t('ruty:upgradeTitle')}
+          detail={t('ruty:upgradeBody')}
+          confirmLabel={t('ruty:upgradeCta')}
+          onConfirm={() => { setPedirUpgrade(false); navigate('/professor/assinatura') }}
+          onCancel={() => setPedirUpgrade(false)}
         />
       )}
       {clonando && <ClonarRotina r={clonando} origen={alumno.id} onCerrar={() => setClonando(null)} onResultado={(a) => { setClonando(null); setAviso(a) }} />}

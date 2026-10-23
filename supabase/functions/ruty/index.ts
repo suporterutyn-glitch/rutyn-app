@@ -2,38 +2,43 @@
 // Usa solo ejercicios del catálogo (base + propios del profesor) y los datos reales del alumno
 // (evaluación, % de grasa, anamnesis). No guarda nada: el profesor revisa el borrador y lo guarda desde la app.
 //
-// POST { accion: 'estado' }                          -> { activo }  (si la cuenta puede usar Ruty)
+// POST { accion: 'estado' }                          -> { permitido, pago, usados }
 // POST { accion: 'rutina', alumno_id, pedido, lang } -> { plan, advertencias, segundos, costo_usd }
+//                                                       o 402 { codigo: 'upgrade' } si ya usó su rutina gratis
 //
-// Por ahora solo para las cuentas del secreto RUTY_EMAILS (separadas por coma).
+// Planes pagos (Básico/Pro, sin congelar): sin límite. Plan Gratis: 1 rutina en total. Administradores: sin límite.
+// Cada rutina armada queda en `ruty_usos`.
 import Anthropic from 'npm:@anthropic-ai/sdk'
 import { z } from 'npm:zod'
 import { zodOutputFormat } from 'npm:@anthropic-ai/sdk/helpers/zod'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
 
-const MODELO = 'claude-opus-5-5'
-// Precio publicado de Claude Opus 5.5 (US$ por millón de tokens), para registrar el costo de cada pedido.
-const PRECIO = { entrada: 4, salida: 20, cacheLeida: 0.2, cacheEscrita: 5 }
+// Modelo de IA: se elige con el secreto RUTY_MODELO (haiku, sonnet u opus) para poder subir de nivel sin tocar el código.
+// Hoy: haiku, el más barato (decisión del dueño, 2026-10-23); opus es el que mejor razona casos de salud complejos.
+const MODELOS: Record<string, { id: string; entrada: number; salida: number; cacheLeida: number; cacheEscrita: number }> = {
+  haiku: { id: 'claude-haiku-5-5', entrada: 0.10, salida: 0.50, cacheLeida: 0.01, cacheEscrita: 0.125 },
+  sonnet: { id: 'claude-sonnet-5-5', entrada: 2, salida: 10, cacheLeida: 0.2, cacheEscrita: 2.5 },
+  opus: { id: 'claude-opus-5-5', entrada: 4, salida: 20, cacheLeida: 0.2, cacheEscrita: 5 },
+}
 
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' }
 const json = (d: unknown, status = 200) => new Response(JSON.stringify(d), { status, headers: { ...CORS, 'Content-Type': 'application/json' } })
 
-const Serie = z.object({
-  tipo: z.enum(['reps', 'tiempo']).describe('reps = repeticiones; tiempo = segundos (isometrías, cardio, estiramientos)'),
-  valor: z.string().describe('Repeticiones ("10", "8-12") o segundos ("30")'),
-  carga_kg: z.string().describe('Carga en kg solo si se puede calcular de datos reales (p. ej. % de 1RM); si no, ""'),
-  intensidad: z.string().describe('Indicación de esfuerzo, p. ej. "RIR 2", "moderada", o ""'),
-  descanso_seg: z.number().int(),
-})
 const Borrador = z.object({
   nombre_plan: z.string(),
   objetivo: z.string(),
   dias: z.array(z.object({
     nombre: z.string().describe('p. ej. "Día A - Piernas"'),
     dias_semana: z.array(z.number().int()).describe('Días sugeridos: 0 = domingo, 1 = lunes … 6 = sábado'),
+    // Una línea por ejercicio (todas las series iguales): menos texto que escribir = respuesta más rápida y barata.
     ejercicios: z.array(z.object({
       ref: z.number().int().describe('Número del ejercicio en el catálogo'),
-      series: z.array(Serie),
+      series: z.number().int().describe('Cantidad de series'),
+      tipo: z.enum(['reps', 'tiempo']).describe('reps = repeticiones; tiempo = segundos (isometrías, cardio, estiramientos)'),
+      valor: z.string().describe('Repeticiones ("10", "8-12") o segundos ("30")'),
+      carga_kg: z.string().describe('Carga en kg solo si se puede calcular de datos reales (p. ej. % de 1RM); si no, ""'),
+      intensidad: z.string().describe('Indicación de esfuerzo, p. ej. "RIR 2", "moderada", o ""'),
+      descanso_seg: z.number().int(),
       notas: z.string().describe('Indicación breve para el alumno o ""'),
     })),
   })),
@@ -51,10 +56,14 @@ Trabajamos con la salud de personas reales, así que:
 - Si el profesor no aclara series, repeticiones, descansos o días, usá valores habituales para el objetivo y repartí los días con descanso entre estímulos parecidos.
 - Cada "día" del plan se guarda como una rutina separada del alumno.
 - En notas y advertencias nombrá los ejercicios por su nombre, nunca por su número de catálogo.
+- Sé breve: notas de un renglón (solo si aportan algo), advertencias concretas de una o dos oraciones y como máximo 6.
 - Escribí todo en el idioma "${lang}" (es = español, pt = portugués, en = inglés).
 
 Catálogo (ref | nombre | grupo muscular | equipamiento | categoría):
 ${catalogo}`
+
+/** Rutinas con Ruty que tiene el plan Gratis. */
+const GRATIS = 1
 
 const idioma = (l: string) => (l === 'pt' || l === 'en' ? l : 'es')
 const texto = (v: unknown) => (v === null || v === undefined || v === '' ? null : String(v))
@@ -100,12 +109,16 @@ Deno.serve(async (req) => {
   const token = (req.headers.get('Authorization') ?? '').replace('Bearer ', '')
   const { data: { user } } = await db.auth.getUser(token)
   if (!user) return json({ error: 'sin sesión' }, 401)
-  const permitidas = (Deno.env.get('RUTY_EMAILS') ?? '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean)
-  const activo = permitidas.includes((user.email ?? '').toLowerCase())
+  const { data: yo } = await db.from('profiles').select('role,plan,frozen_since').eq('id', user.id).maybeSingle()
+  if (yo?.role !== 'teacher') return json({ error: 'solo para profesores' }, 403)
+  const { data: admin } = await db.from('admins').select('id').eq('user_id', user.id).maybeSingle()
+  const pago = ['basic', 'pro', 'master', 'elite'].includes(yo.plan ?? '') && !yo.frozen_since
+  const { count: usados } = await db.from('ruty_usos').select('id', { count: 'exact', head: true }).eq('teacher_id', user.id)
+  const permitido = pago || !!admin || (usados ?? 0) < GRATIS
 
   const body = await req.json().catch(() => ({}))
-  if (body.accion === 'estado') return json({ activo })
-  if (!activo) return json({ error: 'Ruty no está disponible para esta cuenta' }, 403)
+  if (body.accion === 'estado') return json({ permitido, pago: pago || !!admin, usados: usados ?? 0 })
+  if (!permitido) return json({ codigo: 'upgrade', error: 'Ruty sin límite es para planes pagos' }, 402)
   if (body.accion !== 'rutina' || !body.alumno_id || !String(body.pedido ?? '').trim()) return json({ error: 'pedido incompleto' }, 400)
   const lang = idioma(body.lang)
 
@@ -121,18 +134,20 @@ Deno.serve(async (req) => {
   const catalogo = ejercicios!.map((e, i) => `${i + 1} | ${nombre(e)} | ${e.muscle_group ?? ''} | ${e.equipment ?? ''} | ${e.category ?? ''}`).join('\n')
   const datos = await datosDelAlumno(db, alumno.id, user.id, lang)
 
+  const M = MODELOS[Deno.env.get('RUTY_MODELO') ?? ''] ?? MODELOS.haiku
   const cliente = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') })
   const inicio = Date.now()
   try {
-    // Si el modelo rechaza el pedido por sus filtros de seguridad, la API lo reintenta sola con el modelo recomendado.
+    // Con Sonnet u Opus, si el modelo rechaza el pedido por sus filtros de seguridad, la API lo reintenta sola
+    // con el modelo recomendado (Haiku no tiene ese respaldo).
+    const respaldo = M.id === MODELOS.haiku.id ? {} : { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' }
     const r = await cliente.beta.messages.create({
-      model: MODELO,
+      model: M.id,
       max_tokens: 16000,
-      betas: ['server-side-fallback-2026-07-01'],
-      fallbacks: 'default',
+      ...respaldo,
       system: [{ type: 'text', text: SISTEMA(catalogo, lang), cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: `Pedido del profesor:\n${body.pedido}\n\nAlumno: ${alumno.full_name ?? ''}\nDatos cargados en la app:\n${datos || '(no hay evaluación ni anamnesis cargadas)'}` }],
-      output_config: { format: zodOutputFormat(Borrador), effort: 'high' },
+      output_config: { format: zodOutputFormat(Borrador), effort: 'medium' },
     } as never) as Anthropic.Beta.BetaMessage
     const segundos = Math.round((Date.now() - inicio) / 1000)
     const bloque = r.content.find((b) => b.type === 'text') as { text: string } | undefined
@@ -148,13 +163,15 @@ Deno.serve(async (req) => {
       ejercicios: d.ejercicios.flatMap((x) => {
         const e = ejercicios![x.ref - 1]
         if (!e) { descartados++; return [] }
-        return [{ exercise_id: e.id, nombre: nombre(e), grupo: e.muscle_group, series: x.series, notas: x.notas }]
+        const { ref: _ref, ...resto } = x
+        return [{ ...resto, exercise_id: e.id, nombre: nombre(e), grupo: e.muscle_group }]
       }),
     })).filter((d) => d.ejercicios.length > 0)
 
     const u = r.usage
-    const costo = (u.input_tokens * PRECIO.entrada + (u.cache_read_input_tokens ?? 0) * PRECIO.cacheLeida
-      + (u.cache_creation_input_tokens ?? 0) * PRECIO.cacheEscrita + u.output_tokens * PRECIO.salida) / 1e6
+    const costo = (u.input_tokens * M.entrada + (u.cache_read_input_tokens ?? 0) * M.cacheLeida
+      + (u.cache_creation_input_tokens ?? 0) * M.cacheEscrita + u.output_tokens * M.salida) / 1e6
+    await db.from('ruty_usos').insert({ teacher_id: user.id, student_id: alumno.id, modelo: r.model, segundos, costo_usd: Number(costo.toFixed(5)) })
     console.log('ruty', JSON.stringify({ profesor: user.id, alumno: alumno.id, modelo: r.model, segundos, costo: costo.toFixed(4), descartados }))
     return json({ plan: { nombre: b.data.nombre_plan, objetivo: b.data.objetivo, dias }, advertencias: b.data.advertencias, segundos, costo_usd: Number(costo.toFixed(4)) })
   } catch (e) {
