@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { diasCortos } from '@/lib/fechas'
-import { Plus, X, Check, Dumbbell, Search, CalendarCheck, Eye, EyeOff, RotateCcw } from 'lucide-react'
+import { Plus, X, Check, Dumbbell, Search, CalendarCheck, Eye, EyeOff, RotateCcw, Sparkles } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { RoutineCard } from '@/pages/professor/projetos/RoutineCard'
@@ -14,6 +14,8 @@ import { dificultades, objetivosTreino } from '@/lib/catalogos'
 import { asignarRutina, crearRutinaAlumno, estimarTreinos, periodoPorDefecto, sincronizarRutinaAlumno } from '@/lib/asignacion'
 import type { AlumnoCtx } from '@/pages/professor/projetos/DietsTab'
 import { mensajeError, detalleError } from '@/lib/errores'
+import { rutyActivo } from '@/lib/ruty'
+import { RutySheet } from '@/components/professor/RutySheet'
 
 type Asignada = {
   id: string
@@ -46,6 +48,9 @@ export function RotinasAluno({ alumno }: { alumno: AlumnoCtx }) {
   const [borrando, setBorrando] = useState<Asignada[] | null>(null)
   const [aviso, setAviso] = useState<Aviso | null>(null)
   const [contrato, setContrato] = useState<{ weekdays: number[]; frequency: number } | null>(null)
+  const [conRuty, setConRuty] = useState(false)
+  const [ruty, setRuty] = useState(false)
+  useEffect(() => { if (profile?.id) void rutyActivo(profile.id).then(setConRuty) }, [profile?.id])
 
   async function load() {
     const { data, error } = await supabase.from('student_routines')
@@ -109,6 +114,11 @@ export function RotinasAluno({ alumno }: { alumno: AlumnoCtx }) {
           </div>
         </div>
       </div>
+      {conRuty && (
+        <button onClick={() => setRuty(true)} className="w-full h-11 mb-3 rounded-[12px] border border-brand/60 bg-brand/10 text-brand-light text-rt-14 font-semibold flex items-center justify-center gap-2">
+          <Sparkles size={17} /> {t('ruty:button')}
+        </button>
+      )}
 
       {seleccion.length > 0 && (
         <div className="flex items-center justify-between mb-3">
@@ -169,6 +179,15 @@ export function RotinasAluno({ alumno }: { alumno: AlumnoCtx }) {
           posicion={items?.length ?? 0}
           onCerrar={() => setFormulario(null)}
           onListo={(nuevaId) => { setFormulario(null); void load().then(() => { if (nuevaId) setExpandida(nuevaId) }) }}
+        />
+      )}
+      {ruty && (
+        <RutySheet
+          alumno={alumno}
+          posicion={items?.length ?? 0}
+          diasContrato={contrato?.weekdays}
+          onCerrar={() => setRuty(false)}
+          onGuardado={(m) => { setRuty(false); setAviso({ kind: 'success', message: m }); void load() }}
         />
       )}
       {clonando && <ClonarRotina r={clonando} origen={alumno.id} onCerrar={() => setClonando(null)} onResultado={(a) => { setClonando(null); setAviso(a) }} />}
