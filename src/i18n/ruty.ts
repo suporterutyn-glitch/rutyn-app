@@ -3,6 +3,11 @@ import { textos } from './textos'
 // Ruty: asistente que arma borradores de rutina para un alumno a partir de lo que dicta el profesor.
 export default textos({
   pt: {
+    estimated: '≈ = carga inicial estimada pela Ruty. Confirme na primeira sessão.',
+    micDenied: 'O celular não deu permissão ao microfone. Ative nas configurações ou use o microfone do teclado.', micUnavailable: 'Este celular não permite ditar aqui. Use o microfone do teclado.',
+    left: '{{n}} de {{total}} este mês',
+    basicTitle: 'Você usou suas 20 rotinas do mês', basicBody: 'Elas renovam no dia 1. Com o plano Pro você tem até 200 rotinas por mês.',
+    proTitle: 'Você usou suas 200 rotinas do mês', proBody: 'Elas renovam no dia 1 do próximo mês.', ok: 'Entendi',
     speak: 'Falar', stop: 'Parar', listening: 'Ouvindo… fale o que precisa e toque em parar ao terminar.', speakHint: 'Toque no microfone e fale, ou escreva.',
     free: '1 rotina grátis',
     upgradeTitle: 'Ruty é para planos pagos',
@@ -29,6 +34,11 @@ export default textos({
     error: 'A Ruty não conseguiu montar a rotina. Tente novamente.',
   },
   es: {
+    estimated: '≈ = carga inicial estimada por Ruty. Confirmala en la primera sesión.',
+    micDenied: 'El celular no le dio permiso al micrófono. Activalo en la configuración o usá el micrófono del teclado.', micUnavailable: 'Este celular no permite dictar acá. Usá el micrófono del teclado.',
+    left: '{{n}} de {{total}} este mes',
+    basicTitle: 'Usaste tus 20 rutinas del mes', basicBody: 'Se renuevan el día 1. Con el plan Pro tenés hasta 200 rutinas por mes.',
+    proTitle: 'Usaste tus 200 rutinas del mes', proBody: 'Se renuevan el día 1 del próximo mes.', ok: 'Entendido',
     speak: 'Hablar', stop: 'Detener', listening: 'Escuchando… decí lo que necesitás y tocá detener al terminar.', speakHint: 'Tocá el micrófono y hablá, o escribí.',
     free: '1 rutina gratis',
     upgradeTitle: 'Ruty es para planes pagos',
@@ -55,6 +65,11 @@ export default textos({
     error: 'Ruty no pudo armar la rutina. Probá de nuevo.',
   },
   en: {
+    estimated: '≈ = starting load estimated by Ruty. Confirm it in the first session.',
+    micDenied: 'The phone didn’t allow the microphone. Enable it in settings or use the keyboard microphone.', micUnavailable: 'This phone can’t dictate here. Use the keyboard microphone.',
+    left: '{{n}} of {{total}} this month',
+    basicTitle: 'You’ve used your 20 routines this month', basicBody: 'They renew on the 1st. With the Pro plan you get up to 200 routines a month.',
+    proTitle: 'You’ve used your 200 routines this month', proBody: 'They renew on the 1st of next month.', ok: 'Got it',
     speak: 'Speak', stop: 'Stop', listening: 'Listening… say what you need and tap stop when done.', speakHint: 'Tap the microphone and speak, or type.',
     free: '1 free routine',
     upgradeTitle: 'Ruty is for paid plans',

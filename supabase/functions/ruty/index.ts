@@ -2,12 +2,12 @@
 // Usa solo ejercicios del catálogo (base + propios del profesor) y los datos reales del alumno
 // (evaluación, % de grasa, anamnesis). No guarda nada: el profesor revisa el borrador y lo guarda desde la app.
 //
-// POST { accion: 'estado' }                          -> { permitido, pago, usados }
+// POST { accion: 'estado' }                          -> { permitido, plan, limite, usados }
 // POST { accion: 'rutina', alumno_id, pedido, lang } -> { plan, advertencias, segundos, costo_usd }
-//                                                       o 402 { codigo: 'upgrade' } si ya usó su rutina gratis
+//                                                       o 402 { codigo: 'limite', plan } si ya no le quedan rutinas
 //
-// Planes pagos (Básico/Pro, sin congelar): sin límite. Plan Gratis: 1 rutina en total. Administradores: sin límite.
-// Cada rutina armada queda en `ruty_usos`.
+// Límites (decisión del dueño, 2026-10-23): Gratis 1 rutina en total; Básico 20 por mes; Pro 200 por mes;
+// administradores sin límite. El mes empieza el día 1 (hora de Brasil). Cada rutina armada queda en `ruty_usos`.
 import Anthropic from 'npm:@anthropic-ai/sdk'
 import { z } from 'npm:zod'
 import { zodOutputFormat } from 'npm:@anthropic-ai/sdk/helpers/zod'
@@ -36,8 +36,9 @@ const Borrador = z.object({
       series: z.number().int().describe('Cantidad de series'),
       tipo: z.enum(['reps', 'tiempo']).describe('reps = repeticiones; tiempo = segundos (isometrías, cardio, estiramientos)'),
       valor: z.string().describe('Repeticiones ("10", "8-12") o segundos ("30")'),
-      carga_kg: z.string().describe('Carga en kg solo si se puede calcular de datos reales (p. ej. % de 1RM); si no, ""'),
-      intensidad: z.string().describe('Indicación de esfuerzo, p. ej. "RIR 2", "moderada", o ""'),
+      carga_kg: z.string().describe('Carga en kg por serie (número, p. ej. "20" o "12.5"); "" en peso corporal, bandas, estiramientos o cardio'),
+      carga_origen: z.enum(['historial', '1rm', 'estimada', '']).describe('De dónde sale la carga: historial del alumno, % de su 1RM, estimación inicial, o "" si no lleva'),
+      intensidad: z.enum(['light', 'moderate', 'high', 'maximum', 'technique', '']).describe('Intensidad de la serie: light = leve, moderate = moderada, high = alta, maximum = máxima, technique = técnica; "" si no aplica'),
       descanso_seg: z.number().int(),
       notas: z.string().describe('Indicación breve para el alumno o ""'),
     })),
@@ -54,16 +55,24 @@ Trabajamos con la salud de personas reales, así que:
 - Respetá toda lesión, enfermedad, medicación, embarazo o limitación que diga el profesor o que figure en los datos del alumno. Evitá los ejercicios contraindicados y elegí alternativas seguras del catálogo.
 - No diagnostiques ni des indicaciones médicas. Si hay un riesgo de salud, una contraindicación dudosa o falta información importante, no lo adivines: anotalo en "advertencias" para que el profesor lo resuelva (por ejemplo, pedir alta médica).
 - Si el profesor no aclara series, repeticiones, descansos o días, usá valores habituales para el objetivo y repartí los días con descanso entre estímulos parecidos.
+- Cargas: en cada ejercicio con barra, mancuernas, kettlebell, máquina o polea poné una carga en kg. Prioridad: 1) si el alumno ya hizo ese ejercicio (historial de cargas), partí de esa carga y ajustala al nuevo rango de repeticiones (origen "historial"); 2) si hay 1RM cargado, usá un % acorde al objetivo (origen "1rm"); 3) si no hay datos, estimá una carga inicial CONSERVADORA según peso corporal, sexo, edad, nivel de experiencia y lesiones, como haría un profesor en la primera sesión (origen "estimada"): con principiantes, adultos mayores, embarazo o lesiones, elegí la carga más baja razonable. Las cargas de máquinas varían entre gimnasios: aclaralo una sola vez en advertencias si estimaste cargas. En peso corporal, bandas, estiramientos y cardio no pongas carga.
 - Cada "día" del plan se guarda como una rutina separada del alumno.
 - En notas y advertencias nombrá los ejercicios por su nombre, nunca por su número de catálogo.
+- La intensidad elegila solo entre las opciones del campo (leve, moderada, alta, máxima, técnica); no uses siglas como RIR o RPE.
 - Sé breve: notas de un renglón (solo si aportan algo), advertencias concretas de una o dos oraciones y como máximo 6.
 - Escribí todo en el idioma "${lang}" (es = español, pt = portugués, en = inglés).
 
 Catálogo (ref | nombre | grupo muscular | equipamiento | categoría):
 ${catalogo}`
 
-/** Rutinas con Ruty que tiene el plan Gratis. */
-const GRATIS = 1
+/** Rutinas con Ruty por plan: Gratis en total; Básico y Pro por mes. */
+const LIMITES = { free: 1, basic: 20, pro: 200 } as const
+
+/** Primer instante del mes en curso (hora de Brasil, UTC-3). */
+function inicioDeMes() {
+  const [a, m] = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit' }).format(new Date()).split('-')
+  return `${a}-${m}-01T00:00:00-03:00`
+}
 
 const idioma = (l: string) => (l === 'pt' || l === 'en' ? l : 'es')
 const texto = (v: unknown) => (v === null || v === undefined || v === '' ? null : String(v))
@@ -86,6 +95,21 @@ async function datosDelAlumno(db: ReturnType<typeof createClient>, alumnoId: str
     ]
     for (const [k, v] of campos) if (texto(v)) l.push(`${k}: ${v}`)
   }
+  // Historial real: la última carga que hizo en cada ejercicio (últimos 4 meses).
+  const { data: sesiones } = await db.from('workout_sessions').select('started_at,data').eq('student_id', alumnoId)
+    .gte('started_at', new Date(Date.now() - 120 * 86400000).toISOString()).order('started_at', { ascending: false }).limit(60)
+  const cargas = new Map<string, string>()
+  for (const ses of sesiones ?? []) {
+    for (const e of ((ses.data as { exercises?: { name?: string; name_es?: string; series?: { done?: boolean; load?: string; reps?: string }[] }[] })?.exercises ?? [])) {
+      const nombre = e.name_es || e.name
+      if (!nombre || cargas.has(nombre)) continue
+      const hechas = (e.series ?? []).filter((x) => x.done && Number(String(x.load ?? '').replace(',', '.')) > 0)
+      if (!hechas.length) continue
+      const max = hechas.reduce((a, b) => (Number(String(b.load).replace(',', '.')) > Number(String(a.load).replace(',', '.')) ? b : a))
+      cargas.set(nombre, `${max.load} kg × ${max.reps} (${String(ses.started_at).slice(0, 10)})`)
+    }
+  }
+  if (cargas.size) l.push(`Historial de cargas (última vez que hizo cada ejercicio):\n${[...cargas].slice(0, 60).map(([n, c]) => `- ${n}: ${c}`).join('\n')}`)
   if (grasa?.fat_pct) l.push(`Último % de grasa: ${grasa.fat_pct}% (${grasa.tested_on}${grasa.weight_kg ? `, ${grasa.weight_kg} kg` : ''})`)
   for (const a of anam ?? []) {
     const preguntas = (a.questions ?? []) as { id: string; label?: string; label_pt?: string; label_es?: string; label_en?: string; type: string }[]
@@ -112,13 +136,17 @@ Deno.serve(async (req) => {
   const { data: yo } = await db.from('profiles').select('role,plan,frozen_since').eq('id', user.id).maybeSingle()
   if (yo?.role !== 'teacher') return json({ error: 'solo para profesores' }, 403)
   const { data: admin } = await db.from('admins').select('id').eq('user_id', user.id).maybeSingle()
-  const pago = ['basic', 'pro', 'master', 'elite'].includes(yo.plan ?? '') && !yo.frozen_since
-  const { count: usados } = await db.from('ruty_usos').select('id', { count: 'exact', head: true }).eq('teacher_id', user.id)
-  const permitido = pago || !!admin || (usados ?? 0) < GRATIS
+  const plan = admin ? 'admin' : yo.frozen_since ? 'free' : yo.plan === 'basic' ? 'basic' : ['pro', 'master', 'elite'].includes(yo.plan ?? '') ? 'pro' : 'free'
+  const limite = plan === 'admin' ? null : LIMITES[plan]
+  let consulta = db.from('ruty_usos').select('id', { count: 'exact', head: true }).eq('teacher_id', user.id)
+  if (plan === 'basic' || plan === 'pro') consulta = consulta.gte('created_at', inicioDeMes())
+  const { count } = await consulta
+  const usados = count ?? 0
+  const permitido = limite === null || usados < limite
 
   const body = await req.json().catch(() => ({}))
-  if (body.accion === 'estado') return json({ permitido, pago: pago || !!admin, usados: usados ?? 0 })
-  if (!permitido) return json({ codigo: 'upgrade', error: 'Ruty sin límite es para planes pagos' }, 402)
+  if (body.accion === 'estado') return json({ permitido, plan, limite, usados })
+  if (!permitido) return json({ codigo: 'limite', plan, error: 'No te quedan rutinas con Ruty en tu plan' }, 402)
   if (body.accion !== 'rutina' || !body.alumno_id || !String(body.pedido ?? '').trim()) return json({ error: 'pedido incompleto' }, 400)
   const lang = idioma(body.lang)
 

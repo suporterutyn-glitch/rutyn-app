@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth'
 import { diasCortos } from '@/lib/fechas'
 import { guardarBorrador, pedirRutina, RutyUpgrade, type BorradorRuty } from '@/lib/ruty'
 import { mensajeError } from '@/lib/errores'
+import { PARAMETRO_POR_ID, valorFormateado } from '@/lib/parametros'
 
 /** Pantalla de Ruty: el profesor dicta qué necesita, revisa el borrador y lo guarda en el alumno. */
 export function RutySheet({ alumno, posicion, diasContrato, onCerrar, onGuardado, onUpgrade }: {
@@ -27,43 +28,60 @@ export function RutySheet({ alumno, posicion, diasContrato, onCerrar, onGuardado
   const nombresDias = diasCortos(i18n.language)
 
   // Dictado con el reconocimiento de voz del navegador (gratis, sin IA). Si el celular no lo tiene, queda el teclado.
+  type Resultado = { isFinal: boolean; 0: { transcript: string } }
   type Reconocedor = { lang: string; continuous: boolean; interimResults: boolean; start: () => void; stop: () => void
-    onresult: ((ev: { resultIndex: number; results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }> }) => void) | null
-    onend: (() => void) | null; onerror: (() => void) | null }
+    onresult: ((ev: { results: ArrayLike<Resultado> }) => void) | null
+    onend: (() => void) | null; onerror: ((ev: { error: string }) => void) | null }
   const Voz = (window as unknown as { SpeechRecognition?: new () => Reconocedor; webkitSpeechRecognition?: new () => Reconocedor })
   const ClaseVoz = Voz.SpeechRecognition ?? Voz.webkitSpeechRecognition
   const [escuchando, setEscuchando] = useState(false)
+  const [errorVoz, setErrorVoz] = useState<string | null>(null)
   const voz = useRef<Reconocedor | null>(null)
   useEffect(() => () => voz.current?.stop(), [])
+  /** Corta el dictado: lo que llegue después ya no se agrega al pedido. */
+  function pararVoz() {
+    const r = voz.current
+    voz.current = null
+    r?.stop()
+    setEscuchando(false)
+  }
 
   function dictar() {
     if (!ClaseVoz) return
-    if (escuchando) { voz.current?.stop(); return }
-    const r = new ClaseVoz()
+    if (escuchando) { pararVoz(); return }
+    setErrorVoz(null)
+    let r: Reconocedor
+    try { r = new ClaseVoz() } catch { setErrorVoz(t('ruty:micUnavailable')); return }
     r.lang = ({ pt: 'pt-BR', es: 'es-419', en: 'en-US' } as Record<string, string>)[i18n.language.slice(0, 2)] ?? 'es-419'
     r.continuous = true
-    r.interimResults = false
+    r.interimResults = true
     const inicio = pedido.trim()
-    let dicho = ''
+    // El texto se arma de cero con todos los resultados en cada evento: en Android e iPhone los resultados
+    // se repiten o se corrigen, y sumarlos de a partes duplicaba palabras.
     r.onresult = (ev) => {
-      for (let i = ev.resultIndex; i < ev.results.length; i++) if (ev.results[i].isFinal) dicho += ev.results[i][0].transcript.trim() + ' '
-      setPedido([inicio, dicho.trim()].filter(Boolean).join(' '))
+      if (voz.current !== r) return
+      const dicho = Array.from(ev.results).map((x) => x[0].transcript.trim()).filter(Boolean).join(' ')
+      setPedido([inicio, dicho].filter(Boolean).join(' '))
     }
-    r.onend = () => setEscuchando(false)
-    r.onerror = () => setEscuchando(false)
+    r.onend = () => { if (voz.current === r) { voz.current = null; setEscuchando(false) } }
+    r.onerror = (ev) => {
+      setEscuchando(false)
+      if (ev.error === 'no-speech' || ev.error === 'aborted') return
+      setErrorVoz(ev.error === 'not-allowed' || ev.error === 'service-not-allowed' ? t('ruty:micDenied') : t('ruty:micUnavailable'))
+    }
     voz.current = r
-    r.start()
-    setEscuchando(true)
+    try { r.start(); setEscuchando(true) } catch { setErrorVoz(t('ruty:micUnavailable')) }
   }
 
   useEffect(() => {
     if (!pidiendo) return
     setSegundos(0)
-    const iv = setInterval(() => setSegundos((s) => s + 1), 1000)
+    const iv = setInterval(() => setSegundos((n) => n + 1), 1000)
     return () => clearInterval(iv)
   }, [pidiendo])
 
   async function armar() {
+    pararVoz()
     if (!pedido.trim() || pidiendo) return
     setPidiendo(true); setError(null); setBorrador(null)
     try { setBorrador(await pedirRutina(alumno.id, pedido.trim(), i18n.language.slice(0, 2))) }
@@ -75,6 +93,7 @@ export function RutySheet({ alumno, posicion, diasContrato, onCerrar, onGuardado
   }
 
   async function guardar() {
+    pararVoz()
     if (!borrador || !profile?.id) return
     setGuardando(true); setError(null)
     try {
@@ -85,7 +104,7 @@ export function RutySheet({ alumno, posicion, diasContrato, onCerrar, onGuardado
   }
 
   return (
-    <FullScreenSheet title={t('ruty:title')} onClose={onCerrar}>
+    <FullScreenSheet title={t('ruty:title')} onClose={() => { pararVoz(); onCerrar() }}>
       <p className="text-grey-400 text-rt-13 -mt-5 mb-5">{t('ruty:intro', { name: alumno.nombre })}</p>
 
       <label className="block text-white text-rt-13 font-semibold mb-2">{t('ruty:label')}</label>
@@ -111,7 +130,9 @@ export function RutySheet({ alumno, posicion, diasContrato, onCerrar, onGuardado
         </button>
       )}
       </div>
-      <p className="text-grey-600 text-rt-12 mt-1.5">{escuchando ? t('ruty:listening') : ClaseVoz ? t('ruty:speakHint') : t('ruty:dictate')}</p>
+      <p className={'text-rt-12 mt-1.5 ' + (errorVoz ? 'text-warning' : 'text-grey-600')}>
+        {errorVoz ?? (escuchando ? t('ruty:listening') : ClaseVoz ? t('ruty:speakHint') : t('ruty:dictate'))}
+      </p>
 
       {!borrador && (
         <button onClick={() => void armar()} disabled={!pedido.trim() || pidiendo} className="btn-create mt-5">
@@ -137,6 +158,9 @@ export function RutySheet({ alumno, posicion, diasContrato, onCerrar, onGuardado
             </div>
           )}
 
+          {borrador.plan.dias.some((d) => d.ejercicios.some((e) => e.carga_origen === 'estimada')) && (
+            <p className="text-grey-400 text-rt-12">{t('ruty:estimated')}</p>
+          )}
           {borrador.plan.dias.map((d, i) => (
             <div key={i} className="rounded-card border border-surface-line bg-surface-raised p-4">
               <div className="text-white text-rt-15 font-semibold">{d.nombre}</div>
@@ -150,7 +174,7 @@ export function RutySheet({ alumno, posicion, diasContrato, onCerrar, onGuardado
                     </div>
                     <div className="shrink-0 text-right text-grey-400 text-rt-12">
                       <div className="text-white/90">{t('ruty:sets', { n: e.series, v: e.tipo === 'tiempo' ? `${e.valor} s` : e.valor })}</div>
-                      {(e.carga_kg || e.intensidad) && <div>{[e.carga_kg && `${e.carga_kg} kg`, e.intensidad].filter(Boolean).join(' · ')}</div>}
+                      {(e.carga_kg || e.intensidad) && <div>{[e.carga_kg && (e.carga_origen === 'estimada' ? `≈ ${e.carga_kg} kg` : `${e.carga_kg} kg`), e.intensidad && valorFormateado(PARAMETRO_POR_ID.get('intensity')!, e.intensidad, i18n.language)].filter(Boolean).join(' · ')}</div>}
                       <div>{t('ruty:rest', { s: e.descanso_seg })}</div>
                     </div>
                   </li>

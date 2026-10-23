@@ -119,14 +119,17 @@ export function RotinasAluno({ alumno }: { alumno: AlumnoCtx }) {
         </div>
       </div>
       {rutyPlan && (
-        // Plan Gratis que ya usó su rutina: el botón queda apagado y al tocarlo invita a pasar a un plan pago.
+        // Sin rutinas disponibles (Gratis ya usada o límite del mes): el botón queda apagado y al tocarlo explica por qué.
         <button
           onClick={() => (rutyPlan.permitido ? setRuty(true) : setPedirUpgrade(true))}
           className={'w-full h-11 mb-3 rounded-[12px] border text-rt-14 font-semibold flex items-center justify-center gap-2 '
             + (rutyPlan.permitido ? 'border-brand/60 bg-brand/10 text-brand-light' : 'border-surface-line bg-surface-input text-grey-600')}
         >
           <Sparkles size={17} /> {t('ruty:button')}
-          {rutyPlan.permitido && !rutyPlan.pago && <span className="ml-1 text-rt-11 font-medium text-grey-400">· {t('ruty:free')}</span>}
+          {rutyPlan.plan === 'free' && rutyPlan.permitido && <span className="ml-1 text-rt-11 font-medium text-grey-400">· {t('ruty:free')}</span>}
+          {(rutyPlan.plan === 'basic' || rutyPlan.plan === 'pro') && rutyPlan.limite !== null && (
+            <span className="ml-1 text-rt-11 font-medium text-grey-400">· {t('ruty:left', { n: Math.max(0, rutyPlan.limite - rutyPlan.usados), total: rutyPlan.limite })}</span>
+          )}
         </button>
       )}
 
@@ -201,15 +204,23 @@ export function RotinasAluno({ alumno }: { alumno: AlumnoCtx }) {
           onUpgrade={() => { setRuty(false); refrescarRuty(true); setPedirUpgrade(true) }}
         />
       )}
-      {pedirUpgrade && (
+      {pedirUpgrade && (rutyPlan?.plan === 'pro' ? (
         <ConfirmDialog
-          message={t('ruty:upgradeTitle')}
-          detail={t('ruty:upgradeBody')}
+          message={t('ruty:proTitle')}
+          detail={t('ruty:proBody')}
+          confirmLabel={t('ruty:ok')}
+          onConfirm={() => setPedirUpgrade(false)}
+          onCancel={() => setPedirUpgrade(false)}
+        />
+      ) : (
+        <ConfirmDialog
+          message={rutyPlan?.plan === 'basic' ? t('ruty:basicTitle') : t('ruty:upgradeTitle')}
+          detail={rutyPlan?.plan === 'basic' ? t('ruty:basicBody') : t('ruty:upgradeBody')}
           confirmLabel={t('ruty:upgradeCta')}
           onConfirm={() => { setPedirUpgrade(false); navigate('/professor/assinatura') }}
           onCancel={() => setPedirUpgrade(false)}
         />
-      )}
+      ))}
       {clonando && <ClonarRotina r={clonando} origen={alumno.id} onCerrar={() => setClonando(null)} onResultado={(a) => { setClonando(null); setAviso(a) }} />}
       {borrando && (
         <ConfirmDialog

@@ -1,36 +1,37 @@
 import { supabase } from './supabase'
 import { crearRutinaAlumno, periodoPorDefecto, sincronizarRutinaAlumno } from './asignacion'
 
-/** Ruty: asistente que arma borradores de rutina (Edge Function `ruty`). Planes pagos sin límite; plan Gratis, 1 rutina. */
+/** Ruty: asistente que arma borradores de rutina (Edge Function `ruty`). Gratis 1 rutina; Básico 20 y Pro 200 por mes; admin sin límite. */
 
 export type EjercicioRuty = {
   exercise_id: string; nombre: string; grupo: string | null
-  series: number; tipo: 'reps' | 'tiempo'; valor: string; carga_kg: string; intensidad: string; descanso_seg: number; notas: string
+  series: number; tipo: 'reps' | 'tiempo'; valor: string; carga_kg: string; carga_origen: 'historial' | '1rm' | 'estimada' | ''; intensidad: '' | 'light' | 'moderate' | 'high' | 'maximum' | 'technique'; descanso_seg: number; notas: string
 }
 export type DiaRuty = { nombre: string; dias_semana: number[]; ejercicios: EjercicioRuty[] }
 export type BorradorRuty = { plan: { nombre: string; objetivo: string; dias: DiaRuty[] }; advertencias: string[]; segundos: number }
 
-export type EstadoRuty = { permitido: boolean; pago: boolean; usados: number }
+export type PlanRuty = 'free' | 'basic' | 'pro' | 'admin'
+export type EstadoRuty = { permitido: boolean; plan: PlanRuty; limite: number | null; usados: number }
 
 const estadoPorCuenta = new Map<string, Promise<EstadoRuty>>()
 /** Si esta cuenta puede usar Ruty ahora (lo decide el servidor según el plan). Se consulta con la sesión ya cargada. */
 export function estadoRuty(userId: string, refrescar = false) {
   if (refrescar || !estadoPorCuenta.has(userId)) {
     estadoPorCuenta.set(userId, supabase.functions.invoke('ruty', { body: { accion: 'estado' } })
-      .then(({ data }) => ({ permitido: Boolean(data?.permitido), pago: Boolean(data?.pago), usados: Number(data?.usados ?? 0) }))
-      .catch(() => ({ permitido: false, pago: false, usados: 0 })))
+      .then(({ data }) => ({ permitido: Boolean(data?.permitido), plan: (data?.plan ?? 'free') as PlanRuty, limite: data?.limite ?? null, usados: Number(data?.usados ?? 0) }))
+      .catch(() => ({ permitido: false, plan: 'free' as PlanRuty, limite: 1, usados: 0 })))
   }
   return estadoPorCuenta.get(userId)!
 }
 
-/** Error de Ruty cuando el plan Gratis ya usó su rutina: hay que pasarse a un plan pago. */
+/** Error de Ruty cuando el plan ya no tiene rutinas disponibles (Gratis usada, o límite del mes). */
 export class RutyUpgrade extends Error {}
 
 export async function pedirRutina(alumnoId: string, pedido: string, lang: string): Promise<BorradorRuty> {
   const { data, error } = await supabase.functions.invoke('ruty', { body: { accion: 'rutina', alumno_id: alumnoId, pedido, lang } })
   if (error) {
     const detalle = await (error as { context?: Response }).context?.json?.().catch(() => null)
-    if (detalle?.codigo === 'upgrade') throw new RutyUpgrade(detalle.error)
+    if (detalle?.codigo === 'limite') throw new RutyUpgrade(detalle.error)
     throw new Error(detalle?.error ?? error.message)
   }
   return data as BorradorRuty
@@ -54,7 +55,9 @@ export async function guardarBorrador(b: BorradorRuty, o: { alumnoId: string; pr
       const params: Record<string, string> = e.tipo === 'tiempo' ? { time: e.valor.replace(/[^\d]/g, '') } : { repetition: e.valor }
       if (/^\d+([.,]\d+)?$/.test(e.carga_kg.trim())) params.load = e.carga_kg.trim().replace(',', '.')
       params.rest = String(e.descanso_seg)
-      const series = Array.from({ length: Math.max(1, e.series) }, (_, n) => ({ routine_exercise_id: re.id, position: n, params, notes: e.intensidad || null }))
+      // La intensidad va a su parámetro de la serie; la observación queda libre para el profesor.
+      if (e.intensidad) params.intensity = e.intensidad
+      const series = Array.from({ length: Math.max(1, e.series) }, (_, n) => ({ routine_exercise_id: re.id, position: n, params, notes: null }))
       const { error: e2 } = await supabase.from('series').insert(series)
       if (e2) throw e2
     }
